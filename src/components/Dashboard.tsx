@@ -165,7 +165,7 @@ export function Dashboard({
             <ProgressRing radius={80} stroke={10} progress={progressPercentage} />
           </div>
           <p className="text-center text-muted-foreground mt-4">
-            {completedModules.length} из 7 модулей
+            {completedModules.length} из 15 модулей
           </p>
         </div>
 
