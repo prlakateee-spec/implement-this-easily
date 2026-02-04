@@ -17,6 +17,8 @@ async function getDbConnection() {
     throw new Error('PostgreSQL configuration not found');
   }
 
+  console.log('Connecting to PostgreSQL:', { host, port, user, dbname });
+
   // Use postgres client from deno
   const { Client } = await import("https://deno.land/x/postgres@v0.17.0/mod.ts");
   
@@ -26,6 +28,9 @@ async function getDbConnection() {
     user: user,
     password: password,
     database: dbname,
+    tls: {
+      enabled: false, // Try without TLS first for internal network
+    },
   });
   
   await client.connect();
