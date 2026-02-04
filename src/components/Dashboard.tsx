@@ -12,7 +12,7 @@ import {
 import { User } from '@/hooks/useAuth';
 import { ProgressRing } from './ProgressRing';
 import { KnowledgeBase } from './KnowledgeBase';
-import { ACHIEVEMENTS } from '@/lib/data';
+import { ACHIEVEMENTS, TOTAL_MODULES } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 
 interface DashboardProps {
@@ -165,7 +165,7 @@ export function Dashboard({
             <ProgressRing radius={80} stroke={10} progress={progressPercentage} />
           </div>
           <p className="text-center text-muted-foreground mt-4">
-            {completedModules.length} из 15 модулей
+            {completedModules.length} из {TOTAL_MODULES} модулей
           </p>
         </div>
 
