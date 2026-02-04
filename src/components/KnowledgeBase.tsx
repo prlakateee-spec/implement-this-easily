@@ -7,14 +7,12 @@ import {
   ChevronRight,
   ChevronLeft,
   LayoutGrid,
-  List,
-  Loader2
+  List
 } from 'lucide-react';
 import { COURSES, Course } from '@/lib/data';
-import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { getLessonContent, type Lesson, type LessonImage } from '@/lib/lessonApi';
-
+import { type Lesson, type LessonImage } from '@/lib/lessonApi';
+import { LessonArticle } from './LessonArticle';
 interface KnowledgeBaseProps {
   completedModules: string[];
   onToggleModule: (moduleId: string) => void;
@@ -132,93 +130,21 @@ export function KnowledgeBase({ completedModules, onToggleModule }: KnowledgeBas
             setDbLesson(null);
             setDbImages([]);
           }}
-          className="mb-6 text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm font-medium transition-colors"
+          className="mb-8 text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm font-medium transition-colors"
         >
           <ChevronLeft size={16} />
           Назад к курсу
         </button>
 
-        <div className="bg-card rounded-3xl shadow-soft border border-border overflow-hidden">
-          {/* Images gallery or video placeholder */}
-          {lessonImages.length > 0 ? (
-            <div className="p-4 bg-muted/50">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {lessonImages.map((img, idx) => (
-                  <a 
-                    key={img.id} 
-                    href={img.image_url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="aspect-[4/3] rounded-xl overflow-hidden bg-muted hover:opacity-90 transition-opacity"
-                  >
-                    <img 
-                      src={img.image_url} 
-                      alt={`Шаг ${idx + 1}`}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                      referrerPolicy="no-referrer"
-                      onError={(e) => {
-                        const target = e.currentTarget;
-                        target.onerror = null;
-                        target.src = '/placeholder.svg';
-                      }}
-                    />
-                  </a>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="aspect-video bg-muted flex items-center justify-center">
-              {isLoading ? (
-                <Loader2 className="w-10 h-10 text-muted-foreground animate-spin" />
-              ) : (
-                <div className="text-center">
-                  <div className="w-20 h-20 gradient-primary rounded-full flex items-center justify-center mx-auto mb-4 shadow-glow">
-                    <PlayCircle className="w-10 h-10 text-primary-foreground" />
-                  </div>
-                  <p className="text-muted-foreground">Видео материал</p>
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="p-8">
-            <h1 className="text-2xl font-bold text-foreground mb-4">
-              {module.title}
-            </h1>
-            
-            {isLoading ? (
-              <div className="flex items-center gap-2 text-muted-foreground mb-8">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Загрузка контента...
-              </div>
-            ) : (
-              <div className="text-muted-foreground mb-8 leading-relaxed whitespace-pre-line">
-                {lessonContent}
-              </div>
-            )}
-
-            <Button
-              onClick={() => handleModuleComplete(module.id)}
-              className={`px-8 py-6 text-lg font-bold shadow-lg ${
-                isCompleted
-                  ? 'bg-success text-success-foreground hover:bg-success/90'
-                  : 'gradient-primary text-primary-foreground'
-              }`}
-            >
-              {isCompleted ? (
-                <>
-                  <CheckCircle size={20} className="mr-2" />
-                  Урок пройден
-                </>
-              ) : (
-                <>
-                  Завершить урок
-                  <ChevronRight size={20} className="ml-2" />
-                </>
-              )}
-            </Button>
-          </div>
+        <div className="bg-card rounded-3xl shadow-soft border border-border p-8 lg:p-12">
+          <LessonArticle
+            title={module.title}
+            content={lessonContent}
+            images={lessonImages}
+            isLoading={isLoading}
+            isCompleted={isCompleted}
+            onComplete={() => handleModuleComplete(module.id)}
+          />
         </div>
 
         {/* Confetti celebration */}
