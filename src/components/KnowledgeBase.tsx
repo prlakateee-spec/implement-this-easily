@@ -5,10 +5,13 @@ import {
   Layout, 
   CheckCircle, 
   ChevronRight,
-  ChevronLeft
+  ChevronLeft,
+  LayoutGrid,
+  List
 } from 'lucide-react';
 import { COURSES, Course } from '@/lib/data';
 import { Button } from '@/components/ui/button';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 interface KnowledgeBaseProps {
   completedModules: string[];
@@ -19,6 +22,7 @@ export function KnowledgeBase({ completedModules, onToggleModule }: KnowledgeBas
   const [activeCourse, setActiveCourse] = useState<Course | null>(null);
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
   const handleModuleComplete = (moduleId: string) => {
     const wasCompleted = completedModules.includes(moduleId);
@@ -171,15 +175,63 @@ export function KnowledgeBase({ completedModules, onToggleModule }: KnowledgeBas
   // Courses List
   return (
     <div className="p-6 lg:p-10 animate-fade-in-up">
-      <h1 className="text-3xl font-bold text-foreground mb-8">База знаний</h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-bold text-foreground">База знаний</h1>
+        <ToggleGroup 
+          type="single" 
+          value={viewMode} 
+          onValueChange={(value) => value && setViewMode(value as 'list' | 'grid')}
+          className="bg-muted rounded-lg p-1"
+        >
+          <ToggleGroupItem value="list" aria-label="Список" className="data-[state=on]:bg-background data-[state=on]:shadow-sm">
+            <List size={18} />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="grid" aria-label="Плитки" className="data-[state=on]:bg-background data-[state=on]:shadow-sm">
+            <LayoutGrid size={18} />
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </div>
 
-      <div className="grid gap-6">
+      <div className={viewMode === 'grid' ? 'grid md:grid-cols-2 lg:grid-cols-3 gap-6' : 'grid gap-6'}>
         {COURSES.map((course) => {
           const completedCount = course.modules.filter(m => 
             completedModules.includes(m.id)
           ).length;
           const totalModules = course.modules.length;
           const courseProgress = Math.round((completedCount / totalModules) * 100);
+
+          if (viewMode === 'grid') {
+            return (
+              <button
+                key={course.id}
+                onClick={() => setActiveCourse(course)}
+                className="bg-card rounded-2xl p-6 shadow-soft border border-border hover:shadow-elevated hover:border-primary/20 transition-all text-left group flex flex-col"
+              >
+                <div className="w-14 h-14 gradient-primary rounded-2xl flex items-center justify-center text-2xl shadow-glow mb-4">
+                  {course.emoji}
+                </div>
+                <h2 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors mb-2">
+                  {course.title}
+                </h2>
+                <p className="text-muted-foreground text-sm mb-4 flex-1">
+                  {course.description}
+                </p>
+                
+                {/* Progress bar */}
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                    <div 
+                      className="h-full gradient-primary rounded-full transition-all duration-500"
+                      style={{ width: `${courseProgress}%` }}
+                    />
+                  </div>
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {completedCount}/{totalModules}
+                  </span>
+                </div>
+              </button>
+            );
+          }
 
           return (
             <button
