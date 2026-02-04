@@ -156,7 +156,7 @@ export function KnowledgeBase({ completedModules, onToggleModule }: KnowledgeBas
                       alt={`Шаг ${idx + 1}`}
                       className="w-full h-full object-cover"
                       loading="lazy"
-                      crossOrigin="anonymous"
+                      referrerPolicy="no-referrer"
                       onError={(e) => {
                         const target = e.currentTarget;
                         target.onerror = null;
