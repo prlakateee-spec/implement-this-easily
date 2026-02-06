@@ -33,31 +33,33 @@ export function KnowledgeBase({ completedModules, onToggleModule }: KnowledgeBas
   useEffect(() => {
     async function loadLessonContent() {
       if (!activeModuleId || !activeCourse) return;
-      
-      // Only load from DB for alipay course
-      if (activeCourse.id !== 'alipay') {
-        setDbLesson(null);
-        setDbImages([]);
-        return;
-      }
 
       setIsLoading(true);
       try {
         // Map module id to database lesson by matching order
         const moduleIndex = activeCourse.modules.findIndex(m => m.id === activeModuleId);
-        if (moduleIndex === -1) return;
+        if (moduleIndex === -1) {
+          setIsLoading(false);
+          return;
+        }
 
         // Get lesson from database by course slug and order
         const { supabase } = await import('@/integrations/supabase/client');
         
-        // Get course id first
+        // Get course id first (use course.id as slug)
         const { data: course } = await supabase
           .from('courses')
           .select('id')
-          .eq('slug', 'alipay')
+          .eq('slug', activeCourse.id)
           .maybeSingle();
         
-        if (!course) return;
+        if (!course) {
+          // No DB content for this course
+          setDbLesson(null);
+          setDbImages([]);
+          setIsLoading(false);
+          return;
+        }
 
         // Get lesson by order_index
         const { data: lesson } = await supabase
@@ -78,9 +80,14 @@ export function KnowledgeBase({ completedModules, onToggleModule }: KnowledgeBas
             .order('order_index');
           
           setDbImages(images || []);
+        } else {
+          setDbLesson(null);
+          setDbImages([]);
         }
       } catch (error) {
         console.error('Error loading lesson content:', error);
+        setDbLesson(null);
+        setDbImages([]);
       } finally {
         setIsLoading(false);
       }
