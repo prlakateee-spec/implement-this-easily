@@ -62,7 +62,11 @@ export function LessonArticle({
             {/* Insert image after first paragraph */}
             {index === 0 && images.length > 0 && <figure className="my-8">
                 <div className="rounded-2xl overflow-hidden shadow-elevated border border-border bg-muted">
-                  
+                  <img src={images[0].image_url} alt={images[0].caption || 'Шаг 1'} className="w-full h-auto object-contain" loading="lazy" referrerPolicy="no-referrer" onError={e => {
+                    const target = e.currentTarget;
+                    target.onerror = null;
+                    target.src = '/placeholder.svg';
+                  }} />
                 </div>
                 {images[0].caption && <figcaption className="text-center text-sm text-muted-foreground mt-3 italic">
                     {images[0].caption}
