@@ -72,11 +72,7 @@ export function LessonArticle({
             {/* Show additional images distributed through content */}
             {index > 0 && images[index] && <figure className="my-8">
                 <div className="rounded-2xl overflow-hidden shadow-elevated border border-border bg-muted">
-                  <img src={images[index].image_url} alt={images[index].caption || `Шаг ${index + 1}`} className="w-full h-auto object-contain" loading="lazy" referrerPolicy="no-referrer" onError={e => {
-              const target = e.currentTarget;
-              target.onerror = null;
-              target.src = '/placeholder.svg';
-            }} />
+                  
                 </div>
                 {images[index].caption && <figcaption className="text-center text-sm text-muted-foreground mt-3 italic">
                     {images[index].caption}
