@@ -98,6 +98,20 @@ export const COURSES: Course[] = [
     ],
   },
   {
+    id: 'wechat',
+    title: 'WeChat',
+    description: 'Полный гайд по установке, регистрации, верификации и настройке платежей в WeChat.',
+    emoji: '💬',
+    modules: [
+      { id: 'wechat-install', title: 'Установка WeChat', duration: '5 мин', type: 'text' },
+      { id: 'wechat-register', title: 'Регистрация в WeChat', duration: '10 мин', type: 'text' },
+      { id: 'wechat-verify', title: 'Верификация аккаунта', duration: '15 мин', type: 'text' },
+      { id: 'wechat-password', title: 'Установка платежного пароля', duration: '5 мин', type: 'text' },
+      { id: 'wechat-payments', title: 'Баланс и платежи', duration: '10 мин', type: 'text' },
+      { id: 'wechat-change-password', title: 'Изменение платежного пароля', duration: '5 мин', type: 'text' },
+    ],
+  },
+  {
     id: 'contacts',
     title: 'Полезные контакты',
     description: 'База проверенных агентов, карго и сервисов.',
