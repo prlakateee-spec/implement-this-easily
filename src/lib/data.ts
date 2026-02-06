@@ -64,12 +64,17 @@ export const COURSES: Course[] = [
   {
     id: '1688',
     title: '1688',
-    description: 'Оптовая платформа для закупок напрямую с фабрик.',
+    description: 'Полный гайд по оптовым закупкам на крупнейшей B2B-платформе Китая.',
     emoji: '🏭',
     modules: [
-      { id: '1688-intro', title: 'Введение в 1688', duration: '15 мин', type: 'video' },
-      { id: '1688-suppliers', title: 'Поиск поставщиков', duration: '20 мин', type: 'text' },
-      { id: '1688-negotiate', title: 'Переговоры с фабриками', duration: '25 мин', type: 'video' },
+      { id: '1688-install', title: 'Установка 1688', duration: '5 мин', type: 'text' },
+      { id: '1688-register', title: 'Регистрация в 1688', duration: '8 мин', type: 'text' },
+      { id: '1688-account', title: 'Личный кабинет', duration: '7 мин', type: 'text' },
+      { id: '1688-search', title: 'Как искать товар', duration: '10 мин', type: 'text' },
+      { id: '1688-product-card', title: 'Обзор карточки товара', duration: '10 мин', type: 'text' },
+      { id: '1688-order', title: 'Как заказать товар', duration: '12 мин', type: 'text' },
+      { id: '1688-tracking', title: 'Как отследить товар', duration: '5 мин', type: 'text' },
+      { id: '1688-refund', title: 'Как вернуть товар', duration: '8 мин', type: 'text' },
     ],
   },
   {
