@@ -18,7 +18,7 @@ export function LessonArticle({
   onComplete
 }: LessonArticleProps) {
   // Parse content into paragraphs
-  const paragraphs = content.split('\n\n').filter(p => p.trim());
+  const paragraphs = content.split('\n\n').filter((p) => p.trim());
 
   // Determine where to insert images (after first paragraph, or distributed)
   const getImageForParagraph = (index: number): LessonImage | null => {
@@ -62,11 +62,11 @@ export function LessonArticle({
             {/* Insert image after first paragraph */}
             {index === 0 && images.length > 0 && <figure className="my-8">
                 <div className="rounded-2xl overflow-hidden shadow-elevated border border-border bg-muted">
-                  <img src={images[0].image_url} alt={images[0].caption || 'Шаг 1'} className="w-full h-auto object-contain" loading="lazy" referrerPolicy="no-referrer" onError={e => {
-                    const target = e.currentTarget;
-                    target.onerror = null;
-                    target.src = '/placeholder.svg';
-                  }} />
+                  
+
+
+
+
                 </div>
                 {images[0].caption && <figcaption className="text-center text-sm text-muted-foreground mt-3 italic">
                     {images[0].caption}
@@ -76,7 +76,7 @@ export function LessonArticle({
             {/* Show additional images distributed through content */}
             {index > 0 && images[index] && <figure className="my-8">
                 <div className="rounded-2xl overflow-hidden shadow-elevated border border-border bg-muted">
-                  <img src={images[index].image_url} alt={images[index].caption || `Шаг ${index + 1}`} className="w-full h-auto object-contain" loading="lazy" referrerPolicy="no-referrer" onError={e => {
+                  <img src={images[index].image_url} alt={images[index].caption || `Шаг ${index + 1}`} className="w-full h-auto object-contain" loading="lazy" referrerPolicy="no-referrer" onError={(e) => {
               const target = e.currentTarget;
               target.onerror = null;
               target.src = '/placeholder.svg';
@@ -92,7 +92,7 @@ export function LessonArticle({
         {images.length > paragraphs.length && <div className="space-y-8 mt-8">
             {images.slice(paragraphs.length).map((img, idx) => <figure key={img.id}>
                 <div className="rounded-2xl overflow-hidden shadow-elevated border border-border bg-muted">
-                  <img src={img.image_url} alt={img.caption || `Шаг ${paragraphs.length + idx + 1}`} className="w-full h-auto object-contain" loading="lazy" referrerPolicy="no-referrer" onError={e => {
+                  <img src={img.image_url} alt={img.caption || `Шаг ${paragraphs.length + idx + 1}`} className="w-full h-auto object-contain" loading="lazy" referrerPolicy="no-referrer" onError={(e) => {
               const target = e.currentTarget;
               target.onerror = null;
               target.src = '/placeholder.svg';
