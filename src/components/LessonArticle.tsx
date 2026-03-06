@@ -54,56 +54,67 @@ export function LessonArticle({
 
       {/* Article Body */}
       <div className="prose prose-lg max-w-none">
-        {paragraphs.map((paragraph, index) => <div key={index}>
+        {paragraphs.map((paragraph, index) => (
+          <div key={index}>
             <p className="text-muted-foreground leading-relaxed text-lg mb-6">
               {paragraph}
             </p>
             
-            {/* Insert image after first paragraph */}
-            {index === 0 && images.length > 0 && <figure className="my-8">
+            {/* Insert image after corresponding paragraph */}
+            {images[index] && (
+              <figure className="my-8">
                 <div className="rounded-2xl overflow-hidden shadow-elevated border border-border bg-muted">
-                  <img src={images[0].image_url} alt={images[0].caption || 'Шаг 1'} className="w-full h-auto object-contain" loading="lazy" referrerPolicy="no-referrer" onError={(e) => {
-                    const target = e.currentTarget;
-                    target.onerror = null;
-                    target.src = '/placeholder.svg';
-                  }} />
-
+                  <img
+                    src={images[index].image_url}
+                    alt={images[index].caption || `Шаг ${index + 1}`}
+                    className="w-full h-auto object-contain"
+                    loading="lazy"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      target.onerror = null;
+                      target.src = '/placeholder.svg';
+                    }}
+                  />
                 </div>
-                {images[0].caption && <figcaption className="text-center text-sm text-muted-foreground mt-3 italic">
-                    {images[0].caption}
-                  </figcaption>}
-              </figure>}
-
-            {/* Show additional images distributed through content */}
-            {index > 0 && images[index] && <figure className="my-8">
-                <div className="rounded-2xl overflow-hidden shadow-elevated border border-border bg-muted">
-                  <img src={images[index].image_url} alt={images[index].caption || `Шаг ${index + 1}`} className="w-full h-auto object-contain" loading="lazy" referrerPolicy="no-referrer" onError={(e) => {
-              const target = e.currentTarget;
-              target.onerror = null;
-              target.src = '/placeholder.svg';
-            }} />
-                </div>
-                {images[index].caption && <figcaption className="text-center text-sm text-muted-foreground mt-3 italic">
+                {images[index].caption && (
+                  <figcaption className="text-center text-sm text-muted-foreground mt-3 italic">
                     {images[index].caption}
-                  </figcaption>}
-              </figure>}
-          </div>)}
+                  </figcaption>
+                )}
+              </figure>
+            )}
+          </div>
+        ))}
 
-        {/* Show remaining images at end if there are more than paragraphs */}
-        {images.length > paragraphs.length && <div className="space-y-8 mt-8">
-            {images.slice(paragraphs.length).map((img, idx) => <figure key={img.id}>
+        {/* Show remaining images at end if there are more images than paragraphs */}
+        {images.length > paragraphs.length && (
+          <div className="space-y-8 mt-8">
+            {images.slice(paragraphs.length).map((img, idx) => (
+              <figure key={img.id}>
                 <div className="rounded-2xl overflow-hidden shadow-elevated border border-border bg-muted">
-                  <img src={img.image_url} alt={img.caption || `Шаг ${paragraphs.length + idx + 1}`} className="w-full h-auto object-contain" loading="lazy" referrerPolicy="no-referrer" onError={(e) => {
-              const target = e.currentTarget;
-              target.onerror = null;
-              target.src = '/placeholder.svg';
-            }} />
+                  <img
+                    src={img.image_url}
+                    alt={img.caption || `Шаг ${paragraphs.length + idx + 1}`}
+                    className="w-full h-auto object-contain"
+                    loading="lazy"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      target.onerror = null;
+                      target.src = '/placeholder.svg';
+                    }}
+                  />
                 </div>
-                {img.caption && <figcaption className="text-center text-sm text-muted-foreground mt-3 italic">
+                {img.caption && (
+                  <figcaption className="text-center text-sm text-muted-foreground mt-3 italic">
                     {img.caption}
-                  </figcaption>}
-              </figure>)}
-          </div>}
+                  </figcaption>
+                )}
+              </figure>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Complete Button */}
