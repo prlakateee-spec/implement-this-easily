@@ -45,10 +45,10 @@ export function AuthScreen({ onLogin, onRegister }: AuthScreenProps) {
               <Star className="w-8 h-8 text-primary-foreground" />
             </div>
             <h1 className="text-3xl font-bold text-primary-foreground mb-1 tracking-tight">
-              China Club
+              Китай для НОВЫХ
             </h1>
             <p className="text-primary-foreground/80 text-sm">
-              Закрытое сообщество байеров
+              Закрытое сообщество для закупок из Китая для жителей новых регионов России
             </p>
           </div>
         </div>
