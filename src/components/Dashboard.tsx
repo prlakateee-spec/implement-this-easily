@@ -40,7 +40,7 @@ export function Dashboard({
         <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center shadow-glow">
           <Star className="w-5 h-5 text-primary-foreground" />
         </div>
-        <span className="font-bold text-xl text-foreground">China Club</span>
+        <span className="font-bold text-xl text-foreground">Китай для НОВЫХ</span>
       </button>
 
       {/* Navigation */}
@@ -93,7 +93,7 @@ export function Dashboard({
         <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center">
           <Star className="w-4 h-4 text-primary-foreground" />
         </div>
-        <span className="font-bold text-foreground">China Club</span>
+        <span className="font-bold text-foreground">Китай для НОВЫХ</span>
       </div>
       <button
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
