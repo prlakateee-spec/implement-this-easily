@@ -17,9 +17,10 @@ import { LessonArticle } from './LessonArticle';
 interface KnowledgeBaseProps {
   completedModules: string[];
   onToggleModule: (moduleId: string) => void;
+  userEmail: string;
 }
 
-export function KnowledgeBase({ completedModules, onToggleModule }: KnowledgeBaseProps) {
+export function KnowledgeBase({ completedModules, onToggleModule, userEmail }: KnowledgeBaseProps) {
   const [activeCourse, setActiveCourse] = useState<Course | null>(null);
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
