@@ -18,7 +18,7 @@ const Index = () => {
 
   // Not logged in - show auth screen
   if (!user) {
-    return <AuthScreen onLogin={login} onRegister={register} />;
+    return <AuthScreen onLogin={login} />;
   }
 
   // Logged in - show dashboard
