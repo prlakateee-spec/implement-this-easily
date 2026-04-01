@@ -127,7 +127,7 @@ export const COURSES: Course[] = [
 export const TOTAL_MODULES = COURSES.reduce((acc, course) => acc + course.modules.length, 0);
 
 // Courses available to all users
-export const OPEN_COURSES = ['alipay', '1688'];
+export const OPEN_COURSES = ['alipay', 'taobao'];
 
 // Admin email with full access
 export const ADMIN_EMAIL = 'terra.ai.studio@yandex.ru';
