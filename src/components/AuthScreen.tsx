@@ -49,45 +49,7 @@ export function AuthScreen({ onLogin, onRegister }: AuthScreenProps) {
 
         {/* Form Container */}
         <div className="p-8">
-          {/* Toggle Switches */}
-          <div className="flex bg-muted p-1 rounded-xl mb-8 relative">
-            <button
-              onClick={() => setIsRegistering(false)}
-              className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all z-10 ${
-                !isRegistering
-                  ? 'bg-card text-foreground shadow-soft'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Вход
-            </button>
-            <button
-              onClick={() => setIsRegistering(true)}
-              className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all z-10 ${
-                isRegistering
-                  ? 'bg-card text-foreground shadow-soft'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Регистрация
-            </button>
-          </div>
-
           <form onSubmit={handleSubmit} className="space-y-4">
-            {isRegistering && (
-              <div className="relative group animate-fade-in">
-                <User className="absolute left-4 top-3.5 text-muted-foreground group-focus-within:text-primary transition-colors" size={20} />
-                <Input
-                  type="text"
-                  placeholder="Ваше имя"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="pl-12 py-6 rounded-xl border-input focus:border-primary focus:ring-2 focus:ring-primary/20 bg-muted/50 focus:bg-card"
-                  required
-                />
-              </div>
-            )}
-
             <div className="relative group">
               <Mail className="absolute left-4 top-3.5 text-muted-foreground group-focus-within:text-primary transition-colors" size={20} />
               <Input
