@@ -20,11 +20,7 @@ export function AuthScreen({ onLogin, onRegister }: AuthScreenProps) {
     setLoading(true);
 
     try {
-      if (isRegistering) {
-        await onRegister(formData.name, formData.email, formData.password);
-      } else {
-        await onLogin(formData.email, formData.password);
-      }
+      await onLogin(formData.email, formData.password);
     } finally {
       setLoading(false);
     }
