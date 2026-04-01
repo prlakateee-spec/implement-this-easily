@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Star, User, Mail, Key, ArrowRight } from 'lucide-react';
+import { Star, Mail, Key, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
