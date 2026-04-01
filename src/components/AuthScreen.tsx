@@ -83,20 +83,11 @@ export function AuthScreen({ onLogin, onRegister }: AuthScreenProps) {
                 <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary-foreground border-t-transparent" />
               ) : (
                 <>
-                  {isRegistering ? 'Создать аккаунт' : 'Войти в кабинет'}
+                  Войти в кабинет
                   <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                 </>
               )}
             </Button>
-
-            {!isRegistering && (
-              <button
-                type="button"
-                className="w-full text-center text-sm text-muted-foreground hover:text-primary transition-colors mt-4"
-              >
-                Забыли пароль?
-              </button>
-            )}
           </form>
         </div>
       </div>
