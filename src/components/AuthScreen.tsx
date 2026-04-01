@@ -9,10 +9,8 @@ interface AuthScreenProps {
 }
 
 export function AuthScreen({ onLogin, onRegister }: AuthScreenProps) {
-  const [isRegistering, setIsRegistering] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
     email: '',
     password: '',
   });
