@@ -9,16 +9,18 @@ import {
   LayoutGrid,
   List
 } from 'lucide-react';
-import { COURSES, Course } from '@/lib/data';
+import { COURSES, Course, isCourseAccessible } from '@/lib/data';
+import { Lock } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { type Lesson, type LessonImage } from '@/lib/lessonApi';
 import { LessonArticle } from './LessonArticle';
 interface KnowledgeBaseProps {
   completedModules: string[];
   onToggleModule: (moduleId: string) => void;
+  userEmail: string;
 }
 
-export function KnowledgeBase({ completedModules, onToggleModule }: KnowledgeBaseProps) {
+export function KnowledgeBase({ completedModules, onToggleModule, userEmail }: KnowledgeBaseProps) {
   const [activeCourse, setActiveCourse] = useState<Course | null>(null);
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -246,14 +248,25 @@ export function KnowledgeBase({ completedModules, onToggleModule }: KnowledgeBas
           ).length;
           const totalModules = course.modules.length;
           const courseProgress = Math.round((completedCount / totalModules) * 100);
+          const isAccessible = isCourseAccessible(course.id, userEmail);
 
           if (viewMode === 'grid') {
             return (
               <button
                 key={course.id}
-                onClick={() => setActiveCourse(course)}
-                className="bg-card rounded-2xl p-6 shadow-soft border border-border hover:shadow-elevated hover:border-primary/20 transition-all text-left group flex flex-col"
+                onClick={() => isAccessible && setActiveCourse(course)}
+                className={`bg-card rounded-2xl p-6 shadow-soft border border-border transition-all text-left group flex flex-col relative ${
+                  isAccessible 
+                    ? 'hover:shadow-elevated hover:border-primary/20 cursor-pointer' 
+                    : 'opacity-60 cursor-not-allowed'
+                }`}
               >
+                {!isAccessible && (
+                  <div className="absolute inset-0 bg-background/50 backdrop-blur-[2px] rounded-2xl flex flex-col items-center justify-center z-10">
+                    <Lock size={32} className="text-muted-foreground mb-2" />
+                    <span className="text-sm font-medium text-muted-foreground">Скоро откроется</span>
+                  </div>
+                )}
                 <div className="w-14 h-14 gradient-primary rounded-2xl flex items-center justify-center text-2xl shadow-glow mb-4">
                   {course.emoji}
                 </div>
@@ -264,7 +277,6 @@ export function KnowledgeBase({ completedModules, onToggleModule }: KnowledgeBas
                   {course.description}
                 </p>
                 
-                {/* Progress bar */}
                 <div className="flex items-center gap-3">
                   <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                     <div 
@@ -283,9 +295,19 @@ export function KnowledgeBase({ completedModules, onToggleModule }: KnowledgeBas
           return (
             <button
               key={course.id}
-              onClick={() => setActiveCourse(course)}
-              className="bg-card rounded-2xl p-6 shadow-soft border border-border hover:shadow-elevated hover:border-primary/20 transition-all text-left group"
+              onClick={() => isAccessible && setActiveCourse(course)}
+              className={`bg-card rounded-2xl p-6 shadow-soft border border-border transition-all text-left group relative ${
+                isAccessible
+                  ? 'hover:shadow-elevated hover:border-primary/20 cursor-pointer'
+                  : 'opacity-60 cursor-not-allowed'
+              }`}
             >
+              {!isAccessible && (
+                <div className="absolute inset-0 bg-background/50 backdrop-blur-[2px] rounded-2xl flex items-center justify-center z-10">
+                  <Lock size={28} className="text-muted-foreground mr-2" />
+                  <span className="text-sm font-medium text-muted-foreground">Скоро откроется</span>
+                </div>
+              )}
               <div className="flex items-start gap-4">
                 <div className="w-14 h-14 gradient-primary rounded-2xl flex items-center justify-center text-2xl shadow-glow shrink-0">
                   {course.emoji}
@@ -301,7 +323,6 @@ export function KnowledgeBase({ completedModules, onToggleModule }: KnowledgeBas
                     {course.description}
                   </p>
                   
-                  {/* Progress bar */}
                   <div className="flex items-center gap-3">
                     <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                       <div 

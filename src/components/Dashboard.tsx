@@ -211,6 +211,7 @@ export function Dashboard({
           <KnowledgeBase
             completedModules={completedModules}
             onToggleModule={onToggleModule}
+            userEmail={user.email}
           />
         )}
       </div>
