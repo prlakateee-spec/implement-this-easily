@@ -295,9 +295,19 @@ export function KnowledgeBase({ completedModules, onToggleModule, userEmail }: K
           return (
             <button
               key={course.id}
-              onClick={() => setActiveCourse(course)}
-              className="bg-card rounded-2xl p-6 shadow-soft border border-border hover:shadow-elevated hover:border-primary/20 transition-all text-left group"
+              onClick={() => isAccessible && setActiveCourse(course)}
+              className={`bg-card rounded-2xl p-6 shadow-soft border border-border transition-all text-left group relative ${
+                isAccessible
+                  ? 'hover:shadow-elevated hover:border-primary/20 cursor-pointer'
+                  : 'opacity-60 cursor-not-allowed'
+              }`}
             >
+              {!isAccessible && (
+                <div className="absolute inset-0 bg-background/50 backdrop-blur-[2px] rounded-2xl flex items-center justify-center z-10">
+                  <Lock size={28} className="text-muted-foreground mr-2" />
+                  <span className="text-sm font-medium text-muted-foreground">Скоро откроется</span>
+                </div>
+              )}
               <div className="flex items-start gap-4">
                 <div className="w-14 h-14 gradient-primary rounded-2xl flex items-center justify-center text-2xl shadow-glow shrink-0">
                   {course.emoji}
@@ -313,7 +323,6 @@ export function KnowledgeBase({ completedModules, onToggleModule, userEmail }: K
                     {course.description}
                   </p>
                   
-                  {/* Progress bar */}
                   <div className="flex items-center gap-3">
                     <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                       <div 
