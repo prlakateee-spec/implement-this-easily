@@ -9,7 +9,7 @@ import {
   LayoutGrid,
   List
 } from 'lucide-react';
-import { COURSES, Course, isCourseAccessible } from '@/lib/data';
+import { COURSES, Course, isCourseAccessible, getCourseLockMessage } from '@/lib/data';
 import { Lock } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { type Lesson, type LessonImage } from '@/lib/lessonApi';
