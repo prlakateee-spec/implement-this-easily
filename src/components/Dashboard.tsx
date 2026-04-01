@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Layout, 
   BookOpen, 
@@ -7,11 +7,13 @@ import {
   Star, 
   Menu, 
   X,
-  Trophy
+  Trophy,
+  Settings
 } from 'lucide-react';
 import { User } from '@/hooks/useAuth';
 import { ProgressRing } from './ProgressRing';
 import { KnowledgeBase } from './KnowledgeBase';
+import { SettingsPage } from './SettingsPage';
 import { ACHIEVEMENTS, TOTAL_MODULES } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 
@@ -23,6 +25,12 @@ interface DashboardProps {
   onToggleModule: (moduleId: string) => void;
 }
 
+function getUserLevel(registeredAt?: string): number {
+  if (!registeredAt) return 1;
+  const months = Math.floor((Date.now() - new Date(registeredAt).getTime()) / (1000 * 60 * 60 * 24 * 30));
+  return Math.max(1, months + 1);
+}
+
 export function Dashboard({ 
   user, 
   onLogout, 
@@ -30,12 +38,30 @@ export function Dashboard({
   progressPercentage,
   onToggleModule 
 }: DashboardProps) {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'knowledge'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'knowledge' | 'settings'>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Display name from localStorage
+  const [displayName, setDisplayName] = useState(() => {
+    const saved = localStorage.getItem('china-club-display-name');
+    return saved || user.name;
+  });
+
+  const userLevel = getUserLevel(user.registeredAt);
+
+  const handleSaveName = (name: string) => {
+    setDisplayName(name);
+    localStorage.setItem('china-club-display-name', name);
+  };
+
+  const navItems = [
+    { id: 'dashboard' as const, icon: Layout, label: 'Главная' },
+    { id: 'knowledge' as const, icon: BookOpen, label: 'База знаний' },
+    { id: 'settings' as const, icon: Settings, label: 'Настройки' },
+  ];
 
   const Sidebar = () => (
     <div className="hidden lg:flex flex-col w-72 bg-card border-r border-border p-6 h-screen sticky top-0">
-      {/* Logo */}
       <button onClick={() => setActiveTab('dashboard')} className="flex items-center gap-3 mb-10">
         <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center shadow-glow">
           <Star className="w-5 h-5 text-primary-foreground" />
@@ -43,39 +69,28 @@ export function Dashboard({
         <span className="font-bold text-xl text-foreground">Китай для НОВЫХ</span>
       </button>
 
-      {/* Navigation */}
       <nav className="space-y-2 flex-1">
-        <button
-          onClick={() => setActiveTab('dashboard')}
-          className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
-            activeTab === 'dashboard'
-              ? 'bg-secondary text-secondary-foreground'
-              : 'text-muted-foreground hover:bg-muted'
-          }`}
-        >
-          <Layout size={20} />
-          Главная
-        </button>
-        <button
-          onClick={() => setActiveTab('knowledge')}
-          className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
-            activeTab === 'knowledge'
-              ? 'bg-secondary text-secondary-foreground'
-              : 'text-muted-foreground hover:bg-muted'
-          }`}
-        >
-          <BookOpen size={20} />
-          База знаний
-        </button>
+        {navItems.map(item => (
+          <button
+            key={item.id}
+            onClick={() => setActiveTab(item.id)}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+              activeTab === item.id
+                ? 'bg-secondary text-secondary-foreground'
+                : 'text-muted-foreground hover:bg-muted'
+            }`}
+          >
+            <item.icon size={20} />
+            {item.label}
+          </button>
+        ))}
       </nav>
 
-      {/* Tariff Card */}
       <div className="bg-muted rounded-2xl p-4 mb-4">
-        <p className="text-xs text-muted-foreground mb-1">Твой тариф</p>
-        <p className="font-bold text-foreground">Pro Importer 🚀</p>
+        <p className="text-xs text-muted-foreground mb-1">Твой уровень</p>
+        <p className="font-bold text-foreground">Уровень {userLevel} 🚀</p>
       </div>
 
-      {/* Logout */}
       <Button 
         variant="ghost" 
         onClick={onLogout}
@@ -95,33 +110,26 @@ export function Dashboard({
         </div>
         <span className="font-bold text-foreground">Китай для НОВЫХ</span>
       </div>
-      <button
-        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        className="p-2 bg-muted rounded-lg"
-      >
+      <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2 bg-muted rounded-lg">
         {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
     </div>
   );
 
   const MobileMenu = () => (
-    mobileMenuOpen && (
+    mobileMenuOpen ? (
       <div className="lg:hidden fixed inset-0 z-40 bg-background/95 backdrop-blur-sm pt-20 p-6 animate-fade-in">
         <div className="space-y-4">
-          <button
-            onClick={() => { setActiveTab('dashboard'); setMobileMenuOpen(false); }}
-            className="w-full flex items-center gap-3 p-4 bg-muted rounded-2xl font-bold text-lg"
-          >
-            <Layout size={24} />
-            Главная
-          </button>
-          <button
-            onClick={() => { setActiveTab('knowledge'); setMobileMenuOpen(false); }}
-            className="w-full flex items-center gap-3 p-4 bg-muted rounded-2xl font-bold text-lg"
-          >
-            <BookOpen size={24} />
-            Обучение
-          </button>
+          {navItems.map(item => (
+            <button
+              key={item.id}
+              onClick={() => { setActiveTab(item.id); setMobileMenuOpen(false); }}
+              className="w-full flex items-center gap-3 p-4 bg-muted rounded-2xl font-bold text-lg"
+            >
+              <item.icon size={24} />
+              {item.label}
+            </button>
+          ))}
           <button
             onClick={onLogout}
             className="w-full flex items-center gap-3 p-4 bg-destructive/10 text-destructive rounded-2xl font-bold text-lg"
@@ -131,17 +139,16 @@ export function Dashboard({
           </button>
         </div>
       </div>
-    )
+    ) : null
   );
 
   const DashboardContent = () => (
     <div className="p-6 lg:p-10 space-y-8 animate-fade-in-up">
-      {/* Welcome Hero */}
       <div className="gradient-primary rounded-3xl p-8 lg:p-10 text-primary-foreground relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.4)_0%,transparent_50%)]" />
         <div className="relative z-10">
           <h1 className="text-3xl lg:text-4xl font-bold mb-2">
-            Привет, {user.name}! 🚀
+            Привет, {displayName}! 🚀
           </h1>
           <p className="text-primary-foreground/80 mb-6 max-w-md">
             Продолжай обучение и стань настоящим профи в импорте из Китая
@@ -156,11 +163,17 @@ export function Dashboard({
         </div>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid md:grid-cols-2 gap-6">
-        {/* Progress Card */}
         <div className="bg-card rounded-2xl p-6 shadow-soft border border-border">
-          <h2 className="text-lg font-bold text-foreground mb-6">Общий прогресс</h2>
+          <h2 className="text-lg font-bold text-foreground mb-2">Общий прогресс</h2>
+          <div className="flex items-center gap-3 mb-4">
+            <span className="text-sm font-medium text-primary bg-primary/10 px-3 py-1 rounded-full">
+              Уровень {userLevel}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              1 уровень = 1 месяц в клубе
+            </span>
+          </div>
           <div className="flex items-center justify-center">
             <ProgressRing radius={80} stroke={10} progress={progressPercentage} />
           </div>
@@ -169,7 +182,6 @@ export function Dashboard({
           </p>
         </div>
 
-        {/* Achievements Card */}
         <div className="bg-card rounded-2xl p-6 shadow-soft border border-border">
           <div className="flex items-center gap-2 mb-6">
             <Trophy className="text-warning" size={20} />
@@ -213,6 +225,9 @@ export function Dashboard({
             onToggleModule={onToggleModule}
             userEmail={user.email}
           />
+        )}
+        {activeTab === 'settings' && (
+          <SettingsPage userName={displayName} onSaveName={handleSaveName} />
         )}
       </div>
     </div>

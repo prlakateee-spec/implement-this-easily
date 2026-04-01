@@ -6,6 +6,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  registeredAt?: string;
 }
 
 export function useAuth() {
