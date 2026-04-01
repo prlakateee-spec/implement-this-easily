@@ -7,7 +7,7 @@ interface AuthScreenProps {
   onLogin: (email: string, password: string) => Promise<boolean>;
 }
 
-export function AuthScreen({ onLogin, onRegister }: AuthScreenProps) {
+export function AuthScreen({ onLogin }: AuthScreenProps) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
