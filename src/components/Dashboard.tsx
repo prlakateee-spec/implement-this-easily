@@ -57,7 +57,7 @@ export function Dashboard({
   const navItems = [
     { id: 'dashboard' as const, icon: Layout, label: 'Главная' },
     { id: 'knowledge' as const, icon: BookOpen, label: 'База знаний' },
-    { id: 'settings' as const, icon: Settings, label: 'Настройки' },
+    { id: 'settings' as const, icon: Settings, label: 'Личный кабинет' },
   ];
 
   const Sidebar = () => (
