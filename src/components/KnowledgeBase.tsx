@@ -305,7 +305,7 @@ export function KnowledgeBase({ completedModules, onToggleModule, userEmail }: K
               {!isAccessible && (
                 <div className="absolute inset-0 bg-background/50 backdrop-blur-[2px] rounded-2xl flex items-center justify-center z-10">
                   <Lock size={28} className="text-muted-foreground mr-2" />
-                  <span className="text-sm font-medium text-muted-foreground">Скоро откроется</span>
+                  <span className="text-sm font-medium text-muted-foreground">Доступно со 2 уровня</span>
                 </div>
               )}
               <div className="flex items-start gap-4">
