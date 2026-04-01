@@ -33,6 +33,7 @@ export function useAuth() {
           id: crypto.randomUUID(),
           name: email.split('@')[0],
           email,
+          registeredAt: new Date().toISOString(),
         };
         setUser(mockUser);
         localStorage.setItem(AUTH_KEY, JSON.stringify(mockUser));
