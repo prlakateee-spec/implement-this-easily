@@ -6,6 +6,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  registeredAt?: string;
 }
 
 export function useAuth() {
@@ -32,6 +33,7 @@ export function useAuth() {
           id: crypto.randomUUID(),
           name: email.split('@')[0],
           email,
+          registeredAt: new Date().toISOString(),
         };
         setUser(mockUser);
         localStorage.setItem(AUTH_KEY, JSON.stringify(mockUser));
