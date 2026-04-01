@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 
 interface AuthScreenProps {
   onLogin: (email: string, password: string) => Promise<boolean>;
-  onRegister: (name: string, email: string, password: string) => Promise<boolean>;
 }
 
 export function AuthScreen({ onLogin, onRegister }: AuthScreenProps) {
