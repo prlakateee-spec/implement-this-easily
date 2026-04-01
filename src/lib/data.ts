@@ -111,29 +111,32 @@ export const COURSES: Course[] = [
       { id: 'wechat-change-password', title: 'Изменение платежного пароля', duration: '5 мин', type: 'text' },
     ],
   },
-  {
-    id: 'contacts',
-    title: 'Полезные контакты',
-    description: 'База проверенных агентов, карго и сервисов.',
-    emoji: '📇',
-    modules: [
-      { id: 'contacts-agents', title: 'Агенты и посредники', duration: '12 мин', type: 'text' },
-      { id: 'contacts-cargo', title: 'Карго-компании', duration: '10 мин', type: 'text' },
-      { id: 'contacts-services', title: 'Полезные сервисы', duration: '8 мин', type: 'tool' },
-    ],
-  },
 ];
 
 export const TOTAL_MODULES = COURSES.reduce((acc, course) => acc + course.modules.length, 0);
 
-// Courses available to all users
+// Courses available to all users (level 1)
 export const OPEN_COURSES = ['alipay', 'taobao'];
 
 // Admin email with full access
 export const ADMIN_EMAIL = 'terra.ai.studio@yandex.ru';
 
+// Course access levels
+export const COURSE_LEVELS: Record<string, number> = {
+  'alipay': 1,
+  'taobao': 1,
+  'pinduoduo': 2,
+  '1688': 3,
+  'wechat': 4,
+};
+
 export function isCourseAccessible(courseId: string, userEmail: string): boolean {
   return OPEN_COURSES.includes(courseId) || userEmail === ADMIN_EMAIL;
+}
+
+export function getCourseLockMessage(courseId: string): string {
+  const level = COURSE_LEVELS[courseId] || 2;
+  return `Доступно с ${level} уровня`;
 }
 
 export interface Achievement {
