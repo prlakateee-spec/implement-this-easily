@@ -14,6 +14,12 @@ interface UserProfile {
   created_at: string | null;
 }
 
+interface CreatedUser {
+  username: string;
+  password: string;
+  display_name: string;
+}
+
 export function AdminPanel() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -22,6 +28,7 @@ export function AdminPanel() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [createdUser, setCreatedUser] = useState<CreatedUser | null>(null);
   const [form, setForm] = useState({ username: '', password: '', display_name: '' });
 
   const loadUsers = async () => {
