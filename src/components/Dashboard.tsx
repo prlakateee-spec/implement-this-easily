@@ -244,6 +244,7 @@ export function Dashboard({
         {activeTab === 'settings' && (
           <SettingsPage userName={displayName} onSaveName={handleSaveName} userId={user.id} />
         )}
+        {activeTab === 'admin' && isAdmin && <AdminPanel />}
       </div>
     </div>
   );
