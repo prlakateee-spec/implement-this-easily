@@ -10,13 +10,15 @@ import {
   User as UserIcon,
   Sun,
   Moon,
-  Link2
+  Link2,
+  Shield
 } from 'lucide-react';
 import { User } from '@/hooks/useAuth';
 import { ProgressRing } from './ProgressRing';
 import { KnowledgeBase } from './KnowledgeBase';
 import { SettingsPage } from './SettingsPage';
-import { TOTAL_MODULES } from '@/lib/data';
+import { AdminPanel } from './AdminPanel';
+import { TOTAL_MODULES, ADMIN_EMAIL } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { useTheme } from './ThemeProvider';
 
