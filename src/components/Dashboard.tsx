@@ -61,10 +61,13 @@ export function Dashboard({
       .eq('user_id', user.id);
   };
 
+  const isAdmin = user.email === ADMIN_EMAIL || user.email === 'terra_ai_team@kitay.club';
+
   const navItems = [
     { id: 'dashboard' as const, icon: Layout, label: 'Главная' },
     { id: 'knowledge' as const, icon: BookOpen, label: 'База знаний' },
     { id: 'settings' as const, icon: UserIcon, label: 'Личный кабинет' },
+    ...(isAdmin ? [{ id: 'admin' as const, icon: Shield, label: 'Пользователи' }] : []),
   ];
 
   const ThemeToggle = () => (
