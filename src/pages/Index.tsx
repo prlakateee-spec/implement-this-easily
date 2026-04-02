@@ -4,10 +4,9 @@ import { AuthScreen } from '@/components/AuthScreen';
 import { Dashboard } from '@/components/Dashboard';
 
 const Index = () => {
-  const { user, isLoading: authLoading, login, register, logout } = useAuth();
+  const { user, isLoading: authLoading, login, logout } = useAuth();
   const { completedModules, toggleModule, progressPercentage, isLoaded } = useProgress();
 
-  // Loading state
   if (authLoading || !isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -16,12 +15,10 @@ const Index = () => {
     );
   }
 
-  // Not logged in - show auth screen
   if (!user) {
     return <AuthScreen onLogin={login} />;
   }
 
-  // Logged in - show dashboard
   return (
     <Dashboard
       user={user}

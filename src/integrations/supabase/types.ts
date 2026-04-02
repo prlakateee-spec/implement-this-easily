@@ -123,12 +123,48 @@ export type Database = {
           },
         ]
       }
+      user_profiles: {
+        Row: {
+          collections: Json | null
+          created_at: string | null
+          display_name: string | null
+          id: string
+          is_active: boolean
+          registered_at: string | null
+          updated_at: string | null
+          user_id: string | null
+          username: string
+        }
+        Insert: {
+          collections?: Json | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string
+          is_active?: boolean
+          registered_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          username: string
+        }
+        Update: {
+          collections?: Json | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string
+          is_active?: boolean
+          registered_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_user_active: { Args: { p_username: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

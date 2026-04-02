@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Save, Plus, X, Link2, FolderPlus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,20 +21,15 @@ const COLLECTION_EMOJIS = ['📁', '⭐', '🛒', '💡', '🔥', '💎', '🎯'
 interface SettingsPageProps {
   userName: string;
   onSaveName: (name: string) => void;
+  userId?: string;
 }
 
-export function SettingsPage({ userName, onSaveName }: SettingsPageProps) {
+export function SettingsPage({ userName, onSaveName, userId }: SettingsPageProps) {
   const [name, setName] = useState(userName);
   const [nameSaved, setNameSaved] = useState(false);
 
   // Bookmarks state
-  const [collections, setCollections] = useState<BookmarkCollection[]>(() => {
-    const saved = localStorage.getItem('china-club-bookmarks');
-    if (saved) {
-      try { return JSON.parse(saved); } catch { return []; }
-    }
-    return [];
-  });
+  const [collections, setCollections] = useState<BookmarkCollection[]>([]);
 
   const [newCollectionName, setNewCollectionName] = useState('');
   const [showNewCollection, setShowNewCollection] = useState(false);
@@ -42,9 +37,33 @@ export function SettingsPage({ userName, onSaveName }: SettingsPageProps) {
   const [newBookmarkTitle, setNewBookmarkTitle] = useState('');
   const [newBookmarkUrl, setNewBookmarkUrl] = useState('');
 
-  const saveCollections = (updated: BookmarkCollection[]) => {
+  // Load collections from DB
+  useEffect(() => {
+    if (!userId) return;
+    (async () => {
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data } = await supabase
+        .from('user_profiles')
+        .select('collections')
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (data?.collections) {
+        try {
+          setCollections(typeof data.collections === 'string' ? JSON.parse(data.collections) : data.collections);
+        } catch { setCollections([]); }
+      }
+    })();
+  }, [userId]);
+
+  const saveCollections = async (updated: BookmarkCollection[]) => {
     setCollections(updated);
-    localStorage.setItem('china-club-bookmarks', JSON.stringify(updated));
+    if (userId) {
+      const { supabase } = await import('@/integrations/supabase/client');
+      await supabase
+        .from('user_profiles')
+        .update({ collections: updated as any, updated_at: new Date().toISOString() })
+        .eq('user_id', userId);
+    }
   };
 
   const handleSaveName = () => {

@@ -45,16 +45,18 @@ export function Dashboard({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
-  const [displayName, setDisplayName] = useState(() => {
-    const saved = localStorage.getItem('china-club-display-name');
-    return saved || user.name;
-  });
+  const [displayName, setDisplayName] = useState(user.name);
 
   const userLevel = getUserLevel(user.registeredAt);
 
-  const handleSaveName = (name: string) => {
+  const handleSaveName = async (name: string) => {
     setDisplayName(name);
-    localStorage.setItem('china-club-display-name', name);
+    // Save to DB
+    const { supabase } = await import('@/integrations/supabase/client');
+    await supabase
+      .from('user_profiles')
+      .update({ display_name: name, updated_at: new Date().toISOString() })
+      .eq('user_id', user.id);
   };
 
   const navItems = [
@@ -235,7 +237,7 @@ export function Dashboard({
           />
         )}
         {activeTab === 'settings' && (
-          <SettingsPage userName={displayName} onSaveName={handleSaveName} />
+          <SettingsPage userName={displayName} onSaveName={handleSaveName} userId={user.id} />
         )}
       </div>
     </div>
