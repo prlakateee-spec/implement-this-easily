@@ -237,7 +237,7 @@ export function Dashboard({
           />
         )}
         {activeTab === 'settings' && (
-          <SettingsPage userName={displayName} onSaveName={handleSaveName} />
+          <SettingsPage userName={displayName} onSaveName={handleSaveName} userId={user.id} />
         )}
       </div>
     </div>
