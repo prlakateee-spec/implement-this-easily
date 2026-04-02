@@ -24,7 +24,6 @@ interface SettingsPageProps {
 }
 
 export function SettingsPage({ userName, onSaveName }: SettingsPageProps) {
-  const { theme, toggleTheme } = useTheme();
   const [name, setName] = useState(userName);
   const [nameSaved, setNameSaved] = useState(false);
 
