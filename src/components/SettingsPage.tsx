@@ -94,44 +94,20 @@ export function SettingsPage({ userName, onSaveName }: SettingsPageProps) {
     <div className="p-6 lg:p-10 space-y-8 animate-fade-in-up">
       <h1 className="text-3xl font-bold text-foreground">Личный кабинет</h1>
 
-      {/* Theme & Name Settings */}
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Name */}
-        <div className="bg-card rounded-2xl p-6 shadow-soft border border-border">
-          <h2 className="text-lg font-bold text-foreground mb-4">Твоё имя</h2>
-          <p className="text-sm text-muted-foreground mb-4">Так мы будем приветствовать тебя на главной</p>
-          <div className="flex gap-3">
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Введи своё имя"
-              className="flex-1"
-            />
-            <Button onClick={handleSaveName} className="gap-2">
-              <Save size={16} />
-              {nameSaved ? 'Сохранено ✓' : 'Сохранить'}
-            </Button>
-          </div>
-        </div>
-
-        {/* Theme */}
-        <div className="bg-card rounded-2xl p-6 shadow-soft border border-border">
-          <h2 className="text-lg font-bold text-foreground mb-4">Тема оформления</h2>
-          <p className="text-sm text-muted-foreground mb-4">Выбери удобную тему для работы</p>
-          <Button onClick={toggleTheme} variant="outline" className="gap-3 w-full justify-center text-base py-6">
-            {theme === 'light' ? (
-              <>
-                <Sun size={20} className="text-warning" />
-                Светлая тема
-                <span className="text-muted-foreground ml-2">→ Переключить на тёмную</span>
-              </>
-            ) : (
-              <>
-                <Moon size={20} className="text-primary" />
-                Тёмная тема
-                <span className="text-muted-foreground ml-2">→ Переключить на светлую</span>
-              </>
-            )}
+      {/* Name Settings */}
+      <div className="bg-card rounded-2xl p-6 shadow-soft border border-border">
+        <h2 className="text-lg font-bold text-foreground mb-4">Твоё имя</h2>
+        <p className="text-sm text-muted-foreground mb-4">Так мы будем приветствовать тебя на главной</p>
+        <div className="flex gap-3">
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Введи своё имя"
+            className="flex-1"
+          />
+          <Button onClick={handleSaveName} className="gap-2">
+            <Save size={16} />
+            {nameSaved ? 'Сохранено ✓' : 'Сохранить'}
           </Button>
         </div>
       </div>
