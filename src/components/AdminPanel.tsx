@@ -56,14 +56,16 @@ export function AdminPanel() {
     setCreatedUser(null);
 
     try {
+      const normalizedUsername = form.username.trim().toLowerCase();
+
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Не авторизован');
 
       const { data, error } = await supabase.functions.invoke('create-user', {
         body: {
-          username: form.username,
+          username: normalizedUsername,
           password: form.password,
-          display_name: form.display_name || form.username,
+          display_name: form.display_name || normalizedUsername,
         },
       });
 
@@ -71,11 +73,11 @@ export function AdminPanel() {
       if (data?.error) throw new Error(data.error);
 
       setCreatedUser({
-        username: form.username,
+        username: normalizedUsername,
         password: form.password,
-        display_name: form.display_name || form.username,
+        display_name: form.display_name || normalizedUsername,
       });
-      setSuccess(`Пользователь "${form.username}" создан!`);
+      setSuccess(`Пользователь "${normalizedUsername}" создан!`);
       setForm({ username: '', password: '', display_name: '' });
       await loadUsers();
     } catch (err: any) {
@@ -168,6 +170,9 @@ export function AdminPanel() {
                 value={form.username}
                 onChange={(e) => setForm({ ...form, username: e.target.value })}
                 placeholder="username"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
                 required
                 className="bg-muted/50"
               />
