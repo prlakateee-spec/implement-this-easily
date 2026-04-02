@@ -53,6 +53,7 @@ export function AdminPanel() {
     setCreating(true);
     setError('');
     setSuccess('');
+    setCreatedUser(null);
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
