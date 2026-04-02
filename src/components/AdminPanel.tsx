@@ -30,6 +30,8 @@ export function AdminPanel() {
   const [showPassword, setShowPassword] = useState(false);
   const [createdUser, setCreatedUser] = useState<CreatedUser | null>(null);
   const [form, setForm] = useState({ username: '', password: '', display_name: '' });
+  const [resetForm, setResetForm] = useState<{ username: string; password: string } | null>(null);
+  const [resetting, setResetting] = useState(false);
 
   const loadUsers = async () => {
     setLoading(true);
