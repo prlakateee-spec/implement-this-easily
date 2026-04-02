@@ -28,7 +28,8 @@ Deno.serve(async (req) => {
       authHeader.replace("Bearer ", "")
     );
 
-    if (!caller || caller.email !== "terra.ai.studio@yandex.ru") {
+    const adminEmails = ["terra.ai.studio@yandex.ru", "terra_ai_team@kitay.club"];
+    if (!caller || !adminEmails.includes(caller.email || "")) {
       return new Response(JSON.stringify({ error: "Admin only" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
