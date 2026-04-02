@@ -33,19 +33,30 @@ export function AdminPanel() {
 
   const loadUsers = async () => {
     setLoading(true);
-    // Admin can see all profiles via edge function or direct query
+    setError('');
+
+    // Wait for session to be ready before querying
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      setError('Сессия не готова. Попробуйте обновить страницу.');
+      setLoading(false);
+      return;
+    }
+
     const { data, error } = await supabase
       .from('user_profiles')
       .select('*')
       .order('created_at', { ascending: false });
 
     if (data) setUsers(data as UserProfile[]);
-    if (error) setError(error.message);
+    if (error) setError(`Ошибка загрузки: ${error.message}`);
     setLoading(false);
   };
 
   useEffect(() => {
-    loadUsers();
+    // Small delay to ensure auth session is restored
+    const timer = setTimeout(() => loadUsers(), 300);
+    return () => clearTimeout(timer);
   }, []);
 
   const createUser = async (e: React.FormEvent) => {
