@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { UserPlus, UserX, UserCheck, RefreshCw, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { UserPlus, UserX, UserCheck, RefreshCw, Eye, EyeOff, AlertCircle, KeyRound } from 'lucide-react';
 
 interface UserProfile {
   id: string;
