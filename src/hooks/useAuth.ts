@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 const AUTH_KEY = 'china-club-user';
-const SESSION_CACHE_KEY = 'china-club-session-cache';
 
 export interface User {
   id: string;
@@ -10,6 +9,35 @@ export interface User {
   email: string;
   username: string;
   registeredAt?: string;
+}
+
+function loadProfileAndSetUser(
+  userId: string,
+  email: string,
+  setUser: (u: User | null) => void
+) {
+  supabase
+    .from('user_profiles')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle()
+    .then(({ data: profile }) => {
+      if (profile && profile.is_active) {
+        const appUser: User = {
+          id: userId,
+          name: profile.display_name || profile.username,
+          email,
+          username: profile.username,
+          registeredAt: profile.registered_at || undefined,
+        };
+        setUser(appUser);
+        localStorage.setItem(AUTH_KEY, JSON.stringify(appUser));
+      } else if (profile && !profile.is_active) {
+        supabase.auth.signOut();
+        setUser(null);
+        localStorage.removeItem(AUTH_KEY);
+      }
+    });
 }
 
 export function useAuth() {
@@ -21,81 +49,38 @@ export function useAuth() {
       return null;
     }
   });
-  // If no cached user, show login immediately (don't wait for server)
-  const [isLoading, setIsLoading] = useState(() => {
-    return !!localStorage.getItem(AUTH_KEY);
-  });
+  const [isLoading, setIsLoading] = useState(() => !!localStorage.getItem(AUTH_KEY));
 
-  // Restore session on mount
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (session?.user) {
-          // Load profile
-          const { data: profile } = await supabase
-            .from('user_profiles')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .maybeSingle();
-
-          if (profile && profile.is_active) {
-            const appUser: User = {
-              id: session.user.id,
-              name: profile.display_name || profile.username,
-              email: session.user.email || '',
-              username: profile.username,
-              registeredAt: profile.registered_at || undefined,
-            };
-            setUser(appUser);
-            localStorage.setItem(AUTH_KEY, JSON.stringify(appUser));
-          } else if (profile && !profile.is_active) {
-            // Account deactivated
-            await supabase.auth.signOut();
-            setUser(null);
-            localStorage.removeItem(AUTH_KEY);
-          }
-        } else {
+      (event, session) => {
+        if (event === 'SIGNED_OUT' || !session?.user) {
           setUser(null);
           localStorage.removeItem(AUTH_KEY);
+          setIsLoading(false);
+          return;
         }
+
+        // SIGNED_IN or TOKEN_REFRESHED — fire and forget, no await
+        loadProfileAndSetUser(session.user.id, session.user.email || '', setUser);
         setIsLoading(false);
       }
     );
 
-    // Check existing session with timeout
-    const sessionPromise = supabase.auth.getSession().then(async ({ data: { session } }) => {
+    // Initial session check
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .maybeSingle();
-
-        if (profile && profile.is_active) {
-          const appUser: User = {
-            id: session.user.id,
-            name: profile.display_name || profile.username,
-            email: session.user.email || '',
-            username: profile.username,
-            registeredAt: profile.registered_at || undefined,
-          };
-          setUser(appUser);
-          localStorage.setItem(AUTH_KEY, JSON.stringify(appUser));
-        } else if (profile && !profile.is_active) {
-          await supabase.auth.signOut();
-        }
+        loadProfileAndSetUser(session.user.id, session.user.email || '', setUser);
       }
       setIsLoading(false);
     });
 
-    // Timeout: if session check takes too long, stop loading
-    const timeout = setTimeout(() => {
-      setIsLoading(false);
-    }, 5000);
+    const timeout = setTimeout(() => setIsLoading(false), 5000);
 
-    sessionPromise.finally(() => clearTimeout(timeout));
-
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {
@@ -106,9 +91,7 @@ export function useAuth() {
       password,
     });
 
-    if (error) {
-      throw new Error('Неверный логин или пароль');
-    }
+    if (error) throw new Error('Неверный логин или пароль');
 
     const { data: profile } = await supabase
       .from('user_profiles')
@@ -129,16 +112,12 @@ export function useAuth() {
     return true;
   };
 
-  const logout = async () => {
-    await supabase.auth.signOut();
+  const logout = useCallback(async () => {
+    // Clear UI first, then sign out
     setUser(null);
     localStorage.removeItem(AUTH_KEY);
-  };
+    await supabase.auth.signOut();
+  }, []);
 
-  return {
-    user,
-    isLoading,
-    login,
-    logout,
-  };
+  return { user, isLoading, login, logout };
 }
