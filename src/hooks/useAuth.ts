@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 const AUTH_KEY = 'china-club-user';
+const SESSION_CACHE_KEY = 'china-club-session-cache';
 
 export interface User {
   id: string;
@@ -12,8 +13,17 @@ export interface User {
 }
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const cached = localStorage.getItem(AUTH_KEY);
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [isLoading, setIsLoading] = useState(() => {
+    return !localStorage.getItem(AUTH_KEY);
+  });
 
   // Restore session on mount
   useEffect(() => {
