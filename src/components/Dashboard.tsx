@@ -43,7 +43,7 @@ export function Dashboard({
   progressPercentage,
   onToggleModule 
 }: DashboardProps) {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'knowledge' | 'settings'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'knowledge' | 'settings' | 'admin'>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
