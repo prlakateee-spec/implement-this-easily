@@ -61,8 +61,8 @@ export function useAuth() {
       }
     );
 
-    // Check existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    // Check existing session with timeout
+    const sessionPromise = supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         const { data: profile } = await supabase
           .from('user_profiles')
@@ -86,6 +86,13 @@ export function useAuth() {
       }
       setIsLoading(false);
     });
+
+    // Timeout: if session check takes too long, stop loading
+    const timeout = setTimeout(() => {
+      setIsLoading(false);
+    }, 5000);
+
+    sessionPromise.finally(() => clearTimeout(timeout));
 
     return () => subscription.unsubscribe();
   }, []);
