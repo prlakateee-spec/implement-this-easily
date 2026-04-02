@@ -15,24 +15,18 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // Check for admin auth via Bearer token
-    const authHeader = req.headers.get("Authorization");
+    // Check for admin auth via Bearer token or service role key
+    const authHeader = req.headers.get("Authorization") || "";
+    const token = authHeader.replace("Bearer ", "");
     let isAdmin = false;
 
-    if (authHeader) {
-      const { data: { user: caller } } = await supabase.auth.getUser(
-        authHeader.replace("Bearer ", "")
-      );
+    // Service role key as bearer token = admin
+    if (token === serviceKey) {
+      isAdmin = true;
+    } else if (token) {
+      const { data: { user: caller } } = await supabase.auth.getUser(token);
       const adminEmails = ["terra.ai.studio@yandex.ru", "terra_ai_team@kitay.club"];
       isAdmin = !!caller && adminEmails.includes(caller.email || "");
-    }
-
-    // Also allow internal calls with service role key
-    if (!isAdmin) {
-      const apikey = req.headers.get("apikey") || "";
-      if (apikey === serviceKey) {
-        isAdmin = true;
-      }
     }
 
     if (!isAdmin) {
