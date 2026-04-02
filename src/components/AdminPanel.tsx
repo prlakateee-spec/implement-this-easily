@@ -130,6 +130,34 @@ export function AdminPanel() {
             ✅ {success}
           </div>
         )}
+        {createdUser && (
+          <div className="mb-4 p-4 bg-primary/5 border border-primary/20 rounded-xl space-y-2">
+            <p className="font-bold text-foreground text-sm">📋 Данные для входа:</p>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <span className="text-muted-foreground">Логин:</span>
+              <span className="font-mono font-bold text-foreground">{createdUser.username}</span>
+              <span className="text-muted-foreground">Пароль:</span>
+              <span className="font-mono font-bold text-foreground">{createdUser.password}</span>
+              {createdUser.display_name && (
+                <>
+                  <span className="text-muted-foreground">Имя:</span>
+                  <span className="text-foreground">{createdUser.display_name}</span>
+                </>
+              )}
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-2"
+              onClick={() => {
+                navigator.clipboard.writeText(`Логин: ${createdUser.username}\nПароль: ${createdUser.password}`);
+              }}
+            >
+              📋 Скопировать
+            </Button>
+          </div>
+        )}
 
         <form onSubmit={createUser} className="space-y-4">
           <div className="grid sm:grid-cols-3 gap-4">
