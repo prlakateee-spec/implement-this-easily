@@ -66,6 +66,9 @@ export function AuthScreen({ onLogin }: AuthScreenProps) {
                 placeholder="Логин"
                 value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
                 className="pl-12 py-6 rounded-xl border-input focus:border-primary focus:ring-2 focus:ring-primary/20 bg-muted/50 focus:bg-card"
                 required
               />

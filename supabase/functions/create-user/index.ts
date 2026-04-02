@@ -36,7 +36,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { username, password, display_name } = await req.json();
+    const { username: rawUsername, password, display_name } = await req.json();
+    const username = rawUsername?.trim().toLowerCase();
 
     if (!username || !password) {
       return new Response(JSON.stringify({ error: "Username and password required" }), {

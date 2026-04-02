@@ -81,25 +81,31 @@ export function useAuth() {
   }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {
-    // Map username to internal email
-    const email = `${username}@kitay.club`;
-    
-    // Check if account is active first
-    const { data: isActive } = await supabase.rpc('check_user_active', {
-      p_username: username,
-    });
+    const normalizedUsername = username.trim().toLowerCase();
 
-    if (!isActive) {
-      throw new Error('Аккаунт деактивирован. Обратитесь к администратору.');
-    }
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: `${normalizedUsername}@kitay.club`,
       password,
     });
 
     if (error) {
       throw new Error('Неверный логин или пароль');
+    }
+
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('is_active')
+      .eq('user_id', data.user.id)
+      .maybeSingle();
+
+    if (!profile) {
+      await supabase.auth.signOut();
+      throw new Error('Аккаунт не найден');
+    }
+
+    if (!profile.is_active) {
+      await supabase.auth.signOut();
+      throw new Error('Аккаунт деактивирован. Обратитесь к администратору.');
     }
 
     return true;
