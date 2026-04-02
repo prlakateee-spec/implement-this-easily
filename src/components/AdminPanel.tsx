@@ -124,6 +124,31 @@ export function AdminPanel() {
     }
   };
 
+  const resetPassword = async (username: string, newPassword: string) => {
+    setResetting(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Не авторизован');
+
+      const { data, error } = await supabase.functions.invoke('reset-password', {
+        body: { username, new_password: newPassword },
+      });
+
+      if (error) throw new Error(error.message);
+      if (data?.results?.[0]?.error) throw new Error(data.results[0].error);
+
+      setSuccess(`Пароль для "${username}" сброшен на: ${newPassword}`);
+      setResetForm(null);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setResetting(false);
+    }
+  };
+
   return (
     <div className="p-6 lg:p-10 space-y-8 animate-fade-in-up">
       <h1 className="text-2xl font-bold text-foreground">Управление пользователями</h1>
