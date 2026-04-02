@@ -69,6 +69,11 @@ export function AdminPanel() {
       if (error) throw new Error(error.message || 'Ошибка создания');
       if (data?.error) throw new Error(data.error);
 
+      setCreatedUser({
+        username: form.username,
+        password: form.password,
+        display_name: form.display_name || form.username,
+      });
       setSuccess(`Пользователь "${form.username}" создан!`);
       setForm({ username: '', password: '', display_name: '' });
       await loadUsers();
