@@ -118,7 +118,8 @@ export const TOTAL_MODULES = COURSES.reduce((acc, course) => acc + course.module
 // Courses available to all users (level 1)
 export const OPEN_COURSES = ['alipay', 'taobao'];
 
-// Admin email with full access
+// Admin username with full access
+export const ADMIN_USERNAME = 'admin';
 export const ADMIN_EMAIL = 'terra.ai.studio@yandex.ru';
 
 // Course access levels
@@ -131,7 +132,7 @@ export const COURSE_LEVELS: Record<string, number> = {
 };
 
 export function isCourseAccessible(courseId: string, userEmail: string): boolean {
-  return OPEN_COURSES.includes(courseId) || userEmail === ADMIN_EMAIL;
+  return OPEN_COURSES.includes(courseId) || userEmail === ADMIN_EMAIL || userEmail === `${ADMIN_USERNAME}@kitay.club`;
 }
 
 export function getCourseLockMessage(courseId: string): string {
