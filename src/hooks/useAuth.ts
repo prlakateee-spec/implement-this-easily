@@ -21,8 +21,9 @@ export function useAuth() {
       return null;
     }
   });
+  // If no cached user, show login immediately (don't wait for server)
   const [isLoading, setIsLoading] = useState(() => {
-    return !localStorage.getItem(AUTH_KEY);
+    return !!localStorage.getItem(AUTH_KEY);
   });
 
   // Restore session on mount
