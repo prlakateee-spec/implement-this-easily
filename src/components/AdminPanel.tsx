@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { UserPlus, UserX, UserCheck, RefreshCw, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { UserPlus, UserX, UserCheck, RefreshCw, Eye, EyeOff, AlertCircle, KeyRound } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -30,6 +30,8 @@ export function AdminPanel() {
   const [showPassword, setShowPassword] = useState(false);
   const [createdUser, setCreatedUser] = useState<CreatedUser | null>(null);
   const [form, setForm] = useState({ username: '', password: '', display_name: '' });
+  const [resetForm, setResetForm] = useState<{ username: string; password: string } | null>(null);
+  const [resetting, setResetting] = useState(false);
 
   const loadUsers = async () => {
     setLoading(true);
@@ -119,6 +121,31 @@ export function AdminPanel() {
       setError(err.message);
     } finally {
       setTogglingUser(null);
+    }
+  };
+
+  const resetPassword = async (username: string, newPassword: string) => {
+    setResetting(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Не авторизован');
+
+      const { data, error } = await supabase.functions.invoke('reset-password', {
+        body: { username, new_password: newPassword },
+      });
+
+      if (error) throw new Error(error.message);
+      if (data?.results?.[0]?.error) throw new Error(data.results[0].error);
+
+      setSuccess(`Пароль для "${username}" сброшен на: ${newPassword}`);
+      setResetForm(null);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setResetting(false);
     }
   };
 
@@ -276,27 +303,59 @@ export function AdminPanel() {
                     </p>
                   )}
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => toggleActive(u.username, u.is_active)}
-                  disabled={togglingUser === u.username}
-                  className={u.is_active ? 'text-destructive hover:text-destructive' : 'text-green-600 hover:text-green-600'}
-                >
-                  {togglingUser === u.username ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
-                  ) : u.is_active ? (
-                    <>
-                      <UserX size={16} className="mr-1" />
-                      Деактивировать
-                    </>
+                <div className="flex items-center gap-2">
+                  {resetForm?.username === u.username ? (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="text"
+                        value={resetForm.password}
+                        onChange={(e) => setResetForm({ ...resetForm, password: e.target.value })}
+                        placeholder="Новый пароль"
+                        className="w-32 h-8 text-sm bg-muted/50"
+                      />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={resetting || !resetForm.password}
+                        onClick={() => resetPassword(u.username, resetForm.password)}
+                        className="text-primary"
+                      >
+                        {resetting ? <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" /> : '✓'}
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => setResetForm(null)}>✕</Button>
+                    </div>
                   ) : (
-                    <>
-                      <UserCheck size={16} className="mr-1" />
-                      Активировать
-                    </>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setResetForm({ username: u.username, password: '' })}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <KeyRound size={16} />
+                    </Button>
                   )}
-                </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => toggleActive(u.username, u.is_active)}
+                    disabled={togglingUser === u.username}
+                    className={u.is_active ? 'text-destructive hover:text-destructive' : 'text-green-600 hover:text-green-600'}
+                  >
+                    {togglingUser === u.username ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
+                    ) : u.is_active ? (
+                      <>
+                        <UserX size={16} className="mr-1" />
+                        Деактивировать
+                      </>
+                    ) : (
+                      <>
+                        <UserCheck size={16} className="mr-1" />
+                        Активировать
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
