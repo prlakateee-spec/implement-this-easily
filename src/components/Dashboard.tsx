@@ -10,13 +10,15 @@ import {
   User as UserIcon,
   Sun,
   Moon,
-  Link2
+  Link2,
+  Shield
 } from 'lucide-react';
 import { User } from '@/hooks/useAuth';
 import { ProgressRing } from './ProgressRing';
 import { KnowledgeBase } from './KnowledgeBase';
 import { SettingsPage } from './SettingsPage';
-import { TOTAL_MODULES } from '@/lib/data';
+import { AdminPanel } from './AdminPanel';
+import { TOTAL_MODULES, ADMIN_EMAIL } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { useTheme } from './ThemeProvider';
 
@@ -41,7 +43,7 @@ export function Dashboard({
   progressPercentage,
   onToggleModule 
 }: DashboardProps) {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'knowledge' | 'settings'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'knowledge' | 'settings' | 'admin'>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
@@ -59,10 +61,13 @@ export function Dashboard({
       .eq('user_id', user.id);
   };
 
+  const isAdmin = user.email === ADMIN_EMAIL || user.email === 'terra_ai_team@kitay.club';
+
   const navItems = [
     { id: 'dashboard' as const, icon: Layout, label: 'Главная' },
     { id: 'knowledge' as const, icon: BookOpen, label: 'База знаний' },
     { id: 'settings' as const, icon: UserIcon, label: 'Личный кабинет' },
+    ...(isAdmin ? [{ id: 'admin' as const, icon: Shield, label: 'Пользователи' }] : []),
   ];
 
   const ThemeToggle = () => (
@@ -239,6 +244,7 @@ export function Dashboard({
         {activeTab === 'settings' && (
           <SettingsPage userName={displayName} onSaveName={handleSaveName} userId={user.id} />
         )}
+        {activeTab === 'admin' && isAdmin && <AdminPanel />}
       </div>
     </div>
   );
