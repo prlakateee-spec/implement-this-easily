@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { 
   Layout, 
   BookOpen, 
@@ -7,15 +7,18 @@ import {
   Star, 
   Menu, 
   X,
-  Trophy,
-  Settings
+  User as UserIcon,
+  Sun,
+  Moon,
+  Link2
 } from 'lucide-react';
 import { User } from '@/hooks/useAuth';
 import { ProgressRing } from './ProgressRing';
 import { KnowledgeBase } from './KnowledgeBase';
 import { SettingsPage } from './SettingsPage';
-import { ACHIEVEMENTS, TOTAL_MODULES } from '@/lib/data';
+import { TOTAL_MODULES } from '@/lib/data';
 import { Button } from '@/components/ui/button';
+import { useTheme } from './ThemeProvider';
 
 interface DashboardProps {
   user: User;
@@ -40,8 +43,8 @@ export function Dashboard({
 }: DashboardProps) {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'knowledge' | 'settings'>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
-  // Display name from localStorage
   const [displayName, setDisplayName] = useState(() => {
     const saved = localStorage.getItem('china-club-display-name');
     return saved || user.name;
@@ -57,8 +60,18 @@ export function Dashboard({
   const navItems = [
     { id: 'dashboard' as const, icon: Layout, label: 'Главная' },
     { id: 'knowledge' as const, icon: BookOpen, label: 'База знаний' },
-    { id: 'settings' as const, icon: Settings, label: 'Личный кабинет' },
+    { id: 'settings' as const, icon: UserIcon, label: 'Личный кабинет' },
   ];
+
+  const ThemeToggle = () => (
+    <button
+      onClick={toggleTheme}
+      className="p-2 rounded-xl bg-muted hover:bg-muted/80 transition-colors"
+      title={theme === 'light' ? 'Тёмная тема' : 'Светлая тема'}
+    >
+      {theme === 'light' ? <Moon size={18} className="text-muted-foreground" /> : <Sun size={18} className="text-warning" />}
+    </button>
+  );
 
   const Sidebar = () => (
     <div className="hidden lg:flex flex-col w-72 bg-card border-r border-border p-6 h-screen sticky top-0">
@@ -110,9 +123,12 @@ export function Dashboard({
         </div>
         <span className="font-bold text-foreground">Китай для НОВЫХ</span>
       </div>
-      <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2 bg-muted rounded-lg">
-        {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-      </button>
+      <div className="flex items-center gap-2">
+        <ThemeToggle />
+        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2 bg-muted rounded-lg">
+          {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+      </div>
     </div>
   );
 
@@ -184,29 +200,17 @@ export function Dashboard({
 
         <div className="bg-card rounded-2xl p-6 shadow-soft border border-border">
           <div className="flex items-center gap-2 mb-6">
-            <Trophy className="text-warning" size={20} />
-            <h2 className="text-lg font-bold text-foreground">Твои достижения</h2>
+            <Link2 className="text-primary" size={20} />
+            <h2 className="text-lg font-bold text-foreground">Мои подборки</h2>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            {ACHIEVEMENTS.map((achievement) => {
-              const isUnlocked = progressPercentage >= achievement.requiredProgress;
-              return (
-                <div
-                  key={achievement.id}
-                  className={`p-4 rounded-xl flex flex-col items-center text-center transition-all ${
-                    isUnlocked
-                      ? `${achievement.bgClass} border border-border`
-                      : 'bg-muted opacity-50'
-                  }`}
-                >
-                  <span className="text-2xl mb-1">{achievement.emoji}</span>
-                  <span className={`text-sm font-medium ${isUnlocked ? 'text-foreground' : 'text-muted-foreground'}`}>
-                    {achievement.title}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+          <p className="text-sm text-muted-foreground mb-4">Сохраняй полезные ссылки в Личном кабинете</p>
+          <Button
+            onClick={() => setActiveTab('settings')}
+            variant="outline"
+            className="w-full"
+          >
+            Перейти к подборкам
+          </Button>
         </div>
       </div>
     </div>
@@ -218,6 +222,10 @@ export function Dashboard({
       <div className="flex-1">
         <MobileHeader />
         <MobileMenu />
+        {/* Desktop theme toggle */}
+        <div className="hidden lg:flex justify-end p-4 pb-0">
+          <ThemeToggle />
+        </div>
         {activeTab === 'dashboard' && <DashboardContent />}
         {activeTab === 'knowledge' && (
           <KnowledgeBase
