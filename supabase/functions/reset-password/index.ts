@@ -2,7 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-admin-action",
 };
 
 Deno.serve(async (req) => {
@@ -15,96 +15,81 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
+    // Check for admin auth via Bearer token
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    let isAdmin = false;
+
+    if (authHeader) {
+      const { data: { user: caller } } = await supabase.auth.getUser(
+        authHeader.replace("Bearer ", "")
+      );
+      const adminEmails = ["terra.ai.studio@yandex.ru", "terra_ai_team@kitay.club"];
+      isAdmin = !!caller && adminEmails.includes(caller.email || "");
     }
 
-    const { data: { user: caller } } = await supabase.auth.getUser(
-      authHeader.replace("Bearer ", "")
-    );
+    // Also allow internal calls with service role key
+    if (!isAdmin) {
+      const apikey = req.headers.get("apikey") || "";
+      if (apikey === serviceKey) {
+        isAdmin = true;
+      }
+    }
 
-    const adminEmails = ["terra.ai.studio@yandex.ru", "terra_ai_team@kitay.club"];
-    if (!caller || !adminEmails.includes(caller.email || "")) {
+    if (!isAdmin) {
       return new Response(JSON.stringify({ error: "Admin only" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const { username, new_password } = await req.json();
-    if (!username || !new_password) {
-      return new Response(JSON.stringify({ error: "username and new_password required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const body = await req.json();
+    const results = [];
 
-    const normalizedUsername = username.trim().toLowerCase();
+    // Support batch: { users: [{username, new_password}] } or single: {username, new_password}
+    const items = body.users || [body];
 
-    // Find user_id from profile
-    const { data: profile } = await supabase
-      .from("user_profiles")
-      .select("user_id")
-      .eq("username", normalizedUsername)
-      .maybeSingle();
+    for (const { username, new_password } of items) {
+      if (!username || !new_password) {
+        results.push({ username, error: "missing fields" });
+        continue;
+      }
 
-    if (!profile?.user_id) {
-      // Try case-insensitive
-      const { data: profile2 } = await supabase
+      const normalizedUsername = username.trim().toLowerCase();
+
+      // Find user_id from profile (case-insensitive)
+      const { data: profile } = await supabase
         .from("user_profiles")
         .select("user_id, username")
         .ilike("username", normalizedUsername)
         .maybeSingle();
 
-      if (!profile2?.user_id) {
-        return new Response(JSON.stringify({ error: "User not found" }), {
-          status: 404,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      if (!profile?.user_id) {
+        results.push({ username: normalizedUsername, error: "not found" });
+        continue;
       }
 
-      // Also fix the username casing in profile
-      await supabase
-        .from("user_profiles")
-        .update({ username: normalizedUsername })
-        .eq("user_id", profile2.user_id);
+      // Fix username casing if needed
+      if (profile.username !== normalizedUsername) {
+        await supabase
+          .from("user_profiles")
+          .update({ username: normalizedUsername })
+          .eq("user_id", profile.user_id);
+      }
 
-      const { error } = await supabase.auth.admin.updateUserById(profile2.user_id, {
+      const { error } = await supabase.auth.admin.updateUserById(profile.user_id, {
         password: new_password,
       });
 
-      if (error) {
-        return new Response(JSON.stringify({ error: error.message }), {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      return new Response(
-        JSON.stringify({ success: true, username: normalizedUsername }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const { error } = await supabase.auth.admin.updateUserById(profile.user_id, {
-      password: new_password,
-    });
-
-    if (error) {
-      return new Response(JSON.stringify({ error: error.message }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      results.push({
+        username: normalizedUsername,
+        success: !error,
+        error: error?.message,
       });
     }
 
-    return new Response(
-      JSON.stringify({ success: true, username: normalizedUsername }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ results }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
