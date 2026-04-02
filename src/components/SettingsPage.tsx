@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { Sun, Moon, Save, Plus, X, Link2, FolderPlus, Trash2 } from 'lucide-react';
+import { Save, Plus, X, Link2, FolderPlus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useTheme } from './ThemeProvider';
 
 interface Bookmark {
   id: string;
