@@ -418,9 +418,6 @@ export function OrderForMeModule({ userId }: OrderForMeModuleProps) {
               {cart.length}
             </span>
           </h2>
-          <Button variant="outline" size="sm" onClick={addCartItem}>
-            <Plus size={14} className="mr-1" /> Добавить товар
-          </Button>
         </div>
 
         <div className="space-y-4">
@@ -437,6 +434,10 @@ export function OrderForMeModule({ userId }: OrderForMeModuleProps) {
           ))}
         </div>
 
+        <Button onClick={addCartItem} variant="outline" className="w-full border-primary text-primary bg-primary/10 hover:bg-primary/20 font-bold" size="lg">
+          <Plus size={18} className="mr-2" /> Добавить ещё товар в корзину
+        </Button>
+
         {totalCny > 0 && (
           <div className="bg-muted/40 rounded-xl p-3 text-center">
             <p className="text-sm text-muted-foreground">Общая сумма:</p>
@@ -444,18 +445,20 @@ export function OrderForMeModule({ userId }: OrderForMeModuleProps) {
           </div>
         )}
 
-        {selectedProfile ? (
-          <p className="text-xs text-muted-foreground text-center">
-            Получатель: <strong className="text-foreground">{selectedProfile.recipient_name}</strong>
-          </p>
-        ) : (
-          <p className="text-xs text-destructive text-center">⚠️ Выберите профиль получателя выше</p>
-        )}
+        <div className="border-t border-border pt-4 mt-2 space-y-2">
+          {selectedProfile ? (
+            <p className="text-xs text-muted-foreground text-center">
+              Получатель: <strong className="text-foreground">{selectedProfile.recipient_name}</strong>
+            </p>
+          ) : (
+            <p className="text-xs text-destructive text-center">⚠️ Выберите профиль получателя выше</p>
+          )}
 
-        <Button onClick={submitOrder} disabled={loading || !selectedProfile} className="w-full font-bold" size="lg">
-          <Send size={18} className="mr-2" />
-          Оформить заказ ({cart.filter(i => i.product_name.trim()).length} товаров)
-        </Button>
+          <Button onClick={submitOrder} disabled={loading || !selectedProfile} className="w-full font-bold" size="lg">
+            <Send size={18} className="mr-2" />
+            Оформить заказ ({cart.filter(i => i.product_name.trim()).length} товаров)
+          </Button>
+        </div>
       </div>
 
       {/* Pending orders */}
