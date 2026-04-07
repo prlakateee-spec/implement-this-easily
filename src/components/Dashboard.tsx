@@ -67,6 +67,7 @@ export function Dashboard({
   const navItems = [
     { id: 'dashboard' as const, icon: Layout, label: 'Главная' },
     { id: 'knowledge' as const, icon: BookOpen, label: 'База знаний' },
+    { id: 'delivery' as const, icon: Truck, label: 'Доставка' },
     { id: 'settings' as const, icon: UserIcon, label: 'Личный кабинет' },
     ...(isAdmin ? [{ id: 'admin' as const, icon: Shield, label: 'Пользователи' }] : []),
   ];
