@@ -12,7 +12,8 @@ import {
   Moon,
   Link2,
   Shield,
-  Truck
+  Truck,
+  ShoppingBag
 } from 'lucide-react';
 import { User } from '@/hooks/useAuth';
 import { ProgressRing } from './ProgressRing';
@@ -20,6 +21,7 @@ import { KnowledgeBase } from './KnowledgeBase';
 import { SettingsPage } from './SettingsPage';
 import { AdminPanel } from './AdminPanel';
 import { DeliveryModule } from './DeliveryModule';
+import { OrderForMeModule } from './OrderForMeModule';
 import { TOTAL_MODULES, ADMIN_EMAIL } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { useTheme } from './ThemeProvider';
@@ -45,7 +47,7 @@ export function Dashboard({
   progressPercentage,
   onToggleModule 
 }: DashboardProps) {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'knowledge' | 'delivery' | 'settings' | 'admin'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'knowledge' | 'delivery' | 'order' | 'settings' | 'admin'>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
@@ -69,6 +71,7 @@ export function Dashboard({
     { id: 'dashboard' as const, icon: Layout, label: 'Главная' },
     { id: 'knowledge' as const, icon: BookOpen, label: 'База знаний' },
     { id: 'delivery' as const, icon: Truck, label: 'Доставка' },
+    { id: 'order' as const, icon: ShoppingBag, label: 'Закажите мне' },
     { id: 'settings' as const, icon: UserIcon, label: 'Личный кабинет' },
     ...(isAdmin ? [{ id: 'admin' as const, icon: Shield, label: 'Пользователи' }] : []),
   ];
@@ -246,6 +249,9 @@ export function Dashboard({
         )}
         {activeTab === 'delivery' && (
           <DeliveryModule userId={user.id} />
+        )}
+        {activeTab === 'order' && (
+          <OrderForMeModule userId={user.id} />
         )}
         {activeTab === 'settings' && (
           <SettingsPage userName={displayName} onSaveName={handleSaveName} userId={user.id} />

@@ -174,6 +174,63 @@ export type Database = {
           },
         ]
       }
+      order_requests: {
+        Row: {
+          created_at: string
+          delivery_address: string | null
+          delivery_type: string
+          id: string
+          info_image_url: string | null
+          packaging_price: number | null
+          packaging_type: string | null
+          product_link: string | null
+          product_name: string
+          qr_image_url: string | null
+          recipient_name: string
+          recipient_phone: string
+          status: string
+          transport_company: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delivery_address?: string | null
+          delivery_type?: string
+          id?: string
+          info_image_url?: string | null
+          packaging_price?: number | null
+          packaging_type?: string | null
+          product_link?: string | null
+          product_name: string
+          qr_image_url?: string | null
+          recipient_name?: string
+          recipient_phone?: string
+          status?: string
+          transport_company?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delivery_address?: string | null
+          delivery_type?: string
+          id?: string
+          info_image_url?: string | null
+          packaging_price?: number | null
+          packaging_type?: string | null
+          product_link?: string | null
+          product_name?: string
+          qr_image_url?: string | null
+          recipient_name?: string
+          recipient_phone?: string
+          status?: string
+          transport_company?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       shipping_profiles: {
         Row: {
           created_at: string
