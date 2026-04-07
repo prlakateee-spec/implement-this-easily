@@ -201,65 +201,77 @@ export function DeliveryModule({ userId }: DeliveryModuleProps) {
             </div>
           </div>
 
-          {/* Redirect checkbox */}
-          <div className="flex items-center gap-3 p-3 bg-muted rounded-xl">
-            <Checkbox
-              id="redirect"
-              checked={form.is_redirect}
-              onCheckedChange={(checked) => setForm(f => ({ ...f, is_redirect: !!checked }))}
-            />
-            <Label htmlFor="redirect" className="cursor-pointer font-medium">
-              Переадресовка
-            </Label>
+          {/* Delivery type: Самовывоз / Переадресовка */}
+          <div className="space-y-2">
+            <Label>Способ получения</Label>
+            <RadioGroup
+              value={form.delivery_type}
+              onValueChange={(v) => setForm(f => ({ ...f, delivery_type: v as 'pickup' | 'redirect' }))}
+              className="flex gap-4"
+            >
+              <div className="flex items-center gap-2 p-3 bg-muted rounded-xl flex-1 cursor-pointer">
+                <RadioGroupItem value="pickup" id="pickup" />
+                <Label htmlFor="pickup" className="cursor-pointer font-medium">Самовывоз</Label>
+              </div>
+              <div className="flex items-center gap-2 p-3 bg-muted rounded-xl flex-1 cursor-pointer">
+                <RadioGroupItem value="redirect" id="redirect" />
+                <Label htmlFor="redirect" className="cursor-pointer font-medium">Переадресовка</Label>
+              </div>
+            </RadioGroup>
           </div>
 
-          {/* Transport company */}
-          <div className="space-y-2">
-            <Label>Транспортная компания</Label>
-            <Select value={form.transport_company} onValueChange={v => setForm(f => ({ ...f, transport_company: v }))}>
-              <SelectTrigger>
-                <SelectValue placeholder="Выберите ТК" />
-              </SelectTrigger>
-              <SelectContent>
-                {TRANSPORT_COMPANIES.map(tc => (
-                  <SelectItem key={tc} value={tc}>{tc}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Conditional fields for redirect */}
+          {form.delivery_type === 'redirect' && (
+            <div className="grid gap-4 pl-1 border-l-2 border-primary/30 ml-2">
+              {/* Transport company */}
+              <div className="space-y-2 pl-4">
+                <Label>Транспортная компания</Label>
+                <Select value={form.transport_company} onValueChange={v => setForm(f => ({ ...f, transport_company: v }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Выберите ТК" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TRANSPORT_COMPANIES.map(tc => (
+                      <SelectItem key={tc} value={tc}>{tc}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          {/* Address */}
-          <div className="space-y-2">
-            <Label>Адрес получения</Label>
-            <Input
-              value={form.delivery_address}
-              onChange={e => setForm(f => ({ ...f, delivery_address: e.target.value }))}
-              placeholder="Домашний адрес в формате: город, улица, дом"
-              className="placeholder:text-muted-foreground/60"
-            />
-          </div>
+              {/* Address */}
+              <div className="space-y-2 pl-4">
+                <Label>Адрес получения</Label>
+                <Input
+                  value={form.delivery_address}
+                  onChange={e => setForm(f => ({ ...f, delivery_address: e.target.value }))}
+                  placeholder="Домашний адрес в формате: город, улица, дом"
+                  className="placeholder:text-muted-foreground/60"
+                />
+              </div>
 
-          {/* Packaging */}
-          <div className="space-y-2">
-            <Label>Тип упаковки</Label>
-            <Select value={form.packaging_type} onValueChange={handlePackagingChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Выберите упаковку" />
-              </SelectTrigger>
-              <SelectContent>
-                {PACKAGING_OPTIONS.map(opt => (
-                  <SelectItem key={opt.label} value={opt.label}>
-                    {opt.label} — {opt.price}$
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {form.packaging_type && (
-              <p className="text-sm text-primary font-medium">
-                Стоимость упаковки: {form.packaging_price}$
-              </p>
-            )}
-          </div>
+              {/* Packaging */}
+              <div className="space-y-2 pl-4">
+                <Label>Тип упаковки</Label>
+                <Select value={form.packaging_type} onValueChange={handlePackagingChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Выберите упаковку" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PACKAGING_OPTIONS.map(opt => (
+                      <SelectItem key={opt.label} value={opt.label}>
+                        {opt.label} — {opt.price}$
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {form.packaging_type && (
+                  <p className="text-sm text-primary font-medium">
+                    Стоимость упаковки: {form.packaging_price}$
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         <Button onClick={handleSave} disabled={loading} className="w-full font-bold">
