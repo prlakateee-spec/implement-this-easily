@@ -46,6 +46,7 @@ export type Database = {
       }
       deliveries: {
         Row: {
+          admin_viewed_at: string | null
           created_at: string
           delivery_address: string | null
           id: string
@@ -62,6 +63,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          admin_viewed_at?: string | null
           created_at?: string
           delivery_address?: string | null
           id?: string
@@ -78,6 +80,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          admin_viewed_at?: string | null
           created_at?: string
           delivery_address?: string | null
           id?: string
@@ -176,6 +179,7 @@ export type Database = {
       }
       order_requests: {
         Row: {
+          admin_viewed_at: string | null
           created_at: string
           delivery_address: string | null
           delivery_type: string
@@ -195,6 +199,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          admin_viewed_at?: string | null
           created_at?: string
           delivery_address?: string | null
           delivery_type?: string
@@ -214,6 +219,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          admin_viewed_at?: string | null
           created_at?: string
           delivery_address?: string | null
           delivery_type?: string
