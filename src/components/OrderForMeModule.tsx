@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ShoppingBag, Plus, Trash2, Send, Upload, Image, Link2, ChevronDown, ChevronUp, Edit2, Check, X, Save } from 'lucide-react';
+import { ShoppingBag, Plus, Trash2, Send, Upload, Image, Link2, ChevronDown, ChevronUp, Edit2, Check, X, Save, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -47,10 +47,22 @@ const emptyProfile: ShippingProfile = {
   packaging_price: 0,
 };
 
+interface CartItem {
+  id: string;
+  product_name: string;
+  product_link: string;
+  price_cny: string;
+  qrFile: File | null;
+  infoFile: File | null;
+  qrPreview: string | null;
+  infoPreview: string | null;
+}
+
 interface OrderRequest {
   id: string;
   product_name: string;
   product_link: string | null;
+  price_cny: number | null;
   qr_image_url: string | null;
   info_image_url: string | null;
   status: string;
@@ -61,6 +73,18 @@ interface OrderForMeModuleProps {
   userId: string;
 }
 
+let itemIdCounter = 0;
+const newCartItem = (): CartItem => ({
+  id: `cart-${++itemIdCounter}`,
+  product_name: '',
+  product_link: '',
+  price_cny: '',
+  qrFile: null,
+  infoFile: null,
+  qrPreview: null,
+  infoPreview: null,
+});
+
 export function OrderForMeModule({ userId }: OrderForMeModuleProps) {
   const [profiles, setProfiles] = useState<ShippingProfile[]>([]);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
@@ -68,17 +92,10 @@ export function OrderForMeModule({ userId }: OrderForMeModuleProps) {
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [profilesExpanded, setProfilesExpanded] = useState(true);
 
+  const [cart, setCart] = useState<CartItem[]>([newCartItem()]);
   const [orders, setOrders] = useState<OrderRequest[]>([]);
-  const [productName, setProductName] = useState('');
-  const [productLink, setProductLink] = useState('');
-  const [qrFile, setQrFile] = useState<File | null>(null);
-  const [infoFile, setInfoFile] = useState<File | null>(null);
-  const [qrPreview, setQrPreview] = useState<string | null>(null);
-  const [infoPreview, setInfoPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const qrInputRef = useRef<HTMLInputElement>(null);
-  const infoInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -86,7 +103,7 @@ export function OrderForMeModule({ userId }: OrderForMeModuleProps) {
     loadOrders();
   }, []);
 
-  // --- Profiles (reuse from shipping_profiles) ---
+  // --- Profiles ---
   const loadProfiles = async () => {
     const { data } = await supabase
       .from('shipping_profiles')
@@ -156,6 +173,32 @@ export function OrderForMeModule({ userId }: OrderForMeModuleProps) {
 
   const selectedProfile = profiles.find(p => p.id === selectedProfileId);
 
+  // --- Cart ---
+  const updateCartItem = (id: string, updates: Partial<CartItem>) => {
+    setCart(prev => prev.map(item => item.id === id ? { ...item, ...updates } : item));
+  };
+
+  const addCartItem = () => {
+    setCart(prev => [...prev, newCartItem()]);
+  };
+
+  const removeCartItem = (id: string) => {
+    setCart(prev => {
+      const next = prev.filter(item => item.id !== id);
+      return next.length === 0 ? [newCartItem()] : next;
+    });
+  };
+
+  const handleCartFileSelect = (itemId: string, file: File | null, type: 'qr' | 'info') => {
+    if (!file) return;
+    const preview = URL.createObjectURL(file);
+    if (type === 'qr') {
+      updateCartItem(itemId, { qrFile: file, qrPreview: preview });
+    } else {
+      updateCartItem(itemId, { infoFile: file, infoPreview: preview });
+    }
+  };
+
   // --- Orders ---
   const loadOrders = async () => {
     const { data } = await supabase
@@ -166,75 +209,57 @@ export function OrderForMeModule({ userId }: OrderForMeModuleProps) {
     if (data) setOrders(data as unknown as OrderRequest[]);
   };
 
-  const handleFileSelect = (file: File | null, type: 'qr' | 'info') => {
-    if (!file) return;
-    if (type === 'qr') {
-      setQrFile(file);
-      setQrPreview(URL.createObjectURL(file));
-    } else {
-      setInfoFile(file);
-      setInfoPreview(URL.createObjectURL(file));
-    }
-  };
-
   const uploadImage = async (file: File, folder: string): Promise<string | null> => {
     const ext = file.name.split('.').pop();
-    const path = `${userId}/${folder}/${Date.now()}.${ext}`;
+    const path = `${userId}/${folder}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
     const { error } = await supabase.storage.from('order-images').upload(path, file);
-    if (error) {
-      console.error('Upload error:', error);
-      return null;
-    }
+    if (error) { console.error('Upload error:', error); return null; }
     const { data } = supabase.storage.from('order-images').getPublicUrl(path);
     return data.publicUrl;
   };
 
   const submitOrder = async () => {
-    if (!productName.trim()) {
-      toast({ title: 'Введите название товара', variant: 'destructive' });
+    const validItems = cart.filter(item => item.product_name.trim());
+    if (validItems.length === 0) {
+      toast({ title: 'Добавьте хотя бы один товар с названием', variant: 'destructive' });
       return;
     }
     if (!selectedProfile) {
-      toast({ title: 'Выберите профиль отправки', variant: 'destructive' });
+      toast({ title: 'Выберите профиль получателя', variant: 'destructive' });
       return;
     }
     setLoading(true);
 
-    let qrUrl: string | null = null;
-    let infoUrl: string | null = null;
+    for (const item of validItems) {
+      let qrUrl: string | null = null;
+      let infoUrl: string | null = null;
+      if (item.qrFile) qrUrl = await uploadImage(item.qrFile, 'qr');
+      if (item.infoFile) infoUrl = await uploadImage(item.infoFile, 'info');
 
-    if (qrFile) qrUrl = await uploadImage(qrFile, 'qr');
-    if (infoFile) infoUrl = await uploadImage(infoFile, 'info');
+      const priceCny = parseFloat(item.price_cny) || 0;
 
-    const { error } = await supabase.from('order_requests').insert({
-      user_id: userId,
-      recipient_name: selectedProfile.recipient_name,
-      recipient_phone: selectedProfile.recipient_phone,
-      delivery_type: selectedProfile.delivery_type,
-      transport_company: selectedProfile.transport_company || null,
-      delivery_address: selectedProfile.delivery_address || null,
-      packaging_type: selectedProfile.packaging_type || null,
-      packaging_price: selectedProfile.packaging_price || null,
-      product_name: productName.trim(),
-      product_link: productLink.trim() || null,
-      qr_image_url: qrUrl,
-      info_image_url: infoUrl,
-      status: 'pending',
-    });
+      await supabase.from('order_requests').insert({
+        user_id: userId,
+        recipient_name: selectedProfile.recipient_name,
+        recipient_phone: selectedProfile.recipient_phone,
+        delivery_type: selectedProfile.delivery_type,
+        transport_company: selectedProfile.transport_company || null,
+        delivery_address: selectedProfile.delivery_address || null,
+        packaging_type: selectedProfile.packaging_type || null,
+        packaging_price: selectedProfile.packaging_price || null,
+        product_name: item.product_name.trim(),
+        product_link: item.product_link.trim() || null,
+        price_cny: priceCny,
+        qr_image_url: qrUrl,
+        info_image_url: infoUrl,
+        status: 'pending',
+      });
+    }
 
     setLoading(false);
-    if (error) {
-      toast({ title: 'Ошибка', description: error.message, variant: 'destructive' });
-    } else {
-      toast({ title: 'Заказ оформлен ✅' });
-      setProductName('');
-      setProductLink('');
-      setQrFile(null);
-      setInfoFile(null);
-      setQrPreview(null);
-      setInfoPreview(null);
-      loadOrders();
-    }
+    toast({ title: `Заказ оформлен ✅ (${validItems.length} товаров)` });
+    setCart([newCartItem()]);
+    loadOrders();
   };
 
   const deleteOrder = async (id: string) => {
@@ -242,6 +267,7 @@ export function OrderForMeModule({ userId }: OrderForMeModuleProps) {
     loadOrders();
   };
 
+  const totalCny = cart.reduce((sum, item) => sum + (parseFloat(item.price_cny) || 0), 0);
   const pendingOrders = orders.filter(o => o.status === 'pending');
   const completedOrders = orders.filter(o => o.status !== 'pending');
 
@@ -257,7 +283,7 @@ export function OrderForMeModule({ userId }: OrderForMeModuleProps) {
         </div>
         <p className="text-sm text-muted-foreground leading-relaxed">
           🛒 Этот модуль для тех, кому нужна помощь в оформлении заказа и доставки.
-          Заполните данные, добавьте товар со ссылкой и фото — мы оформим всё за вас!
+          Добавьте все товары, заполните данные — мы оформим всё за вас!
         </p>
       </div>
 
@@ -382,89 +408,41 @@ export function OrderForMeModule({ userId }: OrderForMeModuleProps) {
         )}
       </div>
 
-      {/* Order form */}
+      {/* Cart — add multiple items */}
       <div className="bg-card rounded-2xl p-6 shadow-soft border border-border space-y-4">
-        <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-          <ShoppingBag size={20} className="text-primary" />
-          Оформить заказ
-        </h2>
-
-        <div className="space-y-1">
-          <Label className="text-xs">Название товара *</Label>
-          <Input value={productName} onChange={e => setProductName(e.target.value)} placeholder="Например: Кроссовки Nike Air Max" />
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+            <ShoppingCart size={20} className="text-primary" />
+            Корзина товаров
+            <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+              {cart.length}
+            </span>
+          </h2>
+          <Button variant="outline" size="sm" onClick={addCartItem}>
+            <Plus size={14} className="mr-1" /> Добавить товар
+          </Button>
         </div>
 
-        <div className="space-y-1">
-          <Label className="text-xs">Ссылка на товар</Label>
-          <div className="relative">
-            <Link2 size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input value={productLink} onChange={e => setProductLink(e.target.value)} placeholder="https://..." className="pl-9" />
+        <div className="space-y-4">
+          {cart.map((item, idx) => (
+            <CartItemCard
+              key={item.id}
+              item={item}
+              index={idx}
+              total={cart.length}
+              onUpdate={(updates) => updateCartItem(item.id, updates)}
+              onRemove={() => removeCartItem(item.id)}
+              onFileSelect={(file, type) => handleCartFileSelect(item.id, file, type)}
+            />
+          ))}
+        </div>
+
+        {totalCny > 0 && (
+          <div className="bg-muted/40 rounded-xl p-3 text-center">
+            <p className="text-sm text-muted-foreground">Общая сумма:</p>
+            <p className="text-xl font-bold text-foreground">¥{totalCny.toFixed(2)}</p>
           </div>
-        </div>
-
-        {/* QR image upload */}
-        <div className="space-y-2">
-          <Label className="text-xs">Скриншот QR-кода товара</Label>
-          <input
-            ref={qrInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="hidden"
-            onChange={e => handleFileSelect(e.target.files?.[0] || null, 'qr')}
-          />
-          {qrPreview ? (
-            <div className="relative w-32 h-32 rounded-xl overflow-hidden border border-border">
-              <img src={qrPreview} alt="QR" className="w-full h-full object-cover" />
-              <button
-                onClick={() => { setQrFile(null); setQrPreview(null); }}
-                className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1"
-              >
-                <X size={12} />
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => qrInputRef.current?.click()}
-              className="w-full border-2 border-dashed border-border rounded-xl p-6 flex flex-col items-center gap-2 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
-            >
-              <Upload size={24} />
-              <span className="text-sm">Нажмите для загрузки фото</span>
-            </button>
-          )}
-        </div>
-
-        {/* Info image upload */}
-        <div className="space-y-2">
-          <Label className="text-xs">Скриншот с информацией по товару</Label>
-          <input
-            ref={infoInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="hidden"
-            onChange={e => handleFileSelect(e.target.files?.[0] || null, 'info')}
-          />
-          {infoPreview ? (
-            <div className="relative w-32 h-32 rounded-xl overflow-hidden border border-border">
-              <img src={infoPreview} alt="Info" className="w-full h-full object-cover" />
-              <button
-                onClick={() => { setInfoFile(null); setInfoPreview(null); }}
-                className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1"
-              >
-                <X size={12} />
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => infoInputRef.current?.click()}
-              className="w-full border-2 border-dashed border-border rounded-xl p-6 flex flex-col items-center gap-2 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
-            >
-              <Image size={24} />
-              <span className="text-sm">Нажмите для загрузки фото</span>
-            </button>
-          )}
-        </div>
+        )}
 
         {selectedProfile ? (
           <p className="text-xs text-muted-foreground text-center">
@@ -476,7 +454,7 @@ export function OrderForMeModule({ userId }: OrderForMeModuleProps) {
 
         <Button onClick={submitOrder} disabled={loading || !selectedProfile} className="w-full font-bold" size="lg">
           <Send size={18} className="mr-2" />
-          Оформить заказ
+          Оформить заказ ({cart.filter(i => i.product_name.trim()).length} товаров)
         </Button>
       </div>
 
@@ -506,12 +484,116 @@ export function OrderForMeModule({ userId }: OrderForMeModuleProps) {
   );
 }
 
+// --- Cart item card ---
+function CartItemCard({
+  item, index, total, onUpdate, onRemove, onFileSelect,
+}: {
+  item: CartItem;
+  index: number;
+  total: number;
+  onUpdate: (updates: Partial<CartItem>) => void;
+  onRemove: () => void;
+  onFileSelect: (file: File | null, type: 'qr' | 'info') => void;
+}) {
+  const qrRef = useRef<HTMLInputElement>(null);
+  const infoRef = useRef<HTMLInputElement>(null);
+
+  return (
+    <div className="bg-muted/20 rounded-xl border border-border p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-semibold text-foreground">Товар #{index + 1}</span>
+        {total > 1 && (
+          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={onRemove}>
+            <Trash2 size={14} />
+          </Button>
+        )}
+      </div>
+
+      <div className="space-y-1">
+        <Label className="text-xs">Название товара *</Label>
+        <Input value={item.product_name} onChange={e => onUpdate({ product_name: e.target.value })} placeholder="Например: Кроссовки Nike Air Max" />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <Label className="text-xs">Ссылка на товар</Label>
+          <div className="relative">
+            <Link2 size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input value={item.product_link} onChange={e => onUpdate({ product_link: e.target.value })} placeholder="https://..." className="pl-8" />
+          </div>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">Стоимость (¥ юань)</Label>
+          <Input
+            type="number"
+            min="0"
+            step="0.01"
+            value={item.price_cny}
+            onChange={e => onUpdate({ price_cny: e.target.value })}
+            placeholder="0.00"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        {/* QR */}
+        <div className="space-y-1">
+          <Label className="text-xs">QR-код</Label>
+          <input ref={qrRef} type="file" accept="image/*" capture="environment" className="hidden"
+            onChange={e => onFileSelect(e.target.files?.[0] || null, 'qr')} />
+          {item.qrPreview ? (
+            <div className="relative w-full aspect-square max-w-[120px] rounded-lg overflow-hidden border border-border">
+              <img src={item.qrPreview} alt="QR" className="w-full h-full object-cover" />
+              <button onClick={() => onUpdate({ qrFile: null, qrPreview: null })}
+                className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-0.5">
+                <X size={10} />
+              </button>
+            </div>
+          ) : (
+            <button onClick={() => qrRef.current?.click()}
+              className="w-full border-2 border-dashed border-border rounded-lg p-4 flex flex-col items-center gap-1 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors">
+              <Upload size={18} />
+              <span className="text-xs">Загрузить</span>
+            </button>
+          )}
+        </div>
+
+        {/* Info */}
+        <div className="space-y-1">
+          <Label className="text-xs">Инфо о товаре</Label>
+          <input ref={infoRef} type="file" accept="image/*" capture="environment" className="hidden"
+            onChange={e => onFileSelect(e.target.files?.[0] || null, 'info')} />
+          {item.infoPreview ? (
+            <div className="relative w-full aspect-square max-w-[120px] rounded-lg overflow-hidden border border-border">
+              <img src={item.infoPreview} alt="Info" className="w-full h-full object-cover" />
+              <button onClick={() => onUpdate({ infoFile: null, infoPreview: null })}
+                className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-0.5">
+                <X size={10} />
+              </button>
+            </div>
+          ) : (
+            <button onClick={() => infoRef.current?.click()}
+              className="w-full border-2 border-dashed border-border rounded-lg p-4 flex flex-col items-center gap-1 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors">
+              <Image size={18} />
+              <span className="text-xs">Загрузить</span>
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// --- Order card ---
 function OrderCard({ order, onDelete, completed }: { order: OrderRequest; onDelete: (id: string) => void; completed?: boolean }) {
   return (
     <div className={`bg-card rounded-xl border border-border p-4 space-y-2 ${completed ? 'opacity-70' : ''}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-foreground text-sm">{order.product_name}</p>
+          {order.price_cny != null && order.price_cny > 0 && (
+            <p className="text-xs font-medium text-primary">¥{order.price_cny}</p>
+          )}
           {order.product_link && (
             <a href={order.product_link} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline truncate block">
               {order.product_link}
