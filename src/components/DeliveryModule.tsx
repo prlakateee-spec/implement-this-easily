@@ -42,7 +42,7 @@ interface DeliveryForm {
   tracking_number: string;
   recipient_name: string;
   recipient_phone: string;
-  is_redirect: boolean;
+  delivery_type: 'pickup' | 'redirect';
   transport_company: string;
   delivery_address: string;
   packaging_type: string;
@@ -54,7 +54,7 @@ const emptyForm: DeliveryForm = {
   tracking_number: '',
   recipient_name: '',
   recipient_phone: '',
-  is_redirect: true,
+  delivery_type: 'pickup',
   transport_company: '',
   delivery_address: '',
   packaging_type: '',
