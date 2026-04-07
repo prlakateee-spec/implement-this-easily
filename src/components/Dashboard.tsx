@@ -71,6 +71,7 @@ export function Dashboard({
     { id: 'dashboard' as const, icon: Layout, label: 'Главная' },
     { id: 'knowledge' as const, icon: BookOpen, label: 'База знаний' },
     { id: 'delivery' as const, icon: Truck, label: 'Доставка' },
+    { id: 'order' as const, icon: ShoppingBag, label: 'Закажите мне' },
     { id: 'settings' as const, icon: UserIcon, label: 'Личный кабинет' },
     ...(isAdmin ? [{ id: 'admin' as const, icon: Shield, label: 'Пользователи' }] : []),
   ];
