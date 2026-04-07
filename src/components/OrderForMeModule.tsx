@@ -469,24 +469,23 @@ export function OrderForMeModule({ userId }: OrderForMeModuleProps) {
       </div>
 
       {/* Pending orders */}
-      {pendingOrders.length > 0 && (
+      {activeOrders.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-lg font-bold text-foreground">📋 Мои заказы ({pendingOrders.length})</h2>
-          {pendingOrders.map(order => (
-            <OrderCard key={order.id} order={order} onDelete={deleteOrder} />
+          <h2 className="text-lg font-bold text-foreground">📋 Мои заказы ({activeOrders.length})</h2>
+          {activeOrders.map(order => (
+            <OrderCard key={order.id} order={order} onDelete={deleteOrder} statusLabels={ORDER_STATUS_LABELS} />
           ))}
         </div>
       )}
 
-      {/* Completed */}
-      {completedOrders.length > 0 && (
+      {doneOrders.length > 0 && (
         <div className="space-y-3">
           <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-            <Check size={20} className="text-green-500" />
-            Выполненные ({completedOrders.length})
+            <Check size={20} className="text-primary" />
+            Выполненные ({doneOrders.length})
           </h2>
-          {completedOrders.map(order => (
-            <OrderCard key={order.id} order={order} onDelete={deleteOrder} completed />
+          {doneOrders.map(order => (
+            <OrderCard key={order.id} order={order} onDelete={deleteOrder} completed statusLabels={ORDER_STATUS_LABELS} />
           ))}
         </div>
       )}
@@ -595,7 +594,21 @@ function CartItemCard({
 }
 
 // --- Order card ---
-function OrderCard({ order, onDelete, completed }: { order: OrderRequest; onDelete: (id: string) => void; completed?: boolean }) {
+function OrderCard({ order, onDelete, completed, statusLabels }: { order: OrderRequest; onDelete: (id: string) => void; completed?: boolean; statusLabels: Record<string, string> }) {
+  const statusColorMap: Record<string, string> = {
+    pending: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400',
+    payment_link: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400',
+    paid: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400',
+    ordered: 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400',
+    packed: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400',
+    sent_to_moscow: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
+    arrived_moscow: 'bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400',
+    handed_to_tk: 'bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400',
+    in_transit: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400',
+    received: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+    completed: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+  };
+
   return (
     <div className={`bg-card rounded-xl border border-border p-4 space-y-2 ${completed ? 'opacity-70' : ''}`}>
       <div className="flex items-start justify-between gap-2">
@@ -614,14 +627,10 @@ function OrderCard({ order, onDelete, completed }: { order: OrderRequest; onDele
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-            completed
-              ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-              : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
-          }`}>
-            {completed ? 'Выполнен' : 'В обработке'}
+          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColorMap[order.status] || 'bg-muted text-muted-foreground'}`}>
+            {statusLabels[order.status] || order.status}
           </span>
-          {!completed && (
+          {!completed && order.status === 'pending' && (
             <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => onDelete(order.id)}>
               <Trash2 size={14} />
             </Button>
