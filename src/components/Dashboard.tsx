@@ -179,10 +179,15 @@ export function Dashboard({
             <button
               key={item.id}
               onClick={() => { setActiveTab(item.id); setMobileMenuOpen(false); }}
-              className="w-full flex items-center gap-3 p-4 bg-muted rounded-2xl font-bold text-lg"
+              className="w-full flex items-center gap-3 p-4 bg-muted rounded-2xl font-bold text-lg relative"
             >
               <item.icon size={24} />
               {item.label}
+              {item.badge > 0 && (
+                <span className="ml-auto bg-destructive text-destructive-foreground text-xs font-bold min-w-[22px] h-[22px] flex items-center justify-center rounded-full px-1.5">
+                  {item.badge}
+                </span>
+              )}
             </button>
           ))}
           <button
