@@ -174,6 +174,48 @@ export type Database = {
           },
         ]
       }
+      shipping_profiles: {
+        Row: {
+          created_at: string
+          delivery_address: string | null
+          delivery_type: string
+          id: string
+          packaging_price: number | null
+          packaging_type: string | null
+          recipient_name: string
+          recipient_phone: string
+          transport_company: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delivery_address?: string | null
+          delivery_type?: string
+          id?: string
+          packaging_price?: number | null
+          packaging_type?: string | null
+          recipient_name?: string
+          recipient_phone?: string
+          transport_company?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delivery_address?: string | null
+          delivery_type?: string
+          id?: string
+          packaging_price?: number | null
+          packaging_type?: string | null
+          recipient_name?: string
+          recipient_phone?: string
+          transport_company?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           collections: Json | null
