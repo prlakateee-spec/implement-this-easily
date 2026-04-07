@@ -52,7 +52,22 @@ export function Dashboard({
 }: DashboardProps) {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'knowledge' | 'delivery' | 'order' | 'settings' | 'admin' | 'requests'>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [unviewedCount, setUnviewedCount] = useState(0);
   const { theme, toggleTheme } = useTheme();
+
+  useEffect(() => {
+    if (!(user.email === ADMIN_EMAIL || user.email === 'terra_ai_team@kitay.club')) return;
+    const fetchUnviewed = async () => {
+      const [{ count: c1 }, { count: c2 }] = await Promise.all([
+        supabase.from('deliveries').select('*', { count: 'exact', head: true }).is('admin_viewed_at', null).neq('status', 'warehouse'),
+        supabase.from('order_requests').select('*', { count: 'exact', head: true }).is('admin_viewed_at', null),
+      ]);
+      setUnviewedCount((c1 || 0) + (c2 || 0));
+    };
+    fetchUnviewed();
+    const interval = setInterval(fetchUnviewed, 30000);
+    return () => clearInterval(interval);
+  }, [user.email]);
 
   const [displayName, setDisplayName] = useState(user.name);
 
