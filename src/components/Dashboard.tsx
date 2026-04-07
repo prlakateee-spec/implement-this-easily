@@ -11,7 +11,8 @@ import {
   Sun,
   Moon,
   Link2,
-  Shield
+  Shield,
+  Truck
 } from 'lucide-react';
 import { User } from '@/hooks/useAuth';
 import { ProgressRing } from './ProgressRing';
