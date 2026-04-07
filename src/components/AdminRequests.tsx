@@ -21,6 +21,16 @@ const ORDER_STATUSES = [
   { value: 'received', label: 'Посылка получена' },
 ];
 
+const DELIVERY_STATUSES = [
+  { value: 'sent', label: 'В обработке' },
+  { value: 'packed', label: 'Посылка сформирована' },
+  { value: 'sent_to_moscow', label: 'Посылка отправлена в Москву' },
+  { value: 'arrived_moscow', label: 'Прибытие в Москву' },
+  { value: 'handed_to_tk', label: 'Посылка передана в ТК' },
+  { value: 'in_transit', label: 'Едет к вам в город' },
+  { value: 'received', label: 'Посылка получена' },
+];
+
 interface Delivery {
   id: string;
   user_id: string;
@@ -89,7 +99,7 @@ export function AdminRequests() {
     const { data } = await supabase
       .from('deliveries')
       .select('*')
-      .in('status', ['sent', 'warehouse'])
+      .neq('status', 'warehouse')
       .order('created_at', { ascending: false });
     if (data) setDeliveries(data as Delivery[]);
   };
@@ -160,6 +170,12 @@ export function AdminRequests() {
     if (selectedOrder?.id === id) setSelectedOrder({ ...selectedOrder, status: newStatus });
   };
 
+  const updateDeliveryStatus = async (id: string, newStatus: string) => {
+    await supabase.from('deliveries').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', id);
+    setDeliveries(prev => prev.map(d => d.id === id ? { ...d, status: newStatus } : d));
+    if (selectedDelivery?.id === id) setSelectedDelivery({ ...selectedDelivery, status: newStatus });
+  };
+
   const ProfileInfo = ({ userId }: { userId: string }) => {
     const p = profiles[userId];
     return (
@@ -200,11 +216,22 @@ export function AdminRequests() {
           <ChevronLeft size={18} /> Назад к заявкам
         </button>
         <div className="bg-card rounded-2xl p-6 border border-border shadow-soft space-y-5">
-          <div className="flex items-start justify-between">
+          <div className="flex items-start justify-between gap-3">
             <h2 className="text-xl font-bold text-foreground">{d.product_name}</h2>
-            <span className={`text-xs px-3 py-1 rounded-full font-medium ${statusColor[d.status] || 'bg-muted text-muted-foreground'}`}>
-              {statusLabel[d.status] || d.status}
-            </span>
+          </div>
+
+          <div className="bg-muted/50 rounded-xl p-4 space-y-2">
+            <p className="text-xs text-muted-foreground font-semibold uppercase">Статус посылки</p>
+            <Select value={d.status} onValueChange={(v) => updateDeliveryStatus(d.id, v)}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {DELIVERY_STATUSES.map(s => (
+                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="bg-muted/50 rounded-xl p-4">
