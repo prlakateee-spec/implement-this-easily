@@ -235,8 +235,25 @@ export function DeliveryModule({ userId }: DeliveryModuleProps) {
     loadItems();
   };
 
+  const DELIVERY_STATUS_LABELS: Record<string, string> = {
+    warehouse: 'На складе', sent: 'В обработке', packed: 'Посылка сформирована',
+    sent_to_moscow: 'Отправлена в Москву', arrived_moscow: 'Прибытие в Москву',
+    handed_to_tk: 'Передана в ТК', in_transit: 'Едет к вам в город', received: 'Посылка получена',
+  };
+  const DELIVERY_STATUS_COLORS: Record<string, string> = {
+    warehouse: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
+    sent: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400',
+    packed: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400',
+    sent_to_moscow: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
+    arrived_moscow: 'bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400',
+    handed_to_tk: 'bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400',
+    in_transit: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400',
+    received: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+  };
+
   const warehouseItems = items.filter(i => i.status === 'warehouse');
-  const sentItems = items.filter(i => i.status === 'sent');
+  const activeItems = items.filter(i => i.status !== 'warehouse' && i.status !== 'received');
+  const doneItems = items.filter(i => i.status === 'received');
 
   return (
     <div className="p-6 lg:p-10 space-y-6 animate-fade-in-up max-w-3xl mx-auto">
@@ -410,22 +427,45 @@ export function DeliveryModule({ userId }: DeliveryModuleProps) {
         )}
       </div>
 
-      {/* Sent items history */}
-      {sentItems.length > 0 && (
+      {/* Active deliveries with statuses */}
+      {activeItems.length > 0 && (
         <div className="space-y-3">
           <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-            <Check size={20} className="text-green-500" />
-            Отправленные ({sentItems.length})
+            <Truck size={20} className="text-primary" />
+            В пути ({activeItems.length})
           </h2>
-          {sentItems.map(item => (
+          {activeItems.map(item => (
+            <div key={item.id} className="bg-card rounded-xl px-4 py-3 border border-border space-y-1">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-foreground text-sm truncate">{item.product_name}</p>
+                  {item.tracking_number && <p className="text-xs text-muted-foreground font-mono">{item.tracking_number}</p>}
+                </div>
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${DELIVERY_STATUS_COLORS[item.status] || 'bg-muted text-muted-foreground'}`}>
+                  {DELIVERY_STATUS_LABELS[item.status] || item.status}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Received */}
+      {doneItems.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+            <Check size={20} className="text-primary" />
+            Получено ({doneItems.length})
+          </h2>
+          {doneItems.map(item => (
             <div key={item.id} className="flex items-center gap-3 bg-card rounded-xl px-4 py-3 border border-border opacity-70">
-              <Package size={16} className="text-green-500 shrink-0" />
+              <Package size={16} className="text-primary shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-foreground text-sm truncate">{item.product_name}</p>
                 {item.tracking_number && <p className="text-xs text-muted-foreground font-mono">{item.tracking_number}</p>}
               </div>
-              <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full">
-                Отправлено
+              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${DELIVERY_STATUS_COLORS.received}`}>
+                Получена
               </span>
             </div>
           ))}
