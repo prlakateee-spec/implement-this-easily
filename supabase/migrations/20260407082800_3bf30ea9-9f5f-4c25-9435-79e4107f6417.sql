@@ -1,0 +1,1 @@
+ALTER TABLE public.order_requests ADD COLUMN price_cny numeric DEFAULT 0;

@@ -183,6 +183,7 @@ export type Database = {
           info_image_url: string | null
           packaging_price: number | null
           packaging_type: string | null
+          price_cny: number | null
           product_link: string | null
           product_name: string
           qr_image_url: string | null
@@ -201,6 +202,7 @@ export type Database = {
           info_image_url?: string | null
           packaging_price?: number | null
           packaging_type?: string | null
+          price_cny?: number | null
           product_link?: string | null
           product_name: string
           qr_image_url?: string | null
@@ -219,6 +221,7 @@ export type Database = {
           info_image_url?: string | null
           packaging_price?: number | null
           packaging_type?: string | null
+          price_cny?: number | null
           product_link?: string | null
           product_name?: string
           qr_image_url?: string | null
