@@ -244,6 +244,9 @@ export function Dashboard({
             userEmail={user.email}
           />
         )}
+        {activeTab === 'delivery' && (
+          <DeliveryModule userId={user.id} />
+        )}
         {activeTab === 'settings' && (
           <SettingsPage userName={displayName} onSaveName={handleSaveName} userId={user.id} />
         )}
