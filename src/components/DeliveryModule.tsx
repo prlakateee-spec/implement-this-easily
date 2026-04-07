@@ -107,7 +107,7 @@ export function DeliveryModule({ userId }: DeliveryModuleProps) {
       tracking_number: form.tracking_number.trim() || null,
       recipient_name: form.recipient_name.trim(),
       recipient_phone: form.recipient_phone.trim(),
-      is_redirect: form.is_redirect,
+      is_redirect: form.delivery_type === 'redirect',
       transport_company: form.transport_company || null,
       delivery_address: form.delivery_address.trim() || null,
       packaging_type: form.packaging_type || null,
