@@ -170,6 +170,12 @@ export function AdminRequests() {
     if (selectedOrder?.id === id) setSelectedOrder({ ...selectedOrder, status: newStatus });
   };
 
+  const updateDeliveryStatus = async (id: string, newStatus: string) => {
+    await supabase.from('deliveries').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', id);
+    setDeliveries(prev => prev.map(d => d.id === id ? { ...d, status: newStatus } : d));
+    if (selectedDelivery?.id === id) setSelectedDelivery({ ...selectedDelivery, status: newStatus });
+  };
+
   const ProfileInfo = ({ userId }: { userId: string }) => {
     const p = profiles[userId];
     return (
