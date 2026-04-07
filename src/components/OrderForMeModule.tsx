@@ -424,7 +424,7 @@ export function OrderForMeModule({ userId }: OrderForMeModuleProps) {
           {cart.map((item, idx) => (
             <CartItemCard
               key={item.id}
-              item={idx}
+              item={item}
               index={idx}
               total={cart.length}
               onUpdate={(updates) => updateCartItem(item.id, updates)}
