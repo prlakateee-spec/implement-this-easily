@@ -21,6 +21,16 @@ const ORDER_STATUSES = [
   { value: 'received', label: 'Посылка получена' },
 ];
 
+const DELIVERY_STATUSES = [
+  { value: 'sent', label: 'В обработке' },
+  { value: 'packed', label: 'Посылка сформирована' },
+  { value: 'sent_to_moscow', label: 'Посылка отправлена в Москву' },
+  { value: 'arrived_moscow', label: 'Прибытие в Москву' },
+  { value: 'handed_to_tk', label: 'Посылка передана в ТК' },
+  { value: 'in_transit', label: 'Едет к вам в город' },
+  { value: 'received', label: 'Посылка получена' },
+];
+
 interface Delivery {
   id: string;
   user_id: string;
