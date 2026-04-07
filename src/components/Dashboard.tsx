@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Layout, 
   BookOpen, 
@@ -16,6 +16,7 @@ import {
   ShoppingBag,
   ClipboardList
 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/hooks/useAuth';
 import { ProgressRing } from './ProgressRing';
 import { KnowledgeBase } from './KnowledgeBase';
