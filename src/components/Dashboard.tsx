@@ -20,6 +20,7 @@ import { KnowledgeBase } from './KnowledgeBase';
 import { SettingsPage } from './SettingsPage';
 import { AdminPanel } from './AdminPanel';
 import { DeliveryModule } from './DeliveryModule';
+import { OrderForMeModule } from './OrderForMeModule';
 import { TOTAL_MODULES, ADMIN_EMAIL } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { useTheme } from './ThemeProvider';
