@@ -2,10 +2,24 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   RefreshCw, Truck, ShoppingBag, Package, User, Phone, MapPin,
   Calendar, ExternalLink, ChevronLeft, MessageCircle, Eye
 } from 'lucide-react';
+
+const ORDER_STATUSES = [
+  { value: 'pending', label: 'В обработке' },
+  { value: 'payment_link', label: 'Отправлена ссылка на оплату' },
+  { value: 'paid', label: 'Оплачено' },
+  { value: 'ordered', label: 'Товар заказан' },
+  { value: 'packed', label: 'Посылка сформирована' },
+  { value: 'sent_to_moscow', label: 'Посылка отправлена в Москву' },
+  { value: 'arrived_moscow', label: 'Прибытие в Москву' },
+  { value: 'handed_to_tk', label: 'Посылка передана в ТК' },
+  { value: 'in_transit', label: 'Едет к вам в город' },
+  { value: 'received', label: 'Посылка получена' },
+];
 
 interface Delivery {
   id: string;
@@ -124,11 +138,26 @@ export function AdminRequests() {
   const newOrdersCount = orders.filter(o => isNew(o.admin_viewed_at)).length;
 
   const statusLabel: Record<string, string> = {
-    sent: 'Отправлена', warehouse: 'На складе', pending: 'Ожидает', completed: 'Выполнен',
+    sent: 'Отправлена', warehouse: 'На складе', pending: 'В обработке', completed: 'Выполнен',
+    payment_link: 'Ссылка на оплату', paid: 'Оплачено', ordered: 'Товар заказан',
+    packed: 'Посылка сформирована', sent_to_moscow: 'Отправлена в Москву',
+    arrived_moscow: 'Прибытие в Москву', handed_to_tk: 'Передана в ТК',
+    in_transit: 'Едет к вам', received: 'Получена',
   };
   const statusColor: Record<string, string> = {
     sent: 'bg-blue-500/10 text-blue-600', warehouse: 'bg-yellow-500/10 text-yellow-600',
     pending: 'bg-orange-500/10 text-orange-600', completed: 'bg-green-500/10 text-green-600',
+    payment_link: 'bg-purple-500/10 text-purple-600', paid: 'bg-emerald-500/10 text-emerald-600',
+    ordered: 'bg-cyan-500/10 text-cyan-600', packed: 'bg-indigo-500/10 text-indigo-600',
+    sent_to_moscow: 'bg-blue-500/10 text-blue-600', arrived_moscow: 'bg-teal-500/10 text-teal-600',
+    handed_to_tk: 'bg-sky-500/10 text-sky-600', in_transit: 'bg-amber-500/10 text-amber-600',
+    received: 'bg-green-500/10 text-green-600',
+  };
+
+  const updateOrderStatus = async (id: string, newStatus: string) => {
+    await supabase.from('order_requests').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', id);
+    setOrders(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
+    if (selectedOrder?.id === id) setSelectedOrder({ ...selectedOrder, status: newStatus });
   };
 
   const ProfileInfo = ({ userId }: { userId: string }) => {
@@ -211,11 +240,22 @@ export function AdminRequests() {
           <ChevronLeft size={18} /> Назад к заявкам
         </button>
         <div className="bg-card rounded-2xl p-6 border border-border shadow-soft space-y-5">
-          <div className="flex items-start justify-between">
+          <div className="flex items-start justify-between gap-3">
             <h2 className="text-xl font-bold text-foreground">{o.product_name}</h2>
-            <span className={`text-xs px-3 py-1 rounded-full font-medium ${statusColor[o.status] || 'bg-muted text-muted-foreground'}`}>
-              {statusLabel[o.status] || o.status}
-            </span>
+          </div>
+
+          <div className="bg-muted/50 rounded-xl p-4 space-y-2">
+            <p className="text-xs text-muted-foreground font-semibold uppercase">Статус заказа</p>
+            <Select value={o.status} onValueChange={(v) => updateOrderStatus(o.id, v)}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ORDER_STATUSES.map(s => (
+                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="bg-muted/50 rounded-xl p-4">
