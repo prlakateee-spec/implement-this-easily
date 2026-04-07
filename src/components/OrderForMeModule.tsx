@@ -539,7 +539,7 @@ function CartItemCard({
         {/* QR */}
         <div className="space-y-1">
           <Label className="text-xs">QR-код</Label>
-          <input ref={qrRef} type="file" accept="image/*" capture="environment" className="hidden"
+          <input ref={qrRef} type="file" accept="image/*" className="hidden"
             onChange={e => onFileSelect(e.target.files?.[0] || null, 'qr')} />
           {item.qrPreview ? (
             <div className="relative w-full aspect-square max-w-[120px] rounded-lg overflow-hidden border border-border">
@@ -561,7 +561,7 @@ function CartItemCard({
         {/* Info */}
         <div className="space-y-1">
           <Label className="text-xs">Инфо о товаре</Label>
-          <input ref={infoRef} type="file" accept="image/*" capture="environment" className="hidden"
+          <input ref={infoRef} type="file" accept="image/*" className="hidden"
             onChange={e => onFileSelect(e.target.files?.[0] || null, 'info')} />
           {item.infoPreview ? (
             <div className="relative w-full aspect-square max-w-[120px] rounded-lg overflow-hidden border border-border">
