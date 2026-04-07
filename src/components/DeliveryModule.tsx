@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, Truck, Plus, Save, Send, Trash2, Warehouse, ChevronDown, ChevronUp, Edit2, Check } from 'lucide-react';
+import { Package, Truck, Plus, Save, Send, Trash2, Warehouse, ChevronDown, ChevronUp, Edit2, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,6 +27,7 @@ const PACKAGING_OPTIONS = [
 ];
 
 interface ShippingProfile {
+  id?: string;
   recipient_name: string;
   recipient_phone: string;
   delivery_type: 'pickup' | 'redirect';
@@ -59,10 +60,11 @@ interface DeliveryModuleProps {
 }
 
 export function DeliveryModule({ userId }: DeliveryModuleProps) {
-  const [profile, setProfile] = useState<ShippingProfile>({ ...emptyProfile });
-  const [profileSaved, setProfileSaved] = useState(false);
-  const [editingProfile, setEditingProfile] = useState(false);
-  const [profileExpanded, setProfileExpanded] = useState(true);
+  const [profiles, setProfiles] = useState<ShippingProfile[]>([]);
+  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
+  const [editingProfile, setEditingProfile] = useState<ShippingProfile | null>(null);
+  const [isAddingNew, setIsAddingNew] = useState(false);
+  const [profilesExpanded, setProfilesExpanded] = useState(true);
 
   const [items, setItems] = useState<WarehouseItem[]>([]);
   const [newName, setNewName] = useState('');
@@ -71,33 +73,34 @@ export function DeliveryModule({ userId }: DeliveryModuleProps) {
   const { toast } = useToast();
 
   useEffect(() => {
-    loadProfile();
+    loadProfiles();
     loadItems();
   }, []);
 
-  // --- Shipping profile ---
-  const loadProfile = async () => {
+  // --- Shipping profiles ---
+  const loadProfiles = async () => {
     const { data } = await supabase
       .from('shipping_profiles')
       .select('*')
       .eq('user_id', userId)
-      .maybeSingle();
-    if (data) {
-      setProfile({
-        recipient_name: data.recipient_name || '',
-        recipient_phone: data.recipient_phone || '',
-        delivery_type: (data.delivery_type as 'pickup' | 'redirect') || 'pickup',
-        transport_company: data.transport_company || '',
-        delivery_address: data.delivery_address || '',
-        packaging_type: data.packaging_type || '',
-        packaging_price: Number(data.packaging_price) || 0,
-      });
-      setProfileSaved(true);
-      setProfileExpanded(false);
+      .order('created_at', { ascending: true });
+    if (data && data.length > 0) {
+      const mapped = data.map(d => ({
+        id: d.id,
+        recipient_name: d.recipient_name || '',
+        recipient_phone: d.recipient_phone || '',
+        delivery_type: (d.delivery_type as 'pickup' | 'redirect') || 'pickup',
+        transport_company: d.transport_company || '',
+        delivery_address: d.delivery_address || '',
+        packaging_type: d.packaging_type || '',
+        packaging_price: Number(d.packaging_price) || 0,
+      }));
+      setProfiles(mapped);
+      if (!selectedProfileId) setSelectedProfileId(mapped[0].id!);
     }
   };
 
-  const saveProfile = async () => {
+  const saveProfile = async (profile: ShippingProfile) => {
     if (!profile.recipient_name.trim() || !profile.recipient_phone.trim()) {
       toast({ title: 'Заполните ФИО и телефон', variant: 'destructive' });
       return;
@@ -114,20 +117,47 @@ export function DeliveryModule({ userId }: DeliveryModuleProps) {
       packaging_price: profile.packaging_price || null,
     };
 
-    const { error } = profileSaved
-      ? await supabase.from('shipping_profiles').update({ ...payload, updated_at: new Date().toISOString() }).eq('user_id', userId)
-      : await supabase.from('shipping_profiles').insert(payload);
+    if (profile.id) {
+      await supabase.from('shipping_profiles').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', profile.id);
+    } else {
+      await supabase.from('shipping_profiles').insert(payload);
+    }
 
     setLoading(false);
-    if (error) {
-      toast({ title: 'Ошибка', description: error.message, variant: 'destructive' });
-    } else {
-      toast({ title: 'Данные отправки сохранены ✅' });
-      setProfileSaved(true);
-      setEditingProfile(false);
-      setProfileExpanded(false);
-    }
+    toast({ title: 'Данные сохранены ✅' });
+    setEditingProfile(null);
+    setIsAddingNew(false);
+    await loadProfiles();
   };
+
+  const deleteProfile = async (id: string) => {
+    await supabase.from('shipping_profiles').delete().eq('id', id);
+    if (selectedProfileId === id) setSelectedProfileId(null);
+    toast({ title: 'Профиль удалён' });
+    await loadProfiles();
+  };
+
+  const startEdit = (p: ShippingProfile) => {
+    setEditingProfile({ ...p });
+    setIsAddingNew(false);
+  };
+
+  const startAddNew = () => {
+    setEditingProfile({ ...emptyProfile });
+    setIsAddingNew(true);
+  };
+
+  const cancelEdit = () => {
+    setEditingProfile(null);
+    setIsAddingNew(false);
+  };
+
+  const handlePackagingChange = (value: string, setter: (p: ShippingProfile) => void, current: ShippingProfile) => {
+    const opt = PACKAGING_OPTIONS.find(o => o.label === value);
+    setter({ ...current, packaging_type: value, packaging_price: opt?.price || 0 });
+  };
+
+  const selectedProfile = profiles.find(p => p.id === selectedProfileId);
 
   // --- Warehouse items ---
   const loadItems = async () => {
@@ -145,17 +175,18 @@ export function DeliveryModule({ userId }: DeliveryModuleProps) {
       return;
     }
     setLoading(true);
+    const sp = selectedProfile || emptyProfile;
     const { error } = await supabase.from('deliveries').insert({
       user_id: userId,
       product_name: newName.trim(),
       tracking_number: newTrack.trim() || null,
-      recipient_name: profile.recipient_name || '-',
-      recipient_phone: profile.recipient_phone || '-',
-      is_redirect: profile.delivery_type === 'redirect',
-      transport_company: profile.transport_company || null,
-      delivery_address: profile.delivery_address || null,
-      packaging_type: profile.packaging_type || null,
-      packaging_price: profile.packaging_price || null,
+      recipient_name: sp.recipient_name || '-',
+      recipient_phone: sp.recipient_phone || '-',
+      is_redirect: sp.delivery_type === 'redirect',
+      transport_company: sp.transport_company || null,
+      delivery_address: sp.delivery_address || null,
+      packaging_type: sp.packaging_type || null,
+      packaging_price: sp.packaging_price || null,
       status: 'warehouse',
     });
     setLoading(false);
@@ -179,8 +210,8 @@ export function DeliveryModule({ userId }: DeliveryModuleProps) {
       toast({ title: 'Нет товаров для отправки', variant: 'destructive' });
       return;
     }
-    if (!profileSaved) {
-      toast({ title: 'Сначала сохраните данные отправки', variant: 'destructive' });
+    if (!selectedProfile) {
+      toast({ title: 'Выберите профиль отправки', variant: 'destructive' });
       return;
     }
     setLoading(true);
@@ -189,24 +220,19 @@ export function DeliveryModule({ userId }: DeliveryModuleProps) {
       .from('deliveries')
       .update({
         status: 'sent',
-        recipient_name: profile.recipient_name,
-        recipient_phone: profile.recipient_phone,
-        is_redirect: profile.delivery_type === 'redirect',
-        transport_company: profile.transport_company || null,
-        delivery_address: profile.delivery_address || null,
-        packaging_type: profile.packaging_type || null,
-        packaging_price: profile.packaging_price || null,
+        recipient_name: selectedProfile.recipient_name,
+        recipient_phone: selectedProfile.recipient_phone,
+        is_redirect: selectedProfile.delivery_type === 'redirect',
+        transport_company: selectedProfile.transport_company || null,
+        delivery_address: selectedProfile.delivery_address || null,
+        packaging_type: selectedProfile.packaging_type || null,
+        packaging_price: selectedProfile.packaging_price || null,
         updated_at: new Date().toISOString(),
       })
       .in('id', ids);
     setLoading(false);
     toast({ title: 'Посылка отправлена 🚀' });
     loadItems();
-  };
-
-  const handlePackagingChange = (value: string) => {
-    const opt = PACKAGING_OPTIONS.find(o => o.label === value);
-    setProfile(p => ({ ...p, packaging_type: value, packaging_price: opt?.price || 0 }));
   };
 
   const warehouseItems = items.filter(i => i.status === 'warehouse');
@@ -224,114 +250,100 @@ export function DeliveryModule({ userId }: DeliveryModuleProps) {
         </div>
         <p className="text-sm text-muted-foreground leading-relaxed">
           📦 <strong>Куда отправить посылку:</strong> Склад консолидации в Китае.
-          Заполните данные отправки один раз, затем добавляйте товары на склад и отправляйте.
+          Заполните данные отправки, затем добавляйте товары на склад и отправляйте.
         </p>
       </div>
 
-      {/* Shipping profile */}
+      {/* Shipping profiles */}
       <div className="bg-card rounded-2xl shadow-soft border border-border overflow-hidden">
         <button
-          onClick={() => {
-            if (profileSaved && !editingProfile) {
-              setProfileExpanded(!profileExpanded);
-            } else {
-              setProfileExpanded(!profileExpanded);
-            }
-          }}
+          onClick={() => setProfilesExpanded(!profilesExpanded)}
           className="w-full flex items-center justify-between p-5 hover:bg-muted/50 transition-colors"
         >
           <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
             <Send size={20} className="text-primary" />
             Данные отправки
-            {profileSaved && !editingProfile && (
-              <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full font-medium">
-                Сохранено
+            {profiles.length > 0 && (
+              <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+                {profiles.length}
               </span>
             )}
           </h2>
-          {profileExpanded ? <ChevronUp size={20} className="text-muted-foreground" /> : <ChevronDown size={20} className="text-muted-foreground" />}
+          {profilesExpanded ? <ChevronUp size={20} className="text-muted-foreground" /> : <ChevronDown size={20} className="text-muted-foreground" />}
         </button>
 
-        {profileExpanded && (
-          <div className="px-5 pb-5 space-y-4 border-t border-border pt-4">
-            {profileSaved && !editingProfile ? (
-              /* Read-only view */
-              <div className="space-y-2 text-sm">
-                <p><span className="text-muted-foreground">ФИО:</span> <span className="font-medium text-foreground">{profile.recipient_name}</span></p>
-                <p><span className="text-muted-foreground">Телефон:</span> <span className="font-medium text-foreground">{profile.recipient_phone}</span></p>
-                <p><span className="text-muted-foreground">Способ:</span> <span className="font-medium text-foreground">{profile.delivery_type === 'pickup' ? 'Самовывоз' : 'Переадресовка'}</span></p>
-                {profile.delivery_type === 'redirect' && (
-                  <>
-                    {profile.transport_company && <p><span className="text-muted-foreground">ТК:</span> <span className="font-medium text-foreground">{profile.transport_company}</span></p>}
-                    {profile.delivery_address && <p><span className="text-muted-foreground">Адрес:</span> <span className="font-medium text-foreground">{profile.delivery_address}</span></p>}
-                    {profile.packaging_type && <p><span className="text-muted-foreground">Упаковка:</span> <span className="font-medium text-foreground">{profile.packaging_type} ({profile.packaging_price}$)</span></p>}
-                  </>
-                )}
-                <Button variant="outline" size="sm" onClick={() => setEditingProfile(true)} className="mt-2">
-                  <Edit2 size={14} className="mr-1" /> Изменить
-                </Button>
-              </div>
-            ) : (
-              /* Edit form */
-              <div className="grid gap-4">
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>ФИО получателя *</Label>
-                    <Input value={profile.recipient_name} onChange={e => setProfile(p => ({ ...p, recipient_name: e.target.value }))} placeholder="Иванов Иван Иванович" />
+        {profilesExpanded && (
+          <div className="px-5 pb-5 space-y-3 border-t border-border pt-4">
+            {/* Saved profiles list */}
+            {profiles.map(p => (
+              <div
+                key={p.id}
+                className={`rounded-xl border p-4 cursor-pointer transition-all ${
+                  selectedProfileId === p.id
+                    ? 'border-primary bg-primary/5 ring-1 ring-primary/30'
+                    : 'border-border hover:border-primary/40'
+                }`}
+                onClick={() => setSelectedProfileId(p.id!)}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0 space-y-1 text-sm">
+                    <p className="font-semibold text-foreground truncate">{p.recipient_name}</p>
+                    <p className="text-muted-foreground">{p.recipient_phone}</p>
+                    <p className="text-muted-foreground">
+                      {p.delivery_type === 'pickup' ? '📍 Самовывоз' : `🚛 ${p.transport_company || 'Переадресовка'}`}
+                    </p>
+                    {p.delivery_type === 'redirect' && p.delivery_address && (
+                      <p className="text-muted-foreground text-xs truncate">{p.delivery_address}</p>
+                    )}
+                    {p.packaging_type && (
+                      <p className="text-muted-foreground text-xs">📦 {p.packaging_type} — {p.packaging_price}$</p>
+                    )}
                   </div>
-                  <div className="space-y-2">
-                    <Label>Номер телефона *</Label>
-                    <Input value={profile.recipient_phone} onChange={e => setProfile(p => ({ ...p, recipient_phone: e.target.value }))} placeholder="+7 (999) 123-45-67" />
+                  <div className="flex gap-1 shrink-0">
+                    {selectedProfileId === p.id && (
+                      <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-medium mr-1 self-start">
+                        Выбран
+                      </span>
+                    )}
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8"
+                      onClick={(e) => { e.stopPropagation(); startEdit(p); }}
+                    >
+                      <Edit2 size={14} />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={(e) => { e.stopPropagation(); deleteProfile(p.id!); }}
+                    >
+                      <Trash2 size={14} />
+                    </Button>
                   </div>
                 </div>
-
-                <div className="space-y-2">
-                  <Label>Способ получения</Label>
-                  <RadioGroup value={profile.delivery_type} onValueChange={(v) => setProfile(p => ({ ...p, delivery_type: v as 'pickup' | 'redirect' }))} className="flex gap-4">
-                    <div className="flex items-center gap-2 p-3 bg-muted rounded-xl flex-1 cursor-pointer">
-                      <RadioGroupItem value="pickup" id="pickup" />
-                      <Label htmlFor="pickup" className="cursor-pointer font-medium">Самовывоз</Label>
-                    </div>
-                    <div className="flex items-center gap-2 p-3 bg-muted rounded-xl flex-1 cursor-pointer">
-                      <RadioGroupItem value="redirect" id="redirect" />
-                      <Label htmlFor="redirect" className="cursor-pointer font-medium">Переадресовка</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-
-                {profile.delivery_type === 'redirect' && (
-                  <div className="grid gap-4 pl-1 border-l-2 border-primary/30 ml-2">
-                    <div className="space-y-2 pl-4">
-                      <Label>Транспортная компания</Label>
-                      <Select value={profile.transport_company} onValueChange={v => setProfile(p => ({ ...p, transport_company: v }))}>
-                        <SelectTrigger><SelectValue placeholder="Выберите ТК" /></SelectTrigger>
-                        <SelectContent>
-                          {TRANSPORT_COMPANIES.map(tc => (<SelectItem key={tc} value={tc}>{tc}</SelectItem>))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2 pl-4">
-                      <Label>Адрес получения</Label>
-                      <Input value={profile.delivery_address} onChange={e => setProfile(p => ({ ...p, delivery_address: e.target.value }))} placeholder="Домашний адрес в формате: город, улица, дом" className="placeholder:text-muted-foreground/60" />
-                    </div>
-                    <div className="space-y-2 pl-4">
-                      <Label>Тип упаковки</Label>
-                      <Select value={profile.packaging_type} onValueChange={handlePackagingChange}>
-                        <SelectTrigger><SelectValue placeholder="Выберите упаковку" /></SelectTrigger>
-                        <SelectContent>
-                          {PACKAGING_OPTIONS.map(opt => (<SelectItem key={opt.label} value={opt.label}>{opt.label} — {opt.price}$</SelectItem>))}
-                        </SelectContent>
-                      </Select>
-                      {profile.packaging_type && <p className="text-sm text-primary font-medium">Стоимость упаковки: {profile.packaging_price}$</p>}
-                    </div>
-                  </div>
-                )}
-
-                <Button onClick={saveProfile} disabled={loading} className="w-full font-bold">
-                  <Save size={18} className="mr-2" />
-                  {loading ? 'Сохранение...' : 'Сохранить данные отправки'}
-                </Button>
               </div>
+            ))}
+
+            {/* Add new profile button */}
+            {!editingProfile && (
+              <Button variant="outline" onClick={startAddNew} className="w-full">
+                <Plus size={16} className="mr-2" /> Добавить адрес доставки
+              </Button>
+            )}
+
+            {/* Edit / Add form */}
+            {editingProfile && (
+              <ProfileForm
+                profile={editingProfile}
+                onChange={setEditingProfile}
+                onSave={() => saveProfile(editingProfile)}
+                onCancel={cancelEdit}
+                onPackagingChange={(v) => handlePackagingChange(v, setEditingProfile, editingProfile)}
+                loading={loading}
+                isNew={isAddingNew}
+              />
             )}
           </div>
         )}
@@ -344,7 +356,6 @@ export function DeliveryModule({ userId }: DeliveryModuleProps) {
           Мой склад
         </h2>
 
-        {/* Add item row */}
         <div className="flex gap-2 items-end">
           <div className="flex-1 space-y-1">
             <Label className="text-xs">Название товара</Label>
@@ -359,7 +370,6 @@ export function DeliveryModule({ userId }: DeliveryModuleProps) {
           </Button>
         </div>
 
-        {/* Items list */}
         {warehouseItems.length > 0 ? (
           <div className="space-y-2">
             {warehouseItems.map(item => (
@@ -381,12 +391,22 @@ export function DeliveryModule({ userId }: DeliveryModuleProps) {
           </p>
         )}
 
-        {/* Send button */}
         {warehouseItems.length > 0 && (
-          <Button onClick={sendAll} disabled={loading} className="w-full font-bold" size="lg">
-            <Send size={18} className="mr-2" />
-            Отправить посылку ({warehouseItems.length} {warehouseItems.length === 1 ? 'товар' : warehouseItems.length < 5 ? 'товара' : 'товаров'})
-          </Button>
+          <div className="space-y-2">
+            {selectedProfile ? (
+              <p className="text-xs text-muted-foreground text-center">
+                Отправка по профилю: <strong className="text-foreground">{selectedProfile.recipient_name}</strong>
+              </p>
+            ) : (
+              <p className="text-xs text-destructive text-center">
+                ⚠️ Выберите профиль отправки выше
+              </p>
+            )}
+            <Button onClick={sendAll} disabled={loading || !selectedProfile} className="w-full font-bold" size="lg">
+              <Send size={18} className="mr-2" />
+              Отправить посылку ({warehouseItems.length} {warehouseItems.length === 1 ? 'товар' : warehouseItems.length < 5 ? 'товара' : 'товаров'})
+            </Button>
+          </div>
         )}
       </div>
 
@@ -411,6 +431,95 @@ export function DeliveryModule({ userId }: DeliveryModuleProps) {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+/* ---------- Profile Form sub-component ---------- */
+
+function ProfileForm({
+  profile,
+  onChange,
+  onSave,
+  onCancel,
+  onPackagingChange,
+  loading,
+  isNew,
+}: {
+  profile: ShippingProfile;
+  onChange: (p: ShippingProfile) => void;
+  onSave: () => void;
+  onCancel: () => void;
+  onPackagingChange: (v: string) => void;
+  loading: boolean;
+  isNew: boolean;
+}) {
+  return (
+    <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="font-bold text-foreground text-sm">{isNew ? 'Новый адрес' : 'Редактирование'}</h3>
+        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onCancel}>
+          <X size={14} />
+        </Button>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>ФИО получателя *</Label>
+          <Input value={profile.recipient_name} onChange={e => onChange({ ...profile, recipient_name: e.target.value })} placeholder="Иванов Иван Иванович" />
+        </div>
+        <div className="space-y-2">
+          <Label>Номер телефона *</Label>
+          <Input value={profile.recipient_phone} onChange={e => onChange({ ...profile, recipient_phone: e.target.value })} placeholder="+7 (999) 123-45-67" />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Способ получения</Label>
+        <RadioGroup value={profile.delivery_type} onValueChange={(v) => onChange({ ...profile, delivery_type: v as 'pickup' | 'redirect' })} className="flex gap-4">
+          <div className="flex items-center gap-2 p-3 bg-muted rounded-xl flex-1 cursor-pointer">
+            <RadioGroupItem value="pickup" id={`pickup-${profile.id || 'new'}`} />
+            <Label htmlFor={`pickup-${profile.id || 'new'}`} className="cursor-pointer font-medium">Самовывоз</Label>
+          </div>
+          <div className="flex items-center gap-2 p-3 bg-muted rounded-xl flex-1 cursor-pointer">
+            <RadioGroupItem value="redirect" id={`redirect-${profile.id || 'new'}`} />
+            <Label htmlFor={`redirect-${profile.id || 'new'}`} className="cursor-pointer font-medium">Переадресовка</Label>
+          </div>
+        </RadioGroup>
+      </div>
+
+      {profile.delivery_type === 'redirect' && (
+        <div className="grid gap-4 pl-1 border-l-2 border-primary/30 ml-2">
+          <div className="space-y-2 pl-4">
+            <Label>Транспортная компания</Label>
+            <Select value={profile.transport_company} onValueChange={v => onChange({ ...profile, transport_company: v })}>
+              <SelectTrigger><SelectValue placeholder="Выберите ТК" /></SelectTrigger>
+              <SelectContent>
+                {TRANSPORT_COMPANIES.map(tc => (<SelectItem key={tc} value={tc}>{tc}</SelectItem>))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2 pl-4">
+            <Label>Адрес получения</Label>
+            <Input value={profile.delivery_address} onChange={e => onChange({ ...profile, delivery_address: e.target.value })} placeholder="Домашний адрес в формате: город, улица, дом" className="placeholder:text-muted-foreground/60" />
+          </div>
+          <div className="space-y-2 pl-4">
+            <Label>Тип упаковки</Label>
+            <Select value={profile.packaging_type} onValueChange={onPackagingChange}>
+              <SelectTrigger><SelectValue placeholder="Выберите упаковку" /></SelectTrigger>
+              <SelectContent>
+                {PACKAGING_OPTIONS.map(opt => (<SelectItem key={opt.label} value={opt.label}>{opt.label} — {opt.price}$</SelectItem>))}
+              </SelectContent>
+            </Select>
+            {profile.packaging_type && <p className="text-sm text-primary font-medium">Стоимость упаковки: {profile.packaging_price}$</p>}
+          </div>
+        </div>
+      )}
+
+      <Button onClick={onSave} disabled={loading} className="w-full font-bold">
+        <Save size={18} className="mr-2" />
+        {loading ? 'Сохранение...' : 'Сохранить'}
+      </Button>
     </div>
   );
 }
