@@ -121,7 +121,7 @@ export function Dashboard({
           <button
             key={item.id}
             onClick={() => setActiveTab(item.id)}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium relative ${
               activeTab === item.id
                 ? 'bg-secondary text-secondary-foreground'
                 : 'text-muted-foreground hover:bg-muted'
@@ -129,6 +129,11 @@ export function Dashboard({
           >
             <item.icon size={20} />
             {item.label}
+            {item.badge > 0 && (
+              <span className="ml-auto bg-destructive text-destructive-foreground text-[11px] font-bold min-w-[20px] h-5 flex items-center justify-center rounded-full px-1.5">
+                {item.badge}
+              </span>
+            )}
           </button>
         ))}
       </nav>
