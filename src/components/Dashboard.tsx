@@ -13,7 +13,8 @@ import {
   Link2,
   Shield,
   Truck,
-  ShoppingBag
+  ShoppingBag,
+  ClipboardList
 } from 'lucide-react';
 import { User } from '@/hooks/useAuth';
 import { ProgressRing } from './ProgressRing';
@@ -22,6 +23,7 @@ import { SettingsPage } from './SettingsPage';
 import { AdminPanel } from './AdminPanel';
 import { DeliveryModule } from './DeliveryModule';
 import { OrderForMeModule } from './OrderForMeModule';
+import { AdminRequests } from './AdminRequests';
 import { TOTAL_MODULES, ADMIN_EMAIL } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { useTheme } from './ThemeProvider';
@@ -47,7 +49,7 @@ export function Dashboard({
   progressPercentage,
   onToggleModule 
 }: DashboardProps) {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'knowledge' | 'delivery' | 'order' | 'settings' | 'admin'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'knowledge' | 'delivery' | 'order' | 'settings' | 'admin' | 'requests'>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
@@ -73,7 +75,10 @@ export function Dashboard({
     { id: 'delivery' as const, icon: Truck, label: 'Доставка' },
     { id: 'order' as const, icon: ShoppingBag, label: 'Закажите мне' },
     { id: 'settings' as const, icon: UserIcon, label: 'Личный кабинет' },
-    ...(isAdmin ? [{ id: 'admin' as const, icon: Shield, label: 'Пользователи' }] : []),
+    ...(isAdmin ? [
+      { id: 'requests' as const, icon: ClipboardList, label: 'Заявки' },
+      { id: 'admin' as const, icon: Shield, label: 'Пользователи' },
+    ] : []),
   ];
 
   const ThemeToggle = () => (
@@ -256,6 +261,7 @@ export function Dashboard({
         {activeTab === 'settings' && (
           <SettingsPage userName={displayName} onSaveName={handleSaveName} userId={user.id} />
         )}
+        {activeTab === 'requests' && isAdmin && <AdminRequests />}
         {activeTab === 'admin' && isAdmin && <AdminPanel />}
       </div>
     </div>
