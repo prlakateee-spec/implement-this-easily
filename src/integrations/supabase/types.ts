@@ -44,6 +44,57 @@ export type Database = {
         }
         Relationships: []
       }
+      deliveries: {
+        Row: {
+          created_at: string
+          delivery_address: string | null
+          id: string
+          is_redirect: boolean
+          packaging_price: number | null
+          packaging_type: string | null
+          product_name: string
+          recipient_name: string
+          recipient_phone: string
+          status: string
+          tracking_number: string | null
+          transport_company: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delivery_address?: string | null
+          id?: string
+          is_redirect?: boolean
+          packaging_price?: number | null
+          packaging_type?: string | null
+          product_name: string
+          recipient_name: string
+          recipient_phone: string
+          status?: string
+          tracking_number?: string | null
+          transport_company?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delivery_address?: string | null
+          id?: string
+          is_redirect?: boolean
+          packaging_price?: number | null
+          packaging_type?: string | null
+          product_name?: string
+          recipient_name?: string
+          recipient_phone?: string
+          status?: string
+          tracking_number?: string | null
+          transport_company?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       lesson_images: {
         Row: {
           caption: string | null
