@@ -99,7 +99,7 @@ export function AdminRequests() {
     const { data } = await supabase
       .from('deliveries')
       .select('*')
-      .in('status', ['sent', 'warehouse'])
+      .neq('status', 'warehouse')
       .order('created_at', { ascending: false });
     if (data) setDeliveries(data as Delivery[]);
   };
