@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Layout, 
   BookOpen, 
@@ -16,6 +16,7 @@ import {
   ShoppingBag,
   ClipboardList
 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/hooks/useAuth';
 import { ProgressRing } from './ProgressRing';
 import { KnowledgeBase } from './KnowledgeBase';
@@ -51,7 +52,22 @@ export function Dashboard({
 }: DashboardProps) {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'knowledge' | 'delivery' | 'order' | 'settings' | 'admin' | 'requests'>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [unviewedCount, setUnviewedCount] = useState(0);
   const { theme, toggleTheme } = useTheme();
+
+  useEffect(() => {
+    if (!(user.email === ADMIN_EMAIL || user.email === 'terra_ai_team@kitay.club')) return;
+    const fetchUnviewed = async () => {
+      const [{ count: c1 }, { count: c2 }] = await Promise.all([
+        supabase.from('deliveries').select('*', { count: 'exact', head: true }).is('admin_viewed_at', null).neq('status', 'warehouse'),
+        supabase.from('order_requests').select('*', { count: 'exact', head: true }).is('admin_viewed_at', null),
+      ]);
+      setUnviewedCount((c1 || 0) + (c2 || 0));
+    };
+    fetchUnviewed();
+    const interval = setInterval(fetchUnviewed, 30000);
+    return () => clearInterval(interval);
+  }, [user.email]);
 
   const [displayName, setDisplayName] = useState(user.name);
 
@@ -70,14 +86,14 @@ export function Dashboard({
   const isAdmin = user.email === ADMIN_EMAIL || user.email === 'terra_ai_team@kitay.club';
 
   const navItems = [
-    { id: 'dashboard' as const, icon: Layout, label: 'Главная' },
-    { id: 'knowledge' as const, icon: BookOpen, label: 'База знаний' },
-    { id: 'delivery' as const, icon: Truck, label: 'Доставка' },
-    { id: 'order' as const, icon: ShoppingBag, label: 'Закажите мне' },
-    { id: 'settings' as const, icon: UserIcon, label: 'Личный кабинет' },
+    { id: 'dashboard' as const, icon: Layout, label: 'Главная', badge: 0 },
+    { id: 'knowledge' as const, icon: BookOpen, label: 'База знаний', badge: 0 },
+    { id: 'delivery' as const, icon: Truck, label: 'Доставка', badge: 0 },
+    { id: 'order' as const, icon: ShoppingBag, label: 'Закажите мне', badge: 0 },
+    { id: 'settings' as const, icon: UserIcon, label: 'Личный кабинет', badge: 0 },
     ...(isAdmin ? [
-      { id: 'requests' as const, icon: ClipboardList, label: 'Заявки' },
-      { id: 'admin' as const, icon: Shield, label: 'Пользователи' },
+      { id: 'requests' as const, icon: ClipboardList, label: 'Заявки', badge: unviewedCount },
+      { id: 'admin' as const, icon: Shield, label: 'Пользователи', badge: 0 },
     ] : []),
   ];
 
@@ -105,7 +121,7 @@ export function Dashboard({
           <button
             key={item.id}
             onClick={() => setActiveTab(item.id)}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium relative ${
               activeTab === item.id
                 ? 'bg-secondary text-secondary-foreground'
                 : 'text-muted-foreground hover:bg-muted'
@@ -113,6 +129,11 @@ export function Dashboard({
           >
             <item.icon size={20} />
             {item.label}
+            {item.badge > 0 && (
+              <span className="ml-auto bg-destructive text-destructive-foreground text-[11px] font-bold min-w-[20px] h-5 flex items-center justify-center rounded-full px-1.5">
+                {item.badge}
+              </span>
+            )}
           </button>
         ))}
       </nav>
@@ -158,10 +179,15 @@ export function Dashboard({
             <button
               key={item.id}
               onClick={() => { setActiveTab(item.id); setMobileMenuOpen(false); }}
-              className="w-full flex items-center gap-3 p-4 bg-muted rounded-2xl font-bold text-lg"
+              className="w-full flex items-center gap-3 p-4 bg-muted rounded-2xl font-bold text-lg relative"
             >
               <item.icon size={24} />
               {item.label}
+              {item.badge > 0 && (
+                <span className="ml-auto bg-destructive text-destructive-foreground text-xs font-bold min-w-[22px] h-[22px] flex items-center justify-center rounded-full px-1.5">
+                  {item.badge}
+                </span>
+              )}
             </button>
           ))}
           <button
