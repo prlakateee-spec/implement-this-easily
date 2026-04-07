@@ -86,14 +86,14 @@ export function Dashboard({
   const isAdmin = user.email === ADMIN_EMAIL || user.email === 'terra_ai_team@kitay.club';
 
   const navItems = [
-    { id: 'dashboard' as const, icon: Layout, label: 'Главная' },
-    { id: 'knowledge' as const, icon: BookOpen, label: 'База знаний' },
-    { id: 'delivery' as const, icon: Truck, label: 'Доставка' },
-    { id: 'order' as const, icon: ShoppingBag, label: 'Закажите мне' },
-    { id: 'settings' as const, icon: UserIcon, label: 'Личный кабинет' },
+    { id: 'dashboard' as const, icon: Layout, label: 'Главная', badge: 0 },
+    { id: 'knowledge' as const, icon: BookOpen, label: 'База знаний', badge: 0 },
+    { id: 'delivery' as const, icon: Truck, label: 'Доставка', badge: 0 },
+    { id: 'order' as const, icon: ShoppingBag, label: 'Закажите мне', badge: 0 },
+    { id: 'settings' as const, icon: UserIcon, label: 'Личный кабинет', badge: 0 },
     ...(isAdmin ? [
-      { id: 'requests' as const, icon: ClipboardList, label: 'Заявки' },
-      { id: 'admin' as const, icon: Shield, label: 'Пользователи' },
+      { id: 'requests' as const, icon: ClipboardList, label: 'Заявки', badge: unviewedCount },
+      { id: 'admin' as const, icon: Shield, label: 'Пользователи', badge: 0 },
     ] : []),
   ];
 
