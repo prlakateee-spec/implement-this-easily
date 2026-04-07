@@ -267,9 +267,16 @@ export function OrderForMeModule({ userId }: OrderForMeModuleProps) {
     loadOrders();
   };
 
+  const ORDER_STATUS_LABELS: Record<string, string> = {
+    pending: 'В обработке', payment_link: 'Отправлена ссылка на оплату', paid: 'Оплачено',
+    ordered: 'Товар заказан', packed: 'Посылка сформирована', sent_to_moscow: 'Отправлена в Москву',
+    arrived_moscow: 'Прибытие в Москву', handed_to_tk: 'Передана в ТК',
+    in_transit: 'Едет к вам в город', received: 'Посылка получена', completed: 'Выполнен',
+  };
+
   const totalCny = cart.reduce((sum, item) => sum + (parseFloat(item.price_cny) || 0), 0);
-  const pendingOrders = orders.filter(o => o.status === 'pending');
-  const completedOrders = orders.filter(o => o.status !== 'pending');
+  const activeOrders = orders.filter(o => o.status !== 'received' && o.status !== 'completed');
+  const doneOrders = orders.filter(o => o.status === 'received' || o.status === 'completed');
 
   return (
     <div className="p-6 lg:p-10 space-y-6 animate-fade-in-up max-w-3xl mx-auto">

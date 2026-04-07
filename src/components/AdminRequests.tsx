@@ -240,11 +240,22 @@ export function AdminRequests() {
           <ChevronLeft size={18} /> Назад к заявкам
         </button>
         <div className="bg-card rounded-2xl p-6 border border-border shadow-soft space-y-5">
-          <div className="flex items-start justify-between">
+          <div className="flex items-start justify-between gap-3">
             <h2 className="text-xl font-bold text-foreground">{o.product_name}</h2>
-            <span className={`text-xs px-3 py-1 rounded-full font-medium ${statusColor[o.status] || 'bg-muted text-muted-foreground'}`}>
-              {statusLabel[o.status] || o.status}
-            </span>
+          </div>
+
+          <div className="bg-muted/50 rounded-xl p-4 space-y-2">
+            <p className="text-xs text-muted-foreground font-semibold uppercase">Статус заказа</p>
+            <Select value={o.status} onValueChange={(v) => updateOrderStatus(o.id, v)}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ORDER_STATUSES.map(s => (
+                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="bg-muted/50 rounded-xl p-4">
