@@ -10,7 +10,93 @@ import {
   DollarSign, Users, Link2, Check
 } from 'lucide-react';
 
-const ORDER_STATUSES = [
+function AmbassadorDetail({ ambassador: a, profiles, onBack, onActivate, onUpdateBalance, onUpdateStats, formatDate }: {
+  ambassador: { id: string; user_id: string; referral_link: string | null; balance_usd: number; is_active: boolean; referrals_channel: number; referrals_club: number; referrals_orders: number; created_at: string };
+  profiles: Record<string, { username: string; display_name: string | null }>;
+  onBack: () => void;
+  onActivate: (id: string, link: string) => void;
+  onUpdateBalance: (id: string, balance: number) => void;
+  onUpdateStats: (id: string, field: string, value: number) => void;
+  formatDate: (d: string) => string;
+}) {
+  const [editLink, setEditLink] = useState(a.referral_link || '');
+  const [editBalance, setEditBalance] = useState(a.balance_usd.toString());
+  const [editChannel, setEditChannel] = useState(a.referrals_channel.toString());
+  const [editClub, setEditClub] = useState(a.referrals_club.toString());
+  const [editOrders, setEditOrders] = useState(a.referrals_orders.toString());
+  const p = profiles[a.user_id];
+
+  return (
+    <div className="p-6 lg:p-10 space-y-6 animate-fade-in-up">
+      <button onClick={onBack} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+        <ChevronLeft size={18} /> Назад к амбассадорам
+      </button>
+      <div className="bg-card rounded-2xl p-6 border border-border shadow-soft space-y-5">
+        <div className="flex items-start justify-between">
+          <h2 className="text-xl font-bold text-foreground">Амбассадор</h2>
+          <Badge className={a.is_active ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'}>
+            {a.is_active ? 'Активен' : 'Ожидает'}
+          </Badge>
+        </div>
+        <div className="bg-muted/50 rounded-xl p-4 space-y-1">
+          <p className="text-xs text-muted-foreground mb-2 font-semibold uppercase">Пользователь</p>
+          <div className="flex items-center gap-2 text-sm">
+            <User size={14} className="text-muted-foreground" />
+            <span className="font-medium">{p?.display_name || p?.username || 'Неизвестный'}</span>
+          </div>
+          {p?.username && (
+            <div className="flex items-center gap-2 text-sm">
+              <MessageCircle size={14} className="text-muted-foreground" />
+              <span className="text-primary font-mono">@{p.username}</span>
+            </div>
+          )}
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs text-muted-foreground font-semibold uppercase">Реферальная ссылка</label>
+          <div className="flex gap-2">
+            <Input value={editLink} onChange={e => setEditLink(e.target.value)} placeholder="https://t.me/..." className="flex-1" />
+            <Button size="sm" onClick={() => onActivate(a.id, editLink)}>
+              <Check size={16} className="mr-1" /> {a.is_active ? 'Обновить' : 'Активировать'}
+            </Button>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs text-muted-foreground font-semibold uppercase">Баланс (USD)</label>
+          <div className="flex gap-2">
+            <Input type="number" step="0.01" value={editBalance} onChange={e => setEditBalance(e.target.value)} className="w-32" />
+            <Button size="sm" variant="outline" onClick={() => onUpdateBalance(a.id, parseFloat(editBalance) || 0)}>Сохранить</Button>
+          </div>
+        </div>
+        <div className="space-y-3">
+          <p className="text-xs text-muted-foreground font-semibold uppercase">Статистика рефералов</p>
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { label: 'В канал', val: editChannel, set: setEditChannel, field: 'referrals_channel' },
+              { label: 'В клуб', val: editClub, set: setEditClub, field: 'referrals_club' },
+              { label: 'Заказы', val: editOrders, set: setEditOrders, field: 'referrals_orders' },
+            ].map(s => (
+              <div key={s.field} className="space-y-1">
+                <label className="text-xs text-muted-foreground">{s.label}</label>
+                <div className="flex gap-1">
+                  <Input type="number" value={s.val} onChange={e => s.set(e.target.value)} className="w-full" />
+                  <Button size="icon" variant="ghost" onClick={() => onUpdateStats(a.id, s.field, parseInt(s.val) || 0)}><Check size={14} /></Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="flex items-start gap-3 py-2">
+          <Calendar size={16} className="text-muted-foreground mt-0.5 shrink-0" />
+          <div>
+            <p className="text-xs text-muted-foreground">Дата заявки</p>
+            <p className="text-sm font-medium text-foreground">{formatDate(a.created_at)}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
   { value: 'pending', label: 'В обработке' },
   { value: 'payment_link', label: 'Отправлена ссылка на оплату' },
   { value: 'paid', label: 'Оплачено' },
