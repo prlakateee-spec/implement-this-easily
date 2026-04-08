@@ -97,6 +97,7 @@ function AmbassadorDetail({ ambassador: a, profiles, onBack, onActivate, onUpdat
   );
 }
 
+const ORDER_STATUSES = [
   { value: 'pending', label: 'В обработке' },
   { value: 'payment_link', label: 'Отправлена ссылка на оплату' },
   { value: 'paid', label: 'Оплачено' },
