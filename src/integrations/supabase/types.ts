@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      ambassador_profiles: {
+        Row: {
+          balance_usd: number
+          created_at: string
+          id: string
+          is_active: boolean
+          referral_link: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance_usd?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          referral_link?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance_usd?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          referral_link?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       courses: {
         Row: {
           created_at: string | null
