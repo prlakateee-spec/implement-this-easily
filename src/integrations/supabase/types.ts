@@ -21,6 +21,9 @@ export type Database = {
           id: string
           is_active: boolean
           referral_link: string | null
+          referrals_channel: number
+          referrals_club: number
+          referrals_orders: number
           updated_at: string
           user_id: string
         }
@@ -30,6 +33,9 @@ export type Database = {
           id?: string
           is_active?: boolean
           referral_link?: string | null
+          referrals_channel?: number
+          referrals_club?: number
+          referrals_orders?: number
           updated_at?: string
           user_id: string
         }
@@ -39,6 +45,9 @@ export type Database = {
           id?: string
           is_active?: boolean
           referral_link?: string | null
+          referrals_channel?: number
+          referrals_club?: number
+          referrals_orders?: number
           updated_at?: string
           user_id?: string
         }

@@ -3,10 +3,99 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import {
   RefreshCw, Truck, ShoppingBag, Package, User, Phone, MapPin,
-  Calendar, ExternalLink, ChevronLeft, MessageCircle, Eye
+  Calendar, ExternalLink, ChevronLeft, MessageCircle, Eye, Sparkles,
+  DollarSign, Users, Link2, Check
 } from 'lucide-react';
+
+function AmbassadorDetail({ ambassador: a, profiles, onBack, onActivate, onUpdateBalance, onUpdateStats, formatDate }: {
+  ambassador: { id: string; user_id: string; referral_link: string | null; balance_usd: number; is_active: boolean; referrals_channel: number; referrals_club: number; referrals_orders: number; created_at: string };
+  profiles: Record<string, { username: string; display_name: string | null }>;
+  onBack: () => void;
+  onActivate: (id: string, link: string) => void;
+  onUpdateBalance: (id: string, balance: number) => void;
+  onUpdateStats: (id: string, field: string, value: number) => void;
+  formatDate: (d: string) => string;
+}) {
+  const [editLink, setEditLink] = useState(a.referral_link || '');
+  const [editBalance, setEditBalance] = useState(a.balance_usd.toString());
+  const [editChannel, setEditChannel] = useState(a.referrals_channel.toString());
+  const [editClub, setEditClub] = useState(a.referrals_club.toString());
+  const [editOrders, setEditOrders] = useState(a.referrals_orders.toString());
+  const p = profiles[a.user_id];
+
+  return (
+    <div className="p-6 lg:p-10 space-y-6 animate-fade-in-up">
+      <button onClick={onBack} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+        <ChevronLeft size={18} /> Назад к амбассадорам
+      </button>
+      <div className="bg-card rounded-2xl p-6 border border-border shadow-soft space-y-5">
+        <div className="flex items-start justify-between">
+          <h2 className="text-xl font-bold text-foreground">Амбассадор</h2>
+          <Badge className={a.is_active ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'}>
+            {a.is_active ? 'Активен' : 'Ожидает'}
+          </Badge>
+        </div>
+        <div className="bg-muted/50 rounded-xl p-4 space-y-1">
+          <p className="text-xs text-muted-foreground mb-2 font-semibold uppercase">Пользователь</p>
+          <div className="flex items-center gap-2 text-sm">
+            <User size={14} className="text-muted-foreground" />
+            <span className="font-medium">{p?.display_name || p?.username || 'Неизвестный'}</span>
+          </div>
+          {p?.username && (
+            <div className="flex items-center gap-2 text-sm">
+              <MessageCircle size={14} className="text-muted-foreground" />
+              <span className="text-primary font-mono">@{p.username}</span>
+            </div>
+          )}
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs text-muted-foreground font-semibold uppercase">Реферальная ссылка</label>
+          <div className="flex gap-2">
+            <Input value={editLink} onChange={e => setEditLink(e.target.value)} placeholder="https://t.me/..." className="flex-1" />
+            <Button size="sm" onClick={() => onActivate(a.id, editLink)}>
+              <Check size={16} className="mr-1" /> {a.is_active ? 'Обновить' : 'Активировать'}
+            </Button>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs text-muted-foreground font-semibold uppercase">Баланс (USD)</label>
+          <div className="flex gap-2">
+            <Input type="number" step="0.01" value={editBalance} onChange={e => setEditBalance(e.target.value)} className="w-32" />
+            <Button size="sm" variant="outline" onClick={() => onUpdateBalance(a.id, parseFloat(editBalance) || 0)}>Сохранить</Button>
+          </div>
+        </div>
+        <div className="space-y-3">
+          <p className="text-xs text-muted-foreground font-semibold uppercase">Статистика рефералов</p>
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { label: 'В канал', val: editChannel, set: setEditChannel, field: 'referrals_channel' },
+              { label: 'В клуб', val: editClub, set: setEditClub, field: 'referrals_club' },
+              { label: 'Заказы', val: editOrders, set: setEditOrders, field: 'referrals_orders' },
+            ].map(s => (
+              <div key={s.field} className="space-y-1">
+                <label className="text-xs text-muted-foreground">{s.label}</label>
+                <div className="flex gap-1">
+                  <Input type="number" value={s.val} onChange={e => s.set(e.target.value)} className="w-full" />
+                  <Button size="icon" variant="ghost" onClick={() => onUpdateStats(a.id, s.field, parseInt(s.val) || 0)}><Check size={14} /></Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="flex items-start gap-3 py-2">
+          <Calendar size={16} className="text-muted-foreground mt-0.5 shrink-0" />
+          <div>
+            <p className="text-xs text-muted-foreground">Дата заявки</p>
+            <p className="text-sm font-medium text-foreground">{formatDate(a.created_at)}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const ORDER_STATUSES = [
   { value: 'pending', label: 'В обработке' },
@@ -68,21 +157,35 @@ interface OrderRequest {
   admin_viewed_at: string | null;
 }
 
+interface AmbassadorProfile {
+  id: string;
+  user_id: string;
+  referral_link: string | null;
+  balance_usd: number;
+  is_active: boolean;
+  referrals_channel: number;
+  referrals_club: number;
+  referrals_orders: number;
+  created_at: string;
+}
+
 interface Profile {
   username: string;
   display_name: string | null;
 }
 
-type Tab = 'deliveries' | 'orders';
+type Tab = 'deliveries' | 'orders' | 'ambassadors';
 
 export function AdminRequests() {
   const [tab, setTab] = useState<Tab>('deliveries');
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [orders, setOrders] = useState<OrderRequest[]>([]);
+  const [ambassadors, setAmbassadors] = useState<AmbassadorProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [profiles, setProfiles] = useState<Record<string, Profile>>({});
   const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<OrderRequest | null>(null);
+  const [selectedAmbassador, setSelectedAmbassador] = useState<AmbassadorProfile | null>(null);
 
   const loadProfiles = async () => {
     const { data } = await supabase.from('user_profiles').select('user_id, username, display_name');
@@ -112,9 +215,17 @@ export function AdminRequests() {
     if (data) setOrders(data as OrderRequest[]);
   };
 
+  const loadAmbassadors = async () => {
+    const { data } = await supabase
+      .from('ambassador_profiles')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (data) setAmbassadors(data as AmbassadorProfile[]);
+  };
+
   const loadAll = async () => {
     setLoading(true);
-    await Promise.all([loadProfiles(), loadDeliveries(), loadOrders()]);
+    await Promise.all([loadProfiles(), loadDeliveries(), loadOrders(), loadAmbassadors()]);
     setLoading(false);
   };
 
@@ -176,6 +287,26 @@ export function AdminRequests() {
     if (selectedDelivery?.id === id) setSelectedDelivery({ ...selectedDelivery, status: newStatus });
   };
 
+  const activateAmbassador = async (id: string, link: string) => {
+    await supabase.from('ambassador_profiles').update({ is_active: true, referral_link: link, updated_at: new Date().toISOString() }).eq('id', id);
+    setAmbassadors(prev => prev.map(a => a.id === id ? { ...a, is_active: true, referral_link: link } : a));
+    if (selectedAmbassador?.id === id) setSelectedAmbassador({ ...selectedAmbassador, is_active: true, referral_link: link });
+  };
+
+  const updateAmbassadorStats = async (id: string, field: string, value: number) => {
+    await supabase.from('ambassador_profiles').update({ [field]: value, updated_at: new Date().toISOString() }).eq('id', id);
+    setAmbassadors(prev => prev.map(a => a.id === id ? { ...a, [field]: value } : a));
+    if (selectedAmbassador?.id === id) setSelectedAmbassador({ ...selectedAmbassador, [field]: value } as AmbassadorProfile);
+  };
+
+  const updateAmbassadorBalance = async (id: string, balance: number) => {
+    await supabase.from('ambassador_profiles').update({ balance_usd: balance, updated_at: new Date().toISOString() }).eq('id', id);
+    setAmbassadors(prev => prev.map(a => a.id === id ? { ...a, balance_usd: balance } : a));
+    if (selectedAmbassador?.id === id) setSelectedAmbassador({ ...selectedAmbassador, balance_usd: balance } as AmbassadorProfile);
+  };
+
+  const newAmbassadorsCount = ambassadors.filter(a => !a.is_active).length;
+
   const ProfileInfo = ({ userId }: { userId: string }) => {
     const p = profiles[userId];
     return (
@@ -207,7 +338,20 @@ export function AdminRequests() {
     );
   };
 
-  // Detail views
+  // Ambassador detail view
+  if (selectedAmbassador) {
+    return (
+      <AmbassadorDetail
+        ambassador={selectedAmbassador}
+        profiles={profiles}
+        onBack={() => setSelectedAmbassador(null)}
+        onActivate={activateAmbassador}
+        onUpdateBalance={updateAmbassadorBalance}
+        onUpdateStats={updateAmbassadorStats}
+        formatDate={formatDate}
+      />
+    );
+  }
   if (selectedDelivery) {
     const d = selectedDelivery;
     return (
@@ -378,6 +522,20 @@ export function AdminRequests() {
             </Badge>
           )}
         </button>
+        <button
+          onClick={() => setTab('ambassadors')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all relative ${
+            tab === 'ambassadors' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <Sparkles size={16} />
+          Амбассадоры ({ambassadors.length})
+          {newAmbassadorsCount > 0 && (
+            <Badge className="bg-destructive text-destructive-foreground text-[10px] px-1.5 py-0 min-w-[18px] h-[18px] flex items-center justify-center">
+              {newAmbassadorsCount}
+            </Badge>
+          )}
+        </button>
       </div>
 
       {loading ? (
@@ -393,21 +551,15 @@ export function AdminRequests() {
               key={d.id}
               onClick={() => openDelivery(d)}
               className={`w-full text-left bg-card rounded-2xl p-4 border shadow-soft transition-all hover:shadow-md ${
-                isNew(d.admin_viewed_at)
-                  ? 'border-primary ring-2 ring-primary/20'
-                  : 'border-border'
+                isNew(d.admin_viewed_at) ? 'border-primary ring-2 ring-primary/20' : 'border-border'
               }`}
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  {isNew(d.admin_viewed_at) && (
-                    <span className="w-2.5 h-2.5 rounded-full bg-primary shrink-0 animate-pulse" />
-                  )}
+                  {isNew(d.admin_viewed_at) && <span className="w-2.5 h-2.5 rounded-full bg-primary shrink-0 animate-pulse" />}
                   <div>
                     <p className="font-bold text-foreground">{d.product_name}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      @{profiles[d.user_id]?.username || '?'} · {formatDate(d.created_at)}
-                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">@{profiles[d.user_id]?.username || '?'} · {formatDate(d.created_at)}</p>
                   </div>
                 </div>
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${statusColor[d.status] || 'bg-muted text-muted-foreground'}`}>
@@ -417,7 +569,7 @@ export function AdminRequests() {
             </button>
           ))}
         </div>
-      ) : (
+      ) : tab === 'orders' ? (
         <div className="space-y-3">
           {orders.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">Нет заявок на выкуп</p>
@@ -426,26 +578,49 @@ export function AdminRequests() {
               key={o.id}
               onClick={() => openOrder(o)}
               className={`w-full text-left bg-card rounded-2xl p-4 border shadow-soft transition-all hover:shadow-md ${
-                isNew(o.admin_viewed_at)
-                  ? 'border-primary ring-2 ring-primary/20'
-                  : 'border-border'
+                isNew(o.admin_viewed_at) ? 'border-primary ring-2 ring-primary/20' : 'border-border'
               }`}
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  {isNew(o.admin_viewed_at) && (
-                    <span className="w-2.5 h-2.5 rounded-full bg-primary shrink-0 animate-pulse" />
-                  )}
+                  {isNew(o.admin_viewed_at) && <span className="w-2.5 h-2.5 rounded-full bg-primary shrink-0 animate-pulse" />}
                   <div>
                     <p className="font-bold text-foreground">{o.product_name}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      @{profiles[o.user_id]?.username || '?'} · {o.price_cny ? `¥${o.price_cny} · ` : ''}{formatDate(o.created_at)}
-                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">@{profiles[o.user_id]?.username || '?'} · {o.price_cny ? `¥${o.price_cny} · ` : ''}{formatDate(o.created_at)}</p>
                   </div>
                 </div>
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${statusColor[o.status] || 'bg-muted text-muted-foreground'}`}>
                   {statusLabel[o.status] || o.status}
                 </span>
+              </div>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {ambassadors.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">Нет заявок амбассадоров</p>
+          ) : ambassadors.map((a) => (
+            <button
+              key={a.id}
+              onClick={() => setSelectedAmbassador(a)}
+              className={`w-full text-left bg-card rounded-2xl p-4 border shadow-soft transition-all hover:shadow-md ${
+                !a.is_active ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-border'
+              }`}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  {!a.is_active && <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0 animate-pulse" />}
+                  <div>
+                    <p className="font-bold text-foreground">@{profiles[a.user_id]?.username || '?'}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      ${a.balance_usd.toFixed(2)} · {formatDate(a.created_at)}
+                    </p>
+                  </div>
+                </div>
+                <Badge className={a.is_active ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'}>
+                  {a.is_active ? 'Активен' : 'Ожидает'}
+                </Badge>
               </div>
             </button>
           ))}

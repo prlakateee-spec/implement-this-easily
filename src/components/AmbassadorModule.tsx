@@ -3,20 +3,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Slider } from '@/components/ui/slider';
 import { toast } from '@/hooks/use-toast';
 import {
-  Gift,
-  Copy,
-  Check,
-  DollarSign,
-  Users,
-  ShoppingBag,
-  Percent,
-  Package,
-  Sparkles,
-  Star,
-  TrendingUp,
-  ArrowRight,
+  Gift, Copy, Check, Users, ShoppingBag, Percent, Package,
+  Sparkles, Star, TrendingUp, ArrowRight, Calculator, Weight,
 } from 'lucide-react';
 
 interface AmbassadorModuleProps {
@@ -28,38 +20,106 @@ interface AmbassadorProfile {
   referral_link: string | null;
   balance_usd: number;
   is_active: boolean;
+  referrals_channel: number;
+  referrals_club: number;
+  referrals_orders: number;
 }
 
 const BONUS_TIERS = [
-  {
-    icon: Users,
-    amount: '$0.1',
-    description: 'за каждого подписчика в канал, пришедшего по твоей ссылке',
-    color: 'text-blue-500',
-    bg: 'bg-blue-500/10',
-  },
-  {
-    icon: ShoppingBag,
-    amount: '$2',
-    description: 'если человек вступает в клуб или делает заказ через нашу команду',
-    color: 'text-emerald-500',
-    bg: 'bg-emerald-500/10',
-  },
-  {
-    icon: Percent,
-    amount: '-10%',
-    description: 'скидка для твоего друга: 900₽ вместо 1000₽ за первый месяц в клубе',
-    color: 'text-amber-500',
-    bg: 'bg-amber-500/10',
-  },
-  {
-    icon: Package,
-    amount: 'до 30%',
-    description: 'стоимости доставки можно закрыть бонусами',
-    color: 'text-purple-500',
-    bg: 'bg-purple-500/10',
-  },
+  { icon: Users, amount: '$0.1', description: 'за каждого подписчика в канал, пришедшего по твоей ссылке', color: 'text-blue-500', bg: 'bg-blue-500/10' },
+  { icon: ShoppingBag, amount: '$2', description: 'если человек вступает в клуб или делает заказ через нашу команду', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+  { icon: Percent, amount: '-10%', description: 'скидка для твоего друга: 900₽ вместо 1000₽ за первый месяц в клубе', color: 'text-amber-500', bg: 'bg-amber-500/10' },
+  { icon: Package, amount: 'до 30%', description: 'стоимости доставки можно закрыть бонусами', color: 'text-purple-500', bg: 'bg-purple-500/10' },
 ];
+
+const PRICE_PER_KG = 6.5;
+
+function DeliveryCalculator({ balance }: { balance: number }) {
+  const [weight, setWeight] = useState(5);
+  const [targetSubs, setTargetSubs] = useState(50);
+  const [targetClub, setTargetClub] = useState(5);
+
+  const deliveryCost = weight * PRICE_PER_KG;
+  const maxDiscount = deliveryCost * 0.3;
+  const canCover = Math.min(balance, maxDiscount);
+  const finalCost = deliveryCost - canCover;
+
+  const potentialEarnings = targetSubs * 0.1 + targetClub * 2;
+  const potentialCover = Math.min(potentialEarnings, deliveryCost * 0.3);
+
+  return (
+    <Card className="border-border overflow-hidden">
+      <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-4 border-b border-border">
+        <h3 className="font-bold text-foreground flex items-center gap-2">
+          <Calculator className="w-5 h-5 text-primary" />
+          Калькулятор доставки
+        </h3>
+        <p className="text-xs text-muted-foreground mt-1">Посчитай сколько сэкономишь на доставке</p>
+      </div>
+      <CardContent className="p-5 space-y-6">
+        {/* Weight slider */}
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <label className="text-sm font-medium text-foreground flex items-center gap-2">
+              <Weight className="w-4 h-4 text-muted-foreground" /> Вес посылки
+            </label>
+            <span className="text-sm font-bold text-primary">{weight} кг</span>
+          </div>
+          <Slider value={[weight]} onValueChange={([v]) => setWeight(v)} min={1} max={50} step={1} />
+        </div>
+
+        {/* Cost breakdown */}
+        <div className="bg-muted/50 rounded-xl p-4 space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Стоимость доставки ({weight} кг × $6.5)</span>
+            <span className="font-bold text-foreground">${deliveryCost.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Макс. скидка бонусами (30%)</span>
+            <span className="font-medium text-amber-500">-${maxDiscount.toFixed(2)}</span>
+          </div>
+          {balance > 0 && (
+            <div className="flex justify-between text-sm border-t border-border pt-2">
+              <span className="text-muted-foreground">Твой баланс покрывает</span>
+              <span className="font-bold text-emerald-500">-${canCover.toFixed(2)}</span>
+            </div>
+          )}
+          <div className="flex justify-between text-base border-t border-border pt-2">
+            <span className="font-bold text-foreground">Итого к оплате</span>
+            <span className="font-bold text-primary">${finalCost.toFixed(2)}</span>
+          </div>
+        </div>
+
+        {/* Earnings simulator */}
+        <div className="space-y-4 pt-2">
+          <h4 className="text-sm font-bold text-foreground">🎯 Сколько нужно привести?</h4>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <label className="text-sm text-muted-foreground">Подписчиков в канал</label>
+              <span className="text-sm font-bold text-blue-500">{targetSubs} чел = ${(targetSubs * 0.1).toFixed(1)}</span>
+            </div>
+            <Slider value={[targetSubs]} onValueChange={([v]) => setTargetSubs(v)} min={0} max={500} step={10} />
+          </div>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <label className="text-sm text-muted-foreground">В клуб / заказов</label>
+              <span className="text-sm font-bold text-emerald-500">{targetClub} чел = ${(targetClub * 2).toFixed(0)}</span>
+            </div>
+            <Slider value={[targetClub]} onValueChange={([v]) => setTargetClub(v)} min={0} max={50} step={1} />
+          </div>
+
+          <div className="bg-gradient-to-r from-emerald-500/10 to-blue-500/10 rounded-xl p-4 text-center">
+            <p className="text-xs text-muted-foreground mb-1">Ты заработаешь</p>
+            <p className="text-3xl font-bold text-foreground">${potentialEarnings.toFixed(1)}</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Покроешь <span className="font-bold text-primary">${potentialCover.toFixed(2)}</span> из ${deliveryCost.toFixed(2)} доставки
+            </p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export function AmbassadorModule({ userId }: AmbassadorModuleProps) {
   const [profile, setProfile] = useState<AmbassadorProfile | null>(null);
@@ -67,9 +127,7 @@ export function AmbassadorModule({ userId }: AmbassadorModuleProps) {
   const [copied, setCopied] = useState(false);
   const [requesting, setRequesting] = useState(false);
 
-  useEffect(() => {
-    fetchProfile();
-  }, [userId]);
+  useEffect(() => { fetchProfile(); }, [userId]);
 
   const fetchProfile = async () => {
     const { data } = await supabase
@@ -83,9 +141,7 @@ export function AmbassadorModule({ userId }: AmbassadorModuleProps) {
 
   const handleRequest = async () => {
     setRequesting(true);
-    const { error } = await supabase
-      .from('ambassador_profiles')
-      .insert({ user_id: userId });
+    const { error } = await supabase.from('ambassador_profiles').insert({ user_id: userId });
     if (error) {
       toast({ title: 'Ошибка', description: 'Не удалось отправить заявку', variant: 'destructive' });
     } else {
@@ -116,12 +172,9 @@ export function AmbassadorModule({ userId }: AmbassadorModuleProps) {
   if (!profile) {
     return (
       <div className="p-6 lg:p-10 space-y-8 animate-fade-in-up max-w-3xl mx-auto">
-        {/* Hero CTA */}
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500 p-1">
           <div className="rounded-[22px] bg-card p-8 lg:p-10 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-amber-500/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-rose-500/10 to-transparent rounded-full translate-y-1/2 -translate-x-1/2" />
-
             <div className="relative z-10">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-rose-500 flex items-center justify-center shadow-lg">
@@ -132,35 +185,21 @@ export function AmbassadorModule({ userId }: AmbassadorModuleProps) {
                   <p className="text-muted-foreground text-sm">Зарабатывай реальные бонусы 💰</p>
                 </div>
               </div>
-
               <p className="text-muted-foreground mb-6 leading-relaxed max-w-xl">
                 Рассказывай о проекте <span className="font-semibold text-foreground">«Китай для НОВЫХ»</span> и получай
-                не просто бонусы, а полноценную валюту для оплаты доставки из Китая в Москву!
+                полноценную валюту для оплаты доставки из Китая в Москву!
               </p>
-
-              <Button
-                onClick={handleRequest}
-                disabled={requesting}
-                size="lg"
-                className="bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-bold text-lg px-8 py-6 rounded-2xl shadow-lg hover:shadow-xl transition-all"
-              >
-                {requesting ? 'Отправка...' : (
-                  <>
-                    <Star className="w-5 h-5 mr-2" />
-                    Хочу стать амбассадором
-                    <ArrowRight className="w-5 h-5 ml-2" />
-                  </>
-                )}
+              <Button onClick={handleRequest} disabled={requesting} size="lg"
+                className="bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-bold text-lg px-8 py-6 rounded-2xl shadow-lg hover:shadow-xl transition-all">
+                {requesting ? 'Отправка...' : (<><Star className="w-5 h-5 mr-2" />Хочу стать амбассадором<ArrowRight className="w-5 h-5 ml-2" /></>)}
               </Button>
             </div>
           </div>
         </div>
 
-        {/* Bonus tiers */}
         <div className="space-y-4">
           <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-            <Gift className="w-5 h-5 text-amber-500" />
-            Бонусная система
+            <Gift className="w-5 h-5 text-amber-500" /> Бонусная система
           </h2>
           <div className="grid sm:grid-cols-2 gap-4">
             {BONUS_TIERS.map((tier, i) => (
@@ -181,39 +220,13 @@ export function AmbassadorModule({ userId }: AmbassadorModuleProps) {
           </div>
         </div>
 
-        {/* Example */}
-        <Card className="border-border bg-muted/30">
-          <CardContent className="p-6">
-            <h3 className="font-bold text-foreground mb-3 flex items-center gap-2">
-              🧐 Как это работает на деле?
-            </h3>
-            <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-              Допустим, ты собрала посылку на <strong className="text-foreground">10 кг</strong>. Доставка из Китая в Москву — примерно <strong className="text-foreground">$65 (≈5 850₽)</strong>.
-            </p>
-            <div className="space-y-3">
-              <div className="flex items-start gap-3 bg-card rounded-xl p-3 border border-border">
-                <span className="text-lg">1️⃣</span>
-                <p className="text-sm text-muted-foreground">
-                  Если у тебя <strong className="text-foreground">$19.5</strong> (30% от $65) — списываешь их. Доставка обходится в <strong className="text-emerald-500">4 095₽</strong> вместо 5 850₽!
-                </p>
-              </div>
-              <div className="flex items-start gap-3 bg-card rounded-xl p-3 border border-border">
-                <span className="text-lg">2️⃣</span>
-                <p className="text-sm text-muted-foreground">
-                  Если накопилось <strong className="text-foreground">$5-10</strong> — списываешь частично и платишь меньше, или копишь дальше!
-                </p>
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground mt-4 italic">
-              📦 Любая сумма в долларах на твоем счету — это реальная скидка на вес твоей посылки!
-            </p>
-          </CardContent>
-        </Card>
+        {/* Preview calculator */}
+        <DeliveryCalculator balance={0} />
       </div>
     );
   }
 
-  // Ambassador profile exists but not yet activated
+  // Pending activation
   if (!profile.is_active) {
     return (
       <div className="p-6 lg:p-10 space-y-6 animate-fade-in-up max-w-3xl mx-auto">
@@ -233,7 +246,7 @@ export function AmbassadorModule({ userId }: AmbassadorModuleProps) {
     );
   }
 
-  // Active ambassador — show dashboard
+  // Active ambassador dashboard
   return (
     <div className="p-6 lg:p-10 space-y-6 animate-fade-in-up max-w-3xl mx-auto">
       {/* Balance card */}
@@ -241,15 +254,10 @@ export function AmbassadorModule({ userId }: AmbassadorModuleProps) {
         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.4)_0%,transparent_50%)]" />
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-1 text-white/80 text-sm">
-            <TrendingUp className="w-4 h-4" />
-            Мой баланс амбассадора
+            <TrendingUp className="w-4 h-4" /> Мой баланс амбассадора
           </div>
-          <div className="text-5xl lg:text-6xl font-bold mb-2">
-            ${profile.balance_usd.toFixed(2)}
-          </div>
-          <p className="text-white/70 text-sm">
-            Обновляется 1 раз в неделю
-          </p>
+          <div className="text-5xl lg:text-6xl font-bold mb-2">${profile.balance_usd.toFixed(2)}</div>
+          <p className="text-white/70 text-sm">Обновляется 1 раз в неделю</p>
         </div>
       </div>
 
@@ -262,12 +270,7 @@ export function AmbassadorModule({ userId }: AmbassadorModuleProps) {
               <div className="flex-1 bg-muted rounded-xl px-4 py-3 text-sm text-foreground break-all font-mono">
                 {profile.referral_link}
               </div>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={copyLink}
-                className="shrink-0 h-12 w-12 rounded-xl"
-              >
+              <Button variant="outline" size="icon" onClick={copyLink} className="shrink-0 h-12 w-12 rounded-xl">
                 {copied ? <Check className="w-5 h-5 text-emerald-500" /> : <Copy className="w-5 h-5" />}
               </Button>
             </div>
@@ -275,11 +278,38 @@ export function AmbassadorModule({ userId }: AmbassadorModuleProps) {
         </Card>
       )}
 
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-3">
+        <Card className="border-border">
+          <CardContent className="p-4 text-center">
+            <Users className="w-5 h-5 text-blue-500 mx-auto mb-1" />
+            <p className="text-2xl font-bold text-foreground">{profile.referrals_channel}</p>
+            <p className="text-xs text-muted-foreground">В канал</p>
+          </CardContent>
+        </Card>
+        <Card className="border-border">
+          <CardContent className="p-4 text-center">
+            <ShoppingBag className="w-5 h-5 text-emerald-500 mx-auto mb-1" />
+            <p className="text-2xl font-bold text-foreground">{profile.referrals_club}</p>
+            <p className="text-xs text-muted-foreground">В клуб</p>
+          </CardContent>
+        </Card>
+        <Card className="border-border">
+          <CardContent className="p-4 text-center">
+            <Package className="w-5 h-5 text-purple-500 mx-auto mb-1" />
+            <p className="text-2xl font-bold text-foreground">{profile.referrals_orders}</p>
+            <p className="text-xs text-muted-foreground">Заказов</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Calculator */}
+      <DeliveryCalculator balance={profile.balance_usd} />
+
       {/* Bonus tiers reminder */}
       <div className="space-y-3">
         <h3 className="font-bold text-foreground flex items-center gap-2">
-          <Gift className="w-5 h-5 text-amber-500" />
-          Как начисляются бонусы
+          <Gift className="w-5 h-5 text-amber-500" /> Как начисляются бонусы
         </h3>
         <div className="grid sm:grid-cols-2 gap-3">
           {BONUS_TIERS.map((tier, i) => (
