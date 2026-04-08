@@ -92,6 +92,7 @@ export function Dashboard({
     { id: 'knowledge' as const, icon: BookOpen, label: 'База знаний', badge: 0 },
     { id: 'delivery' as const, icon: Truck, label: 'Доставка', badge: 0 },
     { id: 'order' as const, icon: ShoppingBag, label: 'Закажите мне', badge: 0 },
+    { id: 'ambassador' as const, icon: Sparkles, label: 'Амбассадор', badge: 0 },
     { id: 'settings' as const, icon: UserIcon, label: 'Личный кабинет', badge: 0 },
     ...(isAdmin ? [
       { id: 'requests' as const, icon: ClipboardList, label: 'Заявки', badge: unviewedCount },
