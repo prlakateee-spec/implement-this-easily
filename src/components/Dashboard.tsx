@@ -287,6 +287,9 @@ export function Dashboard({
         {activeTab === 'order' && (
           <OrderForMeModule userId={user.id} />
         )}
+        {activeTab === 'ambassador' && (
+          <AmbassadorModule userId={user.id} />
+        )}
         {activeTab === 'settings' && (
           <SettingsPage userName={displayName} onSaveName={handleSaveName} userId={user.id} />
         )}
