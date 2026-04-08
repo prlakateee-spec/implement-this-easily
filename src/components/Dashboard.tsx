@@ -14,7 +14,8 @@ import {
   Shield,
   Truck,
   ShoppingBag,
-  ClipboardList
+  ClipboardList,
+  Sparkles
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/hooks/useAuth';
