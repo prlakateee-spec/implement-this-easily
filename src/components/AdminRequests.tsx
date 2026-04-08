@@ -200,6 +200,26 @@ export function AdminRequests() {
     if (selectedDelivery?.id === id) setSelectedDelivery({ ...selectedDelivery, status: newStatus });
   };
 
+  const activateAmbassador = async (id: string, link: string) => {
+    await supabase.from('ambassador_profiles').update({ is_active: true, referral_link: link, updated_at: new Date().toISOString() }).eq('id', id);
+    setAmbassadors(prev => prev.map(a => a.id === id ? { ...a, is_active: true, referral_link: link } : a));
+    if (selectedAmbassador?.id === id) setSelectedAmbassador({ ...selectedAmbassador, is_active: true, referral_link: link });
+  };
+
+  const updateAmbassadorStats = async (id: string, field: string, value: number) => {
+    await supabase.from('ambassador_profiles').update({ [field]: value, updated_at: new Date().toISOString() }).eq('id', id);
+    setAmbassadors(prev => prev.map(a => a.id === id ? { ...a, [field]: value } : a));
+    if (selectedAmbassador?.id === id) setSelectedAmbassador({ ...selectedAmbassador, [field]: value } as AmbassadorProfile);
+  };
+
+  const updateAmbassadorBalance = async (id: string, balance: number) => {
+    await supabase.from('ambassador_profiles').update({ balance_usd: balance, updated_at: new Date().toISOString() }).eq('id', id);
+    setAmbassadors(prev => prev.map(a => a.id === id ? { ...a, balance_usd: balance } : a));
+    if (selectedAmbassador?.id === id) setSelectedAmbassador({ ...selectedAmbassador, balance_usd: balance } as AmbassadorProfile);
+  };
+
+  const newAmbassadorsCount = ambassadors.filter(a => !a.is_active).length;
+
   const ProfileInfo = ({ userId }: { userId: string }) => {
     const p = profiles[userId];
     return (
@@ -231,7 +251,94 @@ export function AdminRequests() {
     );
   };
 
-  // Detail views
+  // Ambassador detail view
+  if (selectedAmbassador) {
+    const a = selectedAmbassador;
+    const [editLink, setEditLink] = useState(a.referral_link || '');
+    const [editBalance, setEditBalance] = useState(a.balance_usd.toString());
+    const [editChannel, setEditChannel] = useState(a.referrals_channel.toString());
+    const [editClub, setEditClub] = useState(a.referrals_club.toString());
+    const [editOrders, setEditOrders] = useState(a.referrals_orders.toString());
+
+    return (
+      <div className="p-6 lg:p-10 space-y-6 animate-fade-in-up">
+        <button onClick={() => setSelectedAmbassador(null)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ChevronLeft size={18} /> Назад к амбассадорам
+        </button>
+        <div className="bg-card rounded-2xl p-6 border border-border shadow-soft space-y-5">
+          <div className="flex items-start justify-between">
+            <h2 className="text-xl font-bold text-foreground">Амбассадор</h2>
+            <Badge className={a.is_active ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'}>
+              {a.is_active ? 'Активен' : 'Ожидает'}
+            </Badge>
+          </div>
+
+          <div className="bg-muted/50 rounded-xl p-4">
+            <p className="text-xs text-muted-foreground mb-2 font-semibold uppercase">Пользователь</p>
+            <ProfileInfo userId={a.user_id} />
+          </div>
+
+          {/* Referral link */}
+          <div className="space-y-2">
+            <label className="text-xs text-muted-foreground font-semibold uppercase">Реферальная ссылка</label>
+            <div className="flex gap-2">
+              <Input value={editLink} onChange={e => setEditLink(e.target.value)} placeholder="https://t.me/..." className="flex-1" />
+              <Button size="sm" onClick={() => activateAmbassador(a.id, editLink)}>
+                <Check size={16} className="mr-1" /> {a.is_active ? 'Обновить' : 'Активировать'}
+              </Button>
+            </div>
+          </div>
+
+          {/* Balance */}
+          <div className="space-y-2">
+            <label className="text-xs text-muted-foreground font-semibold uppercase">Баланс (USD)</label>
+            <div className="flex gap-2">
+              <Input type="number" step="0.01" value={editBalance} onChange={e => setEditBalance(e.target.value)} className="w-32" />
+              <Button size="sm" variant="outline" onClick={() => updateAmbassadorBalance(a.id, parseFloat(editBalance) || 0)}>
+                Сохранить
+              </Button>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="space-y-3">
+            <p className="text-xs text-muted-foreground font-semibold uppercase">Статистика рефералов</p>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">В канал</label>
+                <div className="flex gap-1">
+                  <Input type="number" value={editChannel} onChange={e => setEditChannel(e.target.value)} className="w-full" />
+                  <Button size="icon" variant="ghost" onClick={() => updateAmbassadorStats(a.id, 'referrals_channel', parseInt(editChannel) || 0)}>
+                    <Check size={14} />
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">В клуб</label>
+                <div className="flex gap-1">
+                  <Input type="number" value={editClub} onChange={e => setEditClub(e.target.value)} className="w-full" />
+                  <Button size="icon" variant="ghost" onClick={() => updateAmbassadorStats(a.id, 'referrals_club', parseInt(editClub) || 0)}>
+                    <Check size={14} />
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">Заказы</label>
+                <div className="flex gap-1">
+                  <Input type="number" value={editOrders} onChange={e => setEditOrders(e.target.value)} className="w-full" />
+                  <Button size="icon" variant="ghost" onClick={() => updateAmbassadorStats(a.id, 'referrals_orders', parseInt(editOrders) || 0)}>
+                    <Check size={14} />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <InfoRow icon={Calendar} label="Дата заявки" value={formatDate(a.created_at)} />
+        </div>
+      </div>
+    );
+  }
   if (selectedDelivery) {
     const d = selectedDelivery;
     return (
