@@ -551,21 +551,15 @@ export function AdminRequests() {
               key={d.id}
               onClick={() => openDelivery(d)}
               className={`w-full text-left bg-card rounded-2xl p-4 border shadow-soft transition-all hover:shadow-md ${
-                isNew(d.admin_viewed_at)
-                  ? 'border-primary ring-2 ring-primary/20'
-                  : 'border-border'
+                isNew(d.admin_viewed_at) ? 'border-primary ring-2 ring-primary/20' : 'border-border'
               }`}
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  {isNew(d.admin_viewed_at) && (
-                    <span className="w-2.5 h-2.5 rounded-full bg-primary shrink-0 animate-pulse" />
-                  )}
+                  {isNew(d.admin_viewed_at) && <span className="w-2.5 h-2.5 rounded-full bg-primary shrink-0 animate-pulse" />}
                   <div>
                     <p className="font-bold text-foreground">{d.product_name}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      @{profiles[d.user_id]?.username || '?'} · {formatDate(d.created_at)}
-                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">@{profiles[d.user_id]?.username || '?'} · {formatDate(d.created_at)}</p>
                   </div>
                 </div>
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${statusColor[d.status] || 'bg-muted text-muted-foreground'}`}>
@@ -575,7 +569,7 @@ export function AdminRequests() {
             </button>
           ))}
         </div>
-      ) : (
+      ) : tab === 'orders' ? (
         <div className="space-y-3">
           {orders.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">Нет заявок на выкуп</p>
@@ -584,26 +578,49 @@ export function AdminRequests() {
               key={o.id}
               onClick={() => openOrder(o)}
               className={`w-full text-left bg-card rounded-2xl p-4 border shadow-soft transition-all hover:shadow-md ${
-                isNew(o.admin_viewed_at)
-                  ? 'border-primary ring-2 ring-primary/20'
-                  : 'border-border'
+                isNew(o.admin_viewed_at) ? 'border-primary ring-2 ring-primary/20' : 'border-border'
               }`}
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  {isNew(o.admin_viewed_at) && (
-                    <span className="w-2.5 h-2.5 rounded-full bg-primary shrink-0 animate-pulse" />
-                  )}
+                  {isNew(o.admin_viewed_at) && <span className="w-2.5 h-2.5 rounded-full bg-primary shrink-0 animate-pulse" />}
                   <div>
                     <p className="font-bold text-foreground">{o.product_name}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      @{profiles[o.user_id]?.username || '?'} · {o.price_cny ? `¥${o.price_cny} · ` : ''}{formatDate(o.created_at)}
-                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">@{profiles[o.user_id]?.username || '?'} · {o.price_cny ? `¥${o.price_cny} · ` : ''}{formatDate(o.created_at)}</p>
                   </div>
                 </div>
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${statusColor[o.status] || 'bg-muted text-muted-foreground'}`}>
                   {statusLabel[o.status] || o.status}
                 </span>
+              </div>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {ambassadors.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">Нет заявок амбассадоров</p>
+          ) : ambassadors.map((a) => (
+            <button
+              key={a.id}
+              onClick={() => setSelectedAmbassador(a)}
+              className={`w-full text-left bg-card rounded-2xl p-4 border shadow-soft transition-all hover:shadow-md ${
+                !a.is_active ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-border'
+              }`}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  {!a.is_active && <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0 animate-pulse" />}
+                  <div>
+                    <p className="font-bold text-foreground">@{profiles[a.user_id]?.username || '?'}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      ${a.balance_usd.toFixed(2)} · {formatDate(a.created_at)}
+                    </p>
+                  </div>
+                </div>
+                <Badge className={a.is_active ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'}>
+                  {a.is_active ? 'Активен' : 'Ожидает'}
+                </Badge>
               </div>
             </button>
           ))}
