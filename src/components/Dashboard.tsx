@@ -26,6 +26,7 @@ import { AdminPanel } from './AdminPanel';
 import { DeliveryModule } from './DeliveryModule';
 import { OrderForMeModule } from './OrderForMeModule';
 import { AdminRequests } from './AdminRequests';
+import { AmbassadorModule } from './AmbassadorModule';
 import { TOTAL_MODULES, ADMIN_EMAIL } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { useTheme } from './ThemeProvider';
