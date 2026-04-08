@@ -3,9 +3,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import {
   RefreshCw, Truck, ShoppingBag, Package, User, Phone, MapPin,
-  Calendar, ExternalLink, ChevronLeft, MessageCircle, Eye
+  Calendar, ExternalLink, ChevronLeft, MessageCircle, Eye, Sparkles,
+  DollarSign, Users, Link2, Check
 } from 'lucide-react';
 
 const ORDER_STATUSES = [
@@ -68,21 +70,35 @@ interface OrderRequest {
   admin_viewed_at: string | null;
 }
 
+interface AmbassadorProfile {
+  id: string;
+  user_id: string;
+  referral_link: string | null;
+  balance_usd: number;
+  is_active: boolean;
+  referrals_channel: number;
+  referrals_club: number;
+  referrals_orders: number;
+  created_at: string;
+}
+
 interface Profile {
   username: string;
   display_name: string | null;
 }
 
-type Tab = 'deliveries' | 'orders';
+type Tab = 'deliveries' | 'orders' | 'ambassadors';
 
 export function AdminRequests() {
   const [tab, setTab] = useState<Tab>('deliveries');
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [orders, setOrders] = useState<OrderRequest[]>([]);
+  const [ambassadors, setAmbassadors] = useState<AmbassadorProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [profiles, setProfiles] = useState<Record<string, Profile>>({});
   const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<OrderRequest | null>(null);
+  const [selectedAmbassador, setSelectedAmbassador] = useState<AmbassadorProfile | null>(null);
 
   const loadProfiles = async () => {
     const { data } = await supabase.from('user_profiles').select('user_id, username, display_name');
@@ -112,9 +128,17 @@ export function AdminRequests() {
     if (data) setOrders(data as OrderRequest[]);
   };
 
+  const loadAmbassadors = async () => {
+    const { data } = await supabase
+      .from('ambassador_profiles')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (data) setAmbassadors(data as AmbassadorProfile[]);
+  };
+
   const loadAll = async () => {
     setLoading(true);
-    await Promise.all([loadProfiles(), loadDeliveries(), loadOrders()]);
+    await Promise.all([loadProfiles(), loadDeliveries(), loadOrders(), loadAmbassadors()]);
     setLoading(false);
   };
 
