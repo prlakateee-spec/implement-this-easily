@@ -14,7 +14,8 @@ import {
   Shield,
   Truck,
   ShoppingBag,
-  ClipboardList
+  ClipboardList,
+  Sparkles
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/hooks/useAuth';
@@ -25,6 +26,7 @@ import { AdminPanel } from './AdminPanel';
 import { DeliveryModule } from './DeliveryModule';
 import { OrderForMeModule } from './OrderForMeModule';
 import { AdminRequests } from './AdminRequests';
+import { AmbassadorModule } from './AmbassadorModule';
 import { TOTAL_MODULES, ADMIN_EMAIL } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { useTheme } from './ThemeProvider';
@@ -50,7 +52,7 @@ export function Dashboard({
   progressPercentage,
   onToggleModule 
 }: DashboardProps) {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'knowledge' | 'delivery' | 'order' | 'settings' | 'admin' | 'requests'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'knowledge' | 'delivery' | 'order' | 'ambassador' | 'settings' | 'admin' | 'requests'>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unviewedCount, setUnviewedCount] = useState(0);
   const { theme, toggleTheme } = useTheme();
@@ -90,6 +92,7 @@ export function Dashboard({
     { id: 'knowledge' as const, icon: BookOpen, label: 'База знаний', badge: 0 },
     { id: 'delivery' as const, icon: Truck, label: 'Доставка', badge: 0 },
     { id: 'order' as const, icon: ShoppingBag, label: 'Закажите мне', badge: 0 },
+    { id: 'ambassador' as const, icon: Sparkles, label: 'Амбассадор', badge: 0 },
     { id: 'settings' as const, icon: UserIcon, label: 'Личный кабинет', badge: 0 },
     ...(isAdmin ? [
       { id: 'requests' as const, icon: ClipboardList, label: 'Заявки', badge: unviewedCount },
@@ -283,6 +286,9 @@ export function Dashboard({
         )}
         {activeTab === 'order' && (
           <OrderForMeModule userId={user.id} />
+        )}
+        {activeTab === 'ambassador' && (
+          <AmbassadorModule userId={user.id} />
         )}
         {activeTab === 'settings' && (
           <SettingsPage userName={displayName} onSaveName={handleSaveName} userId={user.id} />
