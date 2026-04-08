@@ -57,15 +57,25 @@ function DeliveryCalculator({ balance }: { balance: number }) {
         <p className="text-xs text-muted-foreground mt-1">Посчитай сколько сэкономишь на доставке</p>
       </div>
       <CardContent className="p-5 space-y-6">
-        {/* Weight slider */}
+        {/* Weight input */}
         <div className="space-y-3">
           <div className="flex justify-between items-center">
             <label className="text-sm font-medium text-foreground flex items-center gap-2">
               <Weight className="w-4 h-4 text-muted-foreground" /> Вес посылки
             </label>
-            <span className="text-sm font-bold text-primary">{weight} кг</span>
+            <div className="flex items-center gap-1">
+              <Input
+                type="number"
+                value={weight}
+                onChange={(e) => setWeight(Math.max(0.1, Number(e.target.value) || 0))}
+                className="w-20 h-8 text-right text-sm font-bold text-primary"
+                min={0.1}
+                step={0.5}
+              />
+              <span className="text-sm text-muted-foreground">кг</span>
+            </div>
           </div>
-          <Slider value={[weight]} onValueChange={([v]) => setWeight(v)} min={1} max={50} step={1} />
+          <Slider value={[weight]} onValueChange={([v]) => setWeight(v)} min={1} max={50} step={0.5} />
         </div>
 
         {/* Cost breakdown */}
@@ -96,14 +106,32 @@ function DeliveryCalculator({ balance }: { balance: number }) {
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <label className="text-sm text-muted-foreground">Подписчиков в канал</label>
-              <span className="text-sm font-bold text-blue-500">{targetSubs} чел = ${(targetSubs * 0.1).toFixed(1)}</span>
+              <div className="flex items-center gap-1">
+                <Input
+                  type="number"
+                  value={targetSubs}
+                  onChange={(e) => setTargetSubs(Math.max(0, Number(e.target.value) || 0))}
+                  className="w-20 h-8 text-right text-sm font-bold text-blue-500"
+                  min={0}
+                />
+                <span className="text-xs text-muted-foreground">= ${(targetSubs * 0.1).toFixed(1)}</span>
+              </div>
             </div>
             <Slider value={[targetSubs]} onValueChange={([v]) => setTargetSubs(v)} min={0} max={500} step={10} />
           </div>
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <label className="text-sm text-muted-foreground">В клуб / заказов</label>
-              <span className="text-sm font-bold text-emerald-500">{targetClub} чел = ${(targetClub * 2).toFixed(0)}</span>
+              <div className="flex items-center gap-1">
+                <Input
+                  type="number"
+                  value={targetClub}
+                  onChange={(e) => setTargetClub(Math.max(0, Number(e.target.value) || 0))}
+                  className="w-20 h-8 text-right text-sm font-bold text-emerald-500"
+                  min={0}
+                />
+                <span className="text-xs text-muted-foreground">= ${(targetClub * 2).toFixed(0)}</span>
+              </div>
             </div>
             <Slider value={[targetClub]} onValueChange={([v]) => setTargetClub(v)} min={0} max={50} step={1} />
           </div>
