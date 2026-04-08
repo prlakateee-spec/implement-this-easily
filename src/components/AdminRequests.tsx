@@ -435,6 +435,20 @@ export function AdminRequests() {
             </Badge>
           )}
         </button>
+        <button
+          onClick={() => setTab('ambassadors')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all relative ${
+            tab === 'ambassadors' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <Sparkles size={16} />
+          Амбассадоры ({ambassadors.length})
+          {newAmbassadorsCount > 0 && (
+            <Badge className="bg-destructive text-destructive-foreground text-[10px] px-1.5 py-0 min-w-[18px] h-[18px] flex items-center justify-center">
+              {newAmbassadorsCount}
+            </Badge>
+          )}
+        </button>
       </div>
 
       {loading ? (
