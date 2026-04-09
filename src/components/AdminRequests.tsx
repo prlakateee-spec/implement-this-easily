@@ -341,6 +341,22 @@ export function AdminRequests() {
   };
 
   const newAmbassadorsCount = ambassadors.filter(a => !a.is_active).length;
+  const newPicksCount = picks.filter(p => isNew(p.admin_viewed_at)).length;
+
+  const PICK_STATUSES = [
+    { value: 'pending', label: 'В обработке' },
+    { value: 'found', label: 'Подобран' },
+    { value: 'approved', label: 'Подтверждён' },
+    { value: 'ordered', label: 'Заказан' },
+    { value: 'completed', label: 'Завершён' },
+    { value: 'rejected', label: 'Отклонён' },
+  ];
+
+  const updatePickStatus = async (id: string, newStatus: string) => {
+    await supabase.from('pick_requests').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', id);
+    setPicks(prev => prev.map(p => p.id === id ? { ...p, status: newStatus } : p));
+    if (selectedPick?.id === id) setSelectedPick({ ...selectedPick, status: newStatus });
+  };
 
   const ProfileInfo = ({ userId }: { userId: string }) => {
     const p = profiles[userId];
