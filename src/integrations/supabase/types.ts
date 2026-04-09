@@ -279,6 +279,51 @@ export type Database = {
         }
         Relationships: []
       }
+      pick_requests: {
+        Row: {
+          admin_viewed_at: string | null
+          color: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          price_rub: number | null
+          product_link: string
+          quantity: number
+          size: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_viewed_at?: string | null
+          color?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          price_rub?: number | null
+          product_link?: string
+          quantity?: number
+          size?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_viewed_at?: string | null
+          color?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          price_rub?: number | null
+          product_link?: string
+          quantity?: number
+          size?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       shipping_profiles: {
         Row: {
           created_at: string
