@@ -1,0 +1,1 @@
+ALTER TABLE public.pick_requests ADD COLUMN batch_id text DEFAULT NULL;
