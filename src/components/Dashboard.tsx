@@ -214,63 +214,184 @@ export function Dashboard({
     ) : null
   );
 
-  const DashboardContent = () => (
-    <div className="p-6 lg:p-10 space-y-8 animate-fade-in-up">
-      <div className="gradient-primary rounded-3xl p-8 lg:p-10 text-primary-foreground relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.4)_0%,transparent_50%)]" />
-        <div className="relative z-10">
-          <h1 className="text-3xl lg:text-4xl font-bold mb-2">
-            Привет, {displayName}! 🚀
-          </h1>
-          <p className="text-primary-foreground/80 mb-6 max-w-md">
-            Продолжай обучение и стань настоящим профи в импорте из Китая
-          </p>
-          <Button
-            onClick={() => setActiveTab('knowledge')}
-            className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-bold shadow-lg"
-          >
-            Продолжить обучение
-            <ChevronRight size={18} className="ml-1" />
-          </Button>
+  const DashboardContent = () => {
+    const [trackDeliveries, setTrackDeliveries] = useState<any[]>([]);
+    const [trackOrders, setTrackOrders] = useState<any[]>([]);
+    const [loadingTracking, setLoadingTracking] = useState(true);
+
+    useEffect(() => {
+      const fetchTracking = async () => {
+        const [{ data: d }, { data: o }] = await Promise.all([
+          supabase.from('deliveries').select('id, product_name, status, tracking_number, created_at').eq('user_id', user.id).neq('status', 'warehouse').order('created_at', { ascending: false }).limit(10),
+          supabase.from('order_requests').select('id, product_name, status, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
+        ]);
+        setTrackDeliveries(d || []);
+        setTrackOrders(o || []);
+        setLoadingTracking(false);
+      };
+      fetchTracking();
+    }, [user.id]);
+
+    const DELIVERY_STATUSES = [
+      { key: 'processing', label: 'В обработке', icon: '📋' },
+      { key: 'formed', label: 'Сформирована', icon: '📦' },
+      { key: 'sent_to_moscow', label: 'В Москву', icon: '✈️' },
+      { key: 'arrived_moscow', label: 'В Москве', icon: '🏙️' },
+      { key: 'transferred_tk', label: 'В ТК', icon: '🚛' },
+      { key: 'in_transit', label: 'В пути', icon: '🚚' },
+      { key: 'delivered', label: 'Получена', icon: '✅' },
+    ];
+
+    const ORDER_STATUSES = [
+      { key: 'pending', label: 'В обработке', icon: '📋' },
+      { key: 'confirmed', label: 'Подтверждён', icon: '✔️' },
+      { key: 'purchased', label: 'Выкуплен', icon: '🛒' },
+      { key: 'shipped_china', label: 'По Китаю', icon: '📮' },
+      { key: 'at_warehouse', label: 'На складе', icon: '🏭' },
+      { key: 'formed', label: 'Сформирован', icon: '📦' },
+      { key: 'sent_to_moscow', label: 'В Москву', icon: '✈️' },
+      { key: 'arrived_moscow', label: 'В Москве', icon: '🏙️' },
+      { key: 'transferred_tk', label: 'В ТК', icon: '🚛' },
+      { key: 'delivered', label: 'Получен', icon: '✅' },
+    ];
+
+    const getStatusIndex = (status: string, statuses: { key: string }[]) => {
+      const idx = statuses.findIndex(s => s.key === status);
+      return idx >= 0 ? idx : 0;
+    };
+
+    const activeDeliveries = trackDeliveries.filter(d => d.status !== 'delivered');
+    const activeOrders = trackOrders.filter(o => o.status !== 'delivered');
+    const hasTracking = activeDeliveries.length > 0 || activeOrders.length > 0;
+
+    return (
+      <div className="p-6 lg:p-10 space-y-8 animate-fade-in-up">
+        <div className="gradient-primary rounded-3xl p-8 lg:p-10 text-primary-foreground relative overflow-hidden">
+          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.4)_0%,transparent_50%)]" />
+          <div className="relative z-10">
+            <h1 className="text-3xl lg:text-4xl font-bold mb-2">
+              Привет, {displayName}! 🚀
+            </h1>
+            <p className="text-primary-foreground/80 mb-6 max-w-md">
+              Продолжай обучение и стань настоящим профи в импорте из Китая
+            </p>
+            <Button
+              onClick={() => setActiveTab('knowledge')}
+              className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-bold shadow-lg"
+            >
+              Продолжить обучение
+              <ChevronRight size={18} className="ml-1" />
+            </Button>
+          </div>
+        </div>
+
+        {!loadingTracking && hasTracking && (
+          <div className="bg-card rounded-2xl p-6 shadow-soft border border-border space-y-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Truck className="text-primary" size={20} />
+              <h2 className="text-lg font-bold text-foreground">Мои посылки</h2>
+              <span className="text-xs text-muted-foreground ml-auto bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+                {activeDeliveries.length + activeOrders.length} в пути
+              </span>
+            </div>
+
+            {activeDeliveries.map(d => {
+              const idx = getStatusIndex(d.status, DELIVERY_STATUSES);
+              const progress = Math.round(((idx + 1) / DELIVERY_STATUSES.length) * 100);
+              return (
+                <div key={d.id} className="space-y-2.5 p-4 bg-muted/50 rounded-xl">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-semibold text-foreground text-sm truncate">{d.product_name}</span>
+                    {d.tracking_number && (
+                      <span className="text-[11px] text-muted-foreground font-mono shrink-0">{d.tracking_number}</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-0.5">
+                    {DELIVERY_STATUSES.map((s, i) => (
+                      <div key={s.key} className={`flex-1 h-2 rounded-full transition-all duration-500 ${
+                        i <= idx ? 'bg-primary' : 'bg-border'
+                      } ${i === idx ? 'animate-pulse' : ''}`} />
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-primary font-medium">
+                      {DELIVERY_STATUSES[idx].icon} {DELIVERY_STATUSES[idx].label}
+                    </p>
+                    <span className="text-[11px] text-muted-foreground">{progress}%</span>
+                  </div>
+                </div>
+              );
+            })}
+
+            {activeOrders.map(o => {
+              const idx = getStatusIndex(o.status, ORDER_STATUSES);
+              const progress = Math.round(((idx + 1) / ORDER_STATUSES.length) * 100);
+              return (
+                <div key={o.id} className="space-y-2.5 p-4 bg-muted/50 rounded-xl">
+                  <div className="flex items-center gap-1.5">
+                    <ShoppingBag size={14} className="text-muted-foreground shrink-0" />
+                    <span className="font-semibold text-foreground text-sm truncate">{o.product_name}</span>
+                  </div>
+                  <div className="flex items-center gap-0.5">
+                    {ORDER_STATUSES.map((s, i) => (
+                      <div key={s.key} className={`flex-1 h-2 rounded-full transition-all duration-500 ${
+                        i <= idx ? 'bg-primary' : 'bg-border'
+                      } ${i === idx ? 'animate-pulse' : ''}`} />
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-primary font-medium">
+                      {ORDER_STATUSES[idx].icon} {ORDER_STATUSES[idx].label}
+                    </p>
+                    <span className="text-[11px] text-muted-foreground">{progress}%</span>
+                  </div>
+                </div>
+              );
+            })}
+
+            <Button variant="outline" size="sm" onClick={() => setActiveTab('delivery')} className="w-full mt-2">
+              Все посылки <ChevronRight size={16} className="ml-1" />
+            </Button>
+          </div>
+        )}
+
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="bg-card rounded-2xl p-6 shadow-soft border border-border">
+            <h2 className="text-lg font-bold text-foreground mb-2">Общий прогресс</h2>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-sm font-medium text-primary bg-primary/10 px-3 py-1 rounded-full">
+                Уровень {userLevel}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                1 уровень = 1 месяц в клубе
+              </span>
+            </div>
+            <div className="flex items-center justify-center">
+              <ProgressRing radius={80} stroke={10} progress={progressPercentage} />
+            </div>
+            <p className="text-center text-muted-foreground mt-4">
+              {completedModules.length} из {TOTAL_MODULES} модулей
+            </p>
+          </div>
+
+          <div className="bg-card rounded-2xl p-6 shadow-soft border border-border">
+            <div className="flex items-center gap-2 mb-6">
+              <Link2 className="text-primary" size={20} />
+              <h2 className="text-lg font-bold text-foreground">Мои подборки</h2>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">Сохраняй полезные ссылки в Личном кабинете</p>
+            <Button
+              onClick={() => setActiveTab('settings')}
+              variant="outline"
+              className="w-full"
+            >
+              Перейти к подборкам
+            </Button>
+          </div>
         </div>
       </div>
-
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-card rounded-2xl p-6 shadow-soft border border-border">
-          <h2 className="text-lg font-bold text-foreground mb-2">Общий прогресс</h2>
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-sm font-medium text-primary bg-primary/10 px-3 py-1 rounded-full">
-              Уровень {userLevel}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              1 уровень = 1 месяц в клубе
-            </span>
-          </div>
-          <div className="flex items-center justify-center">
-            <ProgressRing radius={80} stroke={10} progress={progressPercentage} />
-          </div>
-          <p className="text-center text-muted-foreground mt-4">
-            {completedModules.length} из {TOTAL_MODULES} модулей
-          </p>
-        </div>
-
-        <div className="bg-card rounded-2xl p-6 shadow-soft border border-border">
-          <div className="flex items-center gap-2 mb-6">
-            <Link2 className="text-primary" size={20} />
-            <h2 className="text-lg font-bold text-foreground">Мои подборки</h2>
-          </div>
-          <p className="text-sm text-muted-foreground mb-4">Сохраняй полезные ссылки в Личном кабинете</p>
-          <Button
-            onClick={() => setActiveTab('settings')}
-            variant="outline"
-            className="w-full"
-          >
-            Перейти к подборкам
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background flex">
