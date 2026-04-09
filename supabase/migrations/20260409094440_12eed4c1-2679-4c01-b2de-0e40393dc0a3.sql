@@ -1,0 +1,1 @@
+ALTER TABLE public.ambassador_profiles ADD COLUMN admin_viewed_at TIMESTAMP WITH TIME ZONE DEFAULT NULL;

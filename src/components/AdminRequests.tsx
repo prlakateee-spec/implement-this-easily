@@ -167,6 +167,7 @@ interface AmbassadorProfile {
   referrals_club: number;
   referrals_orders: number;
   created_at: string;
+  admin_viewed_at: string | null;
 }
 
 interface PickRequest {
@@ -255,8 +256,16 @@ export function AdminRequests() {
 
   useEffect(() => { loadAll(); }, []);
 
-  const markViewed = async (table: 'deliveries' | 'order_requests' | 'pick_requests', id: string) => {
+  const markViewed = async (table: 'deliveries' | 'order_requests' | 'pick_requests' | 'ambassador_profiles', id: string) => {
     await supabase.from(table).update({ admin_viewed_at: new Date().toISOString() }).eq('id', id);
+  };
+
+  const openAmbassador = (a: AmbassadorProfile) => {
+    setSelectedAmbassador(a);
+    if (!a.admin_viewed_at) {
+      markViewed('ambassador_profiles', a.id);
+      setAmbassadors(prev => prev.map(x => x.id === a.id ? { ...x, admin_viewed_at: new Date().toISOString() } : x));
+    }
   };
 
   const openPick = (p: PickRequest) => {
@@ -340,7 +349,7 @@ export function AdminRequests() {
     if (selectedAmbassador?.id === id) setSelectedAmbassador({ ...selectedAmbassador, balance_usd: balance } as AmbassadorProfile);
   };
 
-  const newAmbassadorsCount = ambassadors.filter(a => !a.is_active).length;
+  const newAmbassadorsCount = ambassadors.filter(a => a.is_active && !a.admin_viewed_at).length;
   const newPicksCount = picks.filter(p => isNew(p.admin_viewed_at)).length;
 
   const PICK_STATUSES = [
@@ -755,29 +764,27 @@ export function AdminRequests() {
         </div>
       ) : (
         <div className="space-y-3">
-          {ambassadors.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">Нет заявок амбассадоров</p>
-          ) : ambassadors.map((a) => (
+      {ambassadors.filter(a => a.is_active).length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">Нет активаций амбассадоров</p>
+          ) : ambassadors.filter(a => a.is_active).map((a) => (
             <button
               key={a.id}
-              onClick={() => setSelectedAmbassador(a)}
+              onClick={() => openAmbassador(a)}
               className={`w-full text-left bg-card rounded-2xl p-4 border shadow-soft transition-all hover:shadow-md ${
-                !a.is_active ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-border'
+                isNew(a.admin_viewed_at) ? 'border-primary ring-2 ring-primary/20' : 'border-border'
               }`}
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  {!a.is_active && <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0 animate-pulse" />}
+                  {isNew(a.admin_viewed_at) && <span className="w-2.5 h-2.5 rounded-full bg-primary shrink-0 animate-pulse" />}
                   <div>
                     <p className="font-bold text-foreground">@{profiles[a.user_id]?.username || '?'}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      ${a.balance_usd.toFixed(2)} · {formatDate(a.created_at)}
+                      Активировал(а) программу · {formatDate(a.created_at)}
                     </p>
                   </div>
                 </div>
-                <Badge className={a.is_active ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'}>
-                  {a.is_active ? 'Активен' : 'Ожидает'}
-                </Badge>
+                <Badge className="bg-emerald-500/10 text-emerald-600">Активирован</Badge>
               </div>
             </button>
           ))}
