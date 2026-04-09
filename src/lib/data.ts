@@ -132,7 +132,7 @@ export const COURSE_LEVELS: Record<string, number> = {
 };
 
 export function isCourseAccessible(courseId: string, userEmail: string): boolean {
-  return OPEN_COURSES.includes(courseId) || userEmail === ADMIN_EMAIL || userEmail === `${ADMIN_USERNAME}@kitay.club`;
+  return OPEN_COURSES.includes(courseId) || userEmail === ADMIN_EMAIL || userEmail === 'terra_ai_team@kitay.club';
 }
 
 export function getCourseLockMessage(courseId: string): string {
