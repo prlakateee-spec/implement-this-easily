@@ -322,8 +322,13 @@ export function AdminPanel() {
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-bold text-foreground truncate">{u.username}</span>
+                      {u.unique_code && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-mono font-medium">
+                          #{u.unique_code}
+                        </span>
+                      )}
                       <span className={`text-xs px-2 py-0.5 rounded-full ${
                         u.is_active
                           ? 'bg-green-500/10 text-green-600 dark:text-green-400'
