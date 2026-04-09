@@ -89,15 +89,15 @@ export function Dashboard({
   const isAdmin = user.email === ADMIN_EMAIL || user.email === 'terra_ai_team@kitay.club';
 
   const navItems = [
-    { id: 'dashboard' as const, icon: Layout, label: 'Главная', badge: 0 },
-    { id: 'knowledge' as const, icon: BookOpen, label: 'База знаний', badge: 0 },
-    { id: 'delivery' as const, icon: Truck, label: 'Доставка', badge: 0 },
-    { id: 'order' as const, icon: ShoppingBag, label: 'Закажите мне', badge: 0 },
-    { id: 'ambassador' as const, icon: Sparkles, label: 'Амбассадор', badge: 0 },
-    { id: 'settings' as const, icon: UserIcon, label: 'Личный кабинет', badge: 0 },
+    { id: 'dashboard' as const, icon: Layout, label: 'Главная', badge: 0, highlight: false },
+    { id: 'knowledge' as const, icon: BookOpen, label: 'База знаний', badge: 0, highlight: false },
+    { id: 'delivery' as const, icon: Truck, label: 'Доставка', badge: 0, highlight: false },
+    { id: 'order' as const, icon: ShoppingBag, label: 'Закажите мне', badge: 0, highlight: false },
+    { id: 'ambassador' as const, icon: Sparkles, label: 'Стать амбассадором', badge: 0, highlight: true },
+    { id: 'settings' as const, icon: UserIcon, label: 'Личный кабинет', badge: 0, highlight: false },
     ...(isAdmin ? [
-      { id: 'requests' as const, icon: ClipboardList, label: 'Заявки', badge: unviewedCount },
-      { id: 'admin' as const, icon: Shield, label: 'Пользователи', badge: 0 },
+      { id: 'requests' as const, icon: ClipboardList, label: 'Заявки', badge: unviewedCount, highlight: false },
+      { id: 'admin' as const, icon: Shield, label: 'Пользователи', badge: 0, highlight: false },
     ] : []),
   ];
 
@@ -127,8 +127,12 @@ export function Dashboard({
             onClick={() => setActiveTab(item.id)}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium relative ${
               activeTab === item.id
-                ? 'bg-secondary text-secondary-foreground'
-                : 'text-muted-foreground hover:bg-muted'
+                ? item.highlight
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md'
+                  : 'bg-secondary text-secondary-foreground'
+                : item.highlight
+                  ? 'bg-gradient-to-r from-amber-500/10 to-orange-500/10 text-amber-600 dark:text-amber-400 hover:from-amber-500/20 hover:to-orange-500/20'
+                  : 'text-muted-foreground hover:bg-muted'
             }`}
           >
             <item.icon size={20} />
@@ -183,7 +187,11 @@ export function Dashboard({
             <button
               key={item.id}
               onClick={() => { setActiveTab(item.id); setMobileMenuOpen(false); }}
-              className="w-full flex items-center gap-3 p-4 bg-muted rounded-2xl font-bold text-lg relative"
+              className={`w-full flex items-center gap-3 p-4 rounded-2xl font-bold text-lg relative ${
+                item.highlight
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md'
+                  : 'bg-muted'
+              }`}
             >
               <item.icon size={24} />
               {item.label}
