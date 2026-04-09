@@ -73,13 +73,13 @@ export function AdminPanel() {
     // Save unique code
     await supabase.from('user_profiles').update({ unique_code: fields.code.trim() || null }).eq('user_id', userId);
     
-    // Save ambassador link
+    // Save ambassador link (don't auto-activate — user must activate themselves)
     const link = fields.link.trim() || null;
     const existing = ambassadors.find(a => a.user_id === userId);
     if (existing) {
-      await supabase.from('ambassador_profiles').update({ referral_link: link, is_active: true }).eq('user_id', userId);
+      await supabase.from('ambassador_profiles').update({ referral_link: link }).eq('user_id', userId);
     } else if (link) {
-      await supabase.from('ambassador_profiles').insert({ user_id: userId, referral_link: link, is_active: true });
+      await supabase.from('ambassador_profiles').insert({ user_id: userId, referral_link: link, is_active: false });
     }
     
     setSavingField(null);
