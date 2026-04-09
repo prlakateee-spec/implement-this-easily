@@ -1,4 +1,4 @@
-import { CheckCircle, ChevronRight, Loader2 } from 'lucide-react';
+import { CheckCircle, ChevronRight, Loader2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { Lesson, LessonImage } from '@/lib/lessonApi';
 interface LessonArticleProps {
@@ -8,6 +8,8 @@ interface LessonArticleProps {
   isLoading: boolean;
   isCompleted: boolean;
   onComplete: () => void;
+  onCompleteAndNext?: () => void;
+  hasNext: boolean;
 }
 export function LessonArticle({
   title,
