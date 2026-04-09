@@ -27,7 +27,7 @@ function AmbassadorDetail({ ambassador: a, profiles, onBack, onActivate, onUpdat
   const p = profiles[a.user_id];
 
   return (
-    <div className="p-6 lg:p-10 space-y-6 animate-fade-in-up">
+    <div className="p-4 sm:p-6 lg:p-10 space-y-6 animate-fade-in-up">
       <button onClick={onBack} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
         <ChevronLeft size={18} /> Назад к амбассадорам
       </button>
@@ -402,7 +402,7 @@ export function AdminRequests() {
   if (selectedPick) {
     const p = selectedPick;
     return (
-      <div className="p-6 lg:p-10 space-y-6 animate-fade-in-up">
+      <div className="p-4 sm:p-6 lg:p-10 space-y-6 animate-fade-in-up">
         <button onClick={() => setSelectedPick(null)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
           <ChevronLeft size={18} /> Назад к заявкам
         </button>
@@ -475,7 +475,7 @@ export function AdminRequests() {
   if (selectedDelivery) {
     const d = selectedDelivery;
     return (
-      <div className="p-6 lg:p-10 space-y-6 animate-fade-in-up">
+      <div className="p-4 sm:p-6 lg:p-10 space-y-6 animate-fade-in-up">
         <button onClick={() => setSelectedDelivery(null)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
           <ChevronLeft size={18} /> Назад к заявкам
         </button>
@@ -526,7 +526,7 @@ export function AdminRequests() {
   if (selectedOrder) {
     const o = selectedOrder;
     return (
-      <div className="p-6 lg:p-10 space-y-6 animate-fade-in-up">
+      <div className="p-4 sm:p-6 lg:p-10 space-y-6 animate-fade-in-up">
         <button onClick={() => setSelectedOrder(null)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
           <ChevronLeft size={18} /> Назад к заявкам
         </button>
@@ -604,7 +604,7 @@ export function AdminRequests() {
 
   // List view
   return (
-    <div className="p-6 lg:p-10 space-y-6 animate-fade-in-up">
+    <div className="p-4 sm:p-6 lg:p-10 space-y-6 animate-fade-in-up">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">Заявки</h1>
         <Button variant="ghost" size="sm" onClick={loadAll} disabled={loading}>

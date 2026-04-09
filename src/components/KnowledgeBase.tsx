@@ -145,7 +145,7 @@ export function KnowledgeBase({ completedModules, onToggleModule, userEmail }: K
     const lessonImages = dbImages;
 
     return (
-      <div className="p-6 lg:p-10 animate-fade-in-up">
+      <div className="p-4 sm:p-6 lg:p-10 animate-fade-in-up">
         <button
           onClick={() => {
             setActiveModuleId(null);
@@ -187,7 +187,7 @@ export function KnowledgeBase({ completedModules, onToggleModule, userEmail }: K
   // Course View
   if (activeCourse) {
     return (
-      <div className="p-6 lg:p-10 animate-fade-in-up">
+      <div className="p-4 sm:p-6 lg:p-10 animate-fade-in-up">
         <button
           onClick={() => setActiveCourse(null)}
           className="mb-6 text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm font-medium transition-colors"
@@ -238,7 +238,7 @@ export function KnowledgeBase({ completedModules, onToggleModule, userEmail }: K
 
   // Courses List
   return (
-    <div className="p-6 lg:p-10 animate-fade-in-up">
+    <div className="p-4 sm:p-6 lg:p-10 animate-fade-in-up">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-foreground">База знаний</h1>
         <ToggleGroup 
