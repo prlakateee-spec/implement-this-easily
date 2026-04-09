@@ -389,6 +389,66 @@ export function AdminRequests() {
     );
   };
 
+  // Pick detail view
+  if (selectedPick) {
+    const p = selectedPick;
+    return (
+      <div className="p-6 lg:p-10 space-y-6 animate-fade-in-up">
+        <button onClick={() => setSelectedPick(null)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ChevronLeft size={18} /> Назад к заявкам
+        </button>
+        <div className="bg-card rounded-2xl p-6 border border-border shadow-soft space-y-5">
+          <h2 className="text-xl font-bold text-foreground">Заявка на подбор</h2>
+
+          <div className="bg-muted/50 rounded-xl p-4 space-y-2">
+            <p className="text-xs text-muted-foreground font-semibold uppercase">Статус</p>
+            <Select value={p.status} onValueChange={(v) => updatePickStatus(p.id, v)}>
+              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {PICK_STATUSES.map(s => (
+                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="bg-muted/50 rounded-xl p-4">
+            <p className="text-xs text-muted-foreground mb-2 font-semibold uppercase">Пользователь</p>
+            <ProfileInfo userId={p.user_id} />
+          </div>
+
+          {p.product_link && (
+            <a href={p.product_link} target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm text-primary hover:underline bg-primary/5 rounded-xl p-3">
+              <ExternalLink size={16} /> Ссылка на товар
+            </a>
+          )}
+
+          {p.image_url && (
+            <a href={p.image_url} target="_blank" rel="noopener noreferrer" className="block">
+              <p className="text-xs text-muted-foreground mb-1">Скриншот товара</p>
+              <img src={p.image_url} alt="Product" className="max-h-48 rounded-xl border border-border object-contain" />
+            </a>
+          )}
+
+          {p.price_rub > 0 && (
+            <div className="bg-primary/5 rounded-xl p-4 text-center">
+              <p className="text-xs text-muted-foreground">Стоимость</p>
+              <p className="text-2xl font-bold text-primary">₽{p.price_rub}</p>
+            </div>
+          )}
+
+          <div className="space-y-0">
+            <InfoRow icon={Palette} label="Цвет" value={p.color || undefined} />
+            <InfoRow icon={Ruler} label="Размер" value={p.size || undefined} />
+            <InfoRow icon={Hash} label="Количество" value={`${p.quantity} шт`} />
+            <InfoRow icon={Calendar} label="Дата создания" value={formatDate(p.created_at)} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Ambassador detail view
   if (selectedAmbassador) {
     return (
