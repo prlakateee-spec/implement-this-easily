@@ -170,22 +170,20 @@ export function AmbassadorModule({ userId }: AmbassadorModuleProps) {
   const handleRequest = async () => {
     setRequesting(true);
     if (profile && !profile.is_active) {
-      // Profile exists (admin pre-created with link) — just activate
       const { error } = await supabase.from('ambassador_profiles').update({ is_active: true }).eq('user_id', userId);
       if (error) {
         toast({ title: 'Ошибка', description: 'Не удалось активировать программу', variant: 'destructive' });
       } else {
         toast({ title: '🎉 Программа активирована!', description: 'Теперь ты амбассадор!' });
-        fetchProfile();
+        setProfile({ ...profile, is_active: true });
       }
     } else {
-      // No profile at all — create new
-      const { error } = await supabase.from('ambassador_profiles').insert({ user_id: userId, is_active: true });
+      const { data, error } = await supabase.from('ambassador_profiles').insert({ user_id: userId, is_active: true }).select().single();
       if (error) {
         toast({ title: 'Ошибка', description: 'Не удалось активировать программу', variant: 'destructive' });
       } else {
         toast({ title: '🎉 Программа активирована!', description: 'Теперь ты амбассадор! Реферальную ссылку добавит администратор.' });
-        fetchProfile();
+        setProfile(data);
       }
     }
     setRequesting(false);
