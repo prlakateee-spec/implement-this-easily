@@ -406,66 +406,53 @@ export function AdminPanel() {
                   </div>
                 </div>
 
-                {/* Unique code & Ambassador link */}
-                {u.user_id && (
-                  <div className="mt-3 pt-3 border-t border-border space-y-2">
-                    {/* Unique code */}
-                    <div className="flex items-center gap-2 text-sm">
-                      <Hash size={14} className="text-primary shrink-0" />
-                      <span className="text-muted-foreground shrink-0">Код:</span>
-                      {editingCode?.userId === u.user_id ? (
-                        <div className="flex items-center gap-1 flex-1">
-                          <Input
-                            value={editingCode.code}
-                            onChange={(e) => setEditingCode({ ...editingCode, code: e.target.value })}
-                            className="h-7 text-sm flex-1"
-                            placeholder="Уникальный код"
-                          />
-                          <Button size="sm" variant="ghost" className="h-7 px-2" disabled={savingField}
-                            onClick={() => saveUniqueCode(u.user_id!, editingCode.code)}>✓</Button>
-                          <Button size="sm" variant="ghost" className="h-7 px-2"
-                            onClick={() => setEditingCode(null)}>✕</Button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1 flex-1">
-                          <span className="font-mono font-medium text-foreground">{u.unique_code || '—'}</span>
-                          <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-muted-foreground"
-                            onClick={() => setEditingCode({ userId: u.user_id!, code: u.unique_code || '' })}>
-                            ✏️
-                          </Button>
-                        </div>
+                {u.user_id && (() => {
+                  const amb = ambassadors.find(a => a.user_id === u.user_id);
+                  const fields = editFields[u.user_id!] || { code: u.unique_code || '', link: amb?.referral_link || '' };
+                  const hasChanges = fields.code !== (u.unique_code || '') || fields.link !== (amb?.referral_link || '');
+                  
+                  // Initialize edit fields on first render
+                  if (!editFields[u.user_id!]) {
+                    setTimeout(() => setEditFields(prev => ({ ...prev, [u.user_id!]: { code: u.unique_code || '', link: amb?.referral_link || '' } })), 0);
+                  }
+                  
+                  return (
+                    <div className="mt-3 pt-3 border-t border-border space-y-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Hash size={14} className="text-primary shrink-0" />
+                        <span className="text-muted-foreground shrink-0 w-14">Код:</span>
+                        <Input
+                          value={fields.code}
+                          onChange={(e) => setEditFields(prev => ({ ...prev, [u.user_id!]: { ...fields, code: e.target.value } }))}
+                          className="h-7 text-sm flex-1"
+                          placeholder="Уникальный код"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Link2 size={14} className="text-amber-500 shrink-0" />
+                        <span className="text-muted-foreground shrink-0 w-14">Ссылка:</span>
+                        <Input
+                          value={fields.link}
+                          onChange={(e) => setEditFields(prev => ({ ...prev, [u.user_id!]: { ...fields, link: e.target.value } }))}
+                          className="h-7 text-sm flex-1"
+                          placeholder="https://t.me/..."
+                        />
+                      </div>
+                      {hasChanges && (
+                        <Button
+                          size="sm"
+                          className="w-full mt-1 gradient-primary text-primary-foreground"
+                          disabled={savingField === u.user_id}
+                          onClick={() => saveCodeAndLink(u.user_id!)}
+                        >
+                          {savingField === u.user_id ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary-foreground border-t-transparent mr-2" />
+                          ) : '💾'} Сохранить код и ссылку
+                        </Button>
                       )}
                     </div>
-
-                    {/* Ambassador link */}
-                    <div className="flex items-center gap-2 text-sm">
-                      <Link2 size={14} className="text-amber-500 shrink-0" />
-                      <span className="text-muted-foreground shrink-0">Ссылка:</span>
-                      {editingLink?.userId === u.user_id ? (
-                        <div className="flex items-center gap-1 flex-1">
-                          <Input
-                            value={editingLink.link}
-                            onChange={(e) => setEditingLink({ ...editingLink, link: e.target.value })}
-                            className="h-7 text-sm flex-1"
-                            placeholder="https://t.me/..."
-                          />
-                          <Button size="sm" variant="ghost" className="h-7 px-2" disabled={savingField}
-                            onClick={() => saveAmbassadorLink(u.user_id!, editingLink.link)}>✓</Button>
-                          <Button size="sm" variant="ghost" className="h-7 px-2"
-                            onClick={() => setEditingLink(null)}>✕</Button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1 flex-1 min-w-0">
-                          <span className="font-mono text-xs text-foreground truncate">{amb?.referral_link || '—'}</span>
-                          <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-muted-foreground shrink-0"
-                            onClick={() => setEditingLink({ userId: u.user_id!, link: amb?.referral_link || '' })}>
-                            ✏️
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
               );
             })}
