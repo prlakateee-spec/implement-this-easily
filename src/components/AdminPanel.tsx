@@ -29,6 +29,7 @@ interface CreatedUser {
 
 export function AdminPanel() {
   const [users, setUsers] = useState<UserProfile[]>([]);
+  const [ambassadors, setAmbassadors] = useState<AmbassadorInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [togglingUser, setTogglingUser] = useState<string | null>(null);
@@ -39,6 +40,9 @@ export function AdminPanel() {
   const [form, setForm] = useState({ username: '', password: '', display_name: '' });
   const [resetForm, setResetForm] = useState<{ username: string; password: string } | null>(null);
   const [resetting, setResetting] = useState(false);
+  const [editingCode, setEditingCode] = useState<{ userId: string; code: string } | null>(null);
+  const [editingLink, setEditingLink] = useState<{ userId: string; link: string } | null>(null);
+  const [savingField, setSavingField] = useState(false);
 
   const loadUsers = async () => {
     setLoading(true);
