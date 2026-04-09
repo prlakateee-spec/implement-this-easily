@@ -48,7 +48,6 @@ export function AdminPanel() {
     setLoading(true);
     setError('');
 
-    // Wait for session to be ready before querying
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       setError('Сессия не готова. Попробуйте обновить страницу.');
@@ -56,14 +55,39 @@ export function AdminPanel() {
       return;
     }
 
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const [usersRes, ambRes] = await Promise.all([
+      supabase.from('user_profiles').select('*').order('created_at', { ascending: false }),
+      supabase.from('ambassador_profiles').select('user_id, referral_link, is_active'),
+    ]);
 
-    if (data) setUsers(data as UserProfile[]);
-    if (error) setError(`Ошибка загрузки: ${error.message}`);
+    if (usersRes.data) setUsers(usersRes.data as UserProfile[]);
+    if (usersRes.error) setError(`Ошибка загрузки: ${usersRes.error.message}`);
+    if (ambRes.data) setAmbassadors(ambRes.data as AmbassadorInfo[]);
     setLoading(false);
+  };
+
+  const saveUniqueCode = async (userId: string, code: string) => {
+    setSavingField(true);
+    await supabase.from('user_profiles').update({ unique_code: code.trim() || null }).eq('user_id', userId);
+    setEditingCode(null);
+    setSavingField(false);
+    setSuccess('Код сохранён');
+    await loadUsers();
+  };
+
+  const saveAmbassadorLink = async (userId: string, link: string) => {
+    setSavingField(true);
+    // Upsert ambassador profile with the link
+    const existing = ambassadors.find(a => a.user_id === userId);
+    if (existing) {
+      await supabase.from('ambassador_profiles').update({ referral_link: link.trim() || null, is_active: true }).eq('user_id', userId);
+    } else {
+      await supabase.from('ambassador_profiles').insert({ user_id: userId, referral_link: link.trim() || null, is_active: true });
+    }
+    setEditingLink(null);
+    setSavingField(false);
+    setSuccess('Ссылка амбассадора сохранена');
+    await loadUsers();
   };
 
   useEffect(() => {
