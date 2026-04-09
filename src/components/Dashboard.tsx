@@ -185,19 +185,21 @@ export function Dashboard({
 
   const MobileMenu = () => (
     mobileMenuOpen ? (
-      <div className="lg:hidden fixed inset-0 z-40 bg-background/95 backdrop-blur-sm pt-20 p-6 animate-fade-in">
-        <div className="space-y-4">
+      <div className="lg:hidden fixed inset-0 z-40 bg-background/95 backdrop-blur-sm pt-16 p-4 sm:p-6 animate-fade-in overflow-y-auto">
+        <div className="space-y-2 sm:space-y-3 max-w-md mx-auto">
           {navItems.map(item => (
             <button
               key={item.id}
               onClick={() => { setActiveTab(item.id); setMobileMenuOpen(false); }}
-              className={`w-full flex items-center gap-3 p-4 rounded-2xl font-bold text-lg relative ${
+              className={`w-full flex items-center gap-3 p-3.5 sm:p-4 rounded-2xl font-semibold text-base sm:text-lg relative ${
                 item.highlight
                   ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md'
-                  : 'bg-muted'
+                  : activeTab === item.id
+                    ? 'bg-secondary text-secondary-foreground'
+                    : 'bg-muted'
               }`}
             >
-              <item.icon size={24} />
+              <item.icon size={22} />
               {item.label}
               {item.badge > 0 && (
                 <span className="ml-auto bg-destructive text-destructive-foreground text-xs font-bold min-w-[22px] h-[22px] flex items-center justify-center rounded-full px-1.5">
@@ -208,9 +210,9 @@ export function Dashboard({
           ))}
           <button
             onClick={onLogout}
-            className="w-full flex items-center gap-3 p-4 bg-destructive/10 text-destructive rounded-2xl font-bold text-lg"
+            className="w-full flex items-center gap-3 p-3.5 sm:p-4 bg-destructive/10 text-destructive rounded-2xl font-semibold text-base sm:text-lg"
           >
-            <LogOut size={24} />
+            <LogOut size={22} />
             Выйти
           </button>
         </div>
