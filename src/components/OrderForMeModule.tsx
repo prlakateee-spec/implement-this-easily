@@ -285,11 +285,19 @@ export function OrderForMeModule({ userId }: OrderForMeModuleProps) {
     <div className="p-6 lg:p-10 space-y-6 animate-fade-in-up max-w-3xl mx-auto">
       {/* Header */}
       <div className="bg-accent/30 border border-accent/40 rounded-2xl p-6">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center">
-            <ShoppingBag className="w-5 h-5 text-accent-foreground" />
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center">
+              <ShoppingBag className="w-5 h-5 text-accent-foreground" />
+            </div>
+            <h1 className="text-2xl font-bold text-foreground">Закажите мне</h1>
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Закажите мне</h1>
+          {uniqueCode && (
+            <div className="bg-card border border-border rounded-xl px-3 py-1.5 text-center">
+              <p className="text-[10px] text-muted-foreground leading-none mb-0.5">Мой код</p>
+              <p className="font-mono font-bold text-primary text-sm">{uniqueCode}</p>
+            </div>
+          )}
         </div>
         <p className="text-sm text-muted-foreground leading-relaxed">
           🛒 Этот модуль для тех, кому нужна помощь в оформлении заказа и доставки.
