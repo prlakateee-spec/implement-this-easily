@@ -18,7 +18,7 @@ interface PickRequest {
   quantity: number;
   status: string;
   created_at: string;
-  batch_id: string | null;
+  batch_id?: string | null;
 }
 
 interface CartItem {
