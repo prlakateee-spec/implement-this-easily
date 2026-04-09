@@ -95,12 +95,15 @@ export function OrderForMeModule({ userId }: OrderForMeModuleProps) {
   const [cart, setCart] = useState<CartItem[]>([newCartItem()]);
   const [orders, setOrders] = useState<OrderRequest[]>([]);
   const [loading, setLoading] = useState(false);
+  const [uniqueCode, setUniqueCode] = useState<string | null>(null);
 
   const { toast } = useToast();
 
   useEffect(() => {
     loadProfiles();
     loadOrders();
+    supabase.from('user_profiles').select('unique_code').eq('user_id', userId).maybeSingle()
+      .then(({ data }) => { if (data?.unique_code) setUniqueCode(data.unique_code); });
   }, []);
 
   // --- Profiles ---

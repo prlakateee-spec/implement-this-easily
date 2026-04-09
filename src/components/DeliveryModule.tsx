@@ -262,11 +262,19 @@ export function DeliveryModule({ userId }: DeliveryModuleProps) {
     <div className="p-6 lg:p-10 space-y-6 animate-fade-in-up max-w-3xl mx-auto">
       {/* Header */}
       <div className="bg-primary/10 border border-primary/20 rounded-2xl p-6">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-            <Truck className="w-5 h-5 text-primary-foreground" />
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
+              <Truck className="w-5 h-5 text-primary-foreground" />
+            </div>
+            <h1 className="text-2xl font-bold text-foreground">Доставка</h1>
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Доставка</h1>
+          {uniqueCode && (
+            <div className="bg-card border border-border rounded-xl px-3 py-1.5 text-center">
+              <p className="text-[10px] text-muted-foreground leading-none mb-0.5">Мой код</p>
+              <p className="font-mono font-bold text-primary text-sm">{uniqueCode}</p>
+            </div>
+          )}
         </div>
         <p className="text-sm text-muted-foreground leading-relaxed">
           📦 <strong>Куда отправить посылку:</strong> Склад консолидации в Китае.
