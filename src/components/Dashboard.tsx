@@ -127,8 +127,12 @@ export function Dashboard({
             onClick={() => setActiveTab(item.id)}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium relative ${
               activeTab === item.id
-                ? 'bg-secondary text-secondary-foreground'
-                : 'text-muted-foreground hover:bg-muted'
+                ? item.highlight
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md'
+                  : 'bg-secondary text-secondary-foreground'
+                : item.highlight
+                  ? 'bg-gradient-to-r from-amber-500/10 to-orange-500/10 text-amber-600 dark:text-amber-400 hover:from-amber-500/20 hover:to-orange-500/20'
+                  : 'text-muted-foreground hover:bg-muted'
             }`}
           >
             <item.icon size={20} />
