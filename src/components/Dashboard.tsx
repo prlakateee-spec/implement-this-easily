@@ -292,7 +292,7 @@ export function Dashboard({
         </div>
 
         {!loadingTracking && hasTracking && (
-          <div className="bg-card rounded-2xl p-6 shadow-soft border border-border space-y-4">
+          <div className="bg-card rounded-2xl p-4 sm:p-6 shadow-soft border border-border space-y-4">
             <div className="flex items-center gap-2 mb-1">
               <Truck className="text-primary" size={20} />
               <h2 className="text-lg font-bold text-foreground">Мои посылки</h2>
@@ -361,8 +361,8 @@ export function Dashboard({
           </div>
         )}
 
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="bg-card rounded-2xl p-6 shadow-soft border border-border">
+        <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
+          <div className="bg-card rounded-2xl p-4 sm:p-6 shadow-soft border border-border">
             <h2 className="text-lg font-bold text-foreground mb-2">Общий прогресс</h2>
             <div className="flex items-center gap-3 mb-4">
               <span className="text-sm font-medium text-primary bg-primary/10 px-3 py-1 rounded-full">
@@ -380,7 +380,7 @@ export function Dashboard({
             </p>
           </div>
 
-          <div className="bg-card rounded-2xl p-6 shadow-soft border border-border">
+          <div className="bg-card rounded-2xl p-4 sm:p-6 shadow-soft border border-border">
             <div className="flex items-center gap-2 mb-6">
               <Link2 className="text-primary" size={20} />
               <h2 className="text-lg font-bold text-foreground">Мои подборки</h2>
