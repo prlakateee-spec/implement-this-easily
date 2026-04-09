@@ -109,9 +109,36 @@ export function SettingsPage({ userName, onSaveName, userId }: SettingsPageProps
     ));
   };
 
+  // Unique code
+  const [uniqueCode, setUniqueCode] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!userId) return;
+    (async () => {
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data } = await supabase
+        .from('user_profiles')
+        .select('unique_code')
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (data?.unique_code) setUniqueCode(data.unique_code);
+    })();
+  }, [userId]);
+
   return (
     <div className="p-6 lg:p-10 space-y-8 animate-fade-in-up">
       <h1 className="text-3xl font-bold text-foreground">Личный кабинет</h1>
+
+      {/* Unique code */}
+      {uniqueCode && (
+        <div className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-2xl p-6">
+          <h2 className="text-lg font-bold text-foreground mb-2">🔑 Твой уникальный код</h2>
+          <p className="text-sm text-muted-foreground mb-3">Этот код закреплён за твоим аккаунтом</p>
+          <div className="bg-card rounded-xl px-5 py-3 border border-border inline-block">
+            <span className="font-mono text-xl font-bold text-primary tracking-wider">{uniqueCode}</span>
+          </div>
+        </div>
+      )}
 
       {/* Name Settings */}
       <div className="bg-card rounded-2xl p-6 shadow-soft border border-border">

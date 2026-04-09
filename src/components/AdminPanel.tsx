@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { UserPlus, UserX, UserCheck, RefreshCw, Eye, EyeOff, AlertCircle, KeyRound } from 'lucide-react';
+import { UserPlus, UserX, UserCheck, RefreshCw, Eye, EyeOff, AlertCircle, KeyRound, Hash, Link2 } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -12,6 +12,13 @@ interface UserProfile {
   is_active: boolean;
   registered_at: string | null;
   created_at: string | null;
+  unique_code: string | null;
+}
+
+interface AmbassadorInfo {
+  user_id: string;
+  referral_link: string | null;
+  is_active: boolean;
 }
 
 interface CreatedUser {
@@ -22,6 +29,7 @@ interface CreatedUser {
 
 export function AdminPanel() {
   const [users, setUsers] = useState<UserProfile[]>([]);
+  const [ambassadors, setAmbassadors] = useState<AmbassadorInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [togglingUser, setTogglingUser] = useState<string | null>(null);
@@ -32,12 +40,14 @@ export function AdminPanel() {
   const [form, setForm] = useState({ username: '', password: '', display_name: '' });
   const [resetForm, setResetForm] = useState<{ username: string; password: string } | null>(null);
   const [resetting, setResetting] = useState(false);
+  const [editingCode, setEditingCode] = useState<{ userId: string; code: string } | null>(null);
+  const [editingLink, setEditingLink] = useState<{ userId: string; link: string } | null>(null);
+  const [savingField, setSavingField] = useState(false);
 
   const loadUsers = async () => {
     setLoading(true);
     setError('');
 
-    // Wait for session to be ready before querying
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       setError('Сессия не готова. Попробуйте обновить страницу.');
@@ -45,14 +55,39 @@ export function AdminPanel() {
       return;
     }
 
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const [usersRes, ambRes] = await Promise.all([
+      supabase.from('user_profiles').select('*').order('created_at', { ascending: false }),
+      supabase.from('ambassador_profiles').select('user_id, referral_link, is_active'),
+    ]);
 
-    if (data) setUsers(data as UserProfile[]);
-    if (error) setError(`Ошибка загрузки: ${error.message}`);
+    if (usersRes.data) setUsers(usersRes.data as UserProfile[]);
+    if (usersRes.error) setError(`Ошибка загрузки: ${usersRes.error.message}`);
+    if (ambRes.data) setAmbassadors(ambRes.data as AmbassadorInfo[]);
     setLoading(false);
+  };
+
+  const saveUniqueCode = async (userId: string, code: string) => {
+    setSavingField(true);
+    await supabase.from('user_profiles').update({ unique_code: code.trim() || null }).eq('user_id', userId);
+    setEditingCode(null);
+    setSavingField(false);
+    setSuccess('Код сохранён');
+    await loadUsers();
+  };
+
+  const saveAmbassadorLink = async (userId: string, link: string) => {
+    setSavingField(true);
+    // Upsert ambassador profile with the link
+    const existing = ambassadors.find(a => a.user_id === userId);
+    if (existing) {
+      await supabase.from('ambassador_profiles').update({ referral_link: link.trim() || null, is_active: true }).eq('user_id', userId);
+    } else {
+      await supabase.from('ambassador_profiles').insert({ user_id: userId, referral_link: link.trim() || null, is_active: true });
+    }
+    setEditingLink(null);
+    setSavingField(false);
+    setSuccess('Ссылка амбассадора сохранена');
+    await loadUsers();
   };
 
   useEffect(() => {
@@ -274,90 +309,156 @@ export function AdminPanel() {
           <p className="text-muted-foreground text-center py-8">Пользователей пока нет</p>
         ) : (
           <div className="space-y-3">
-            {users.map((u) => (
+            {users.map((u) => {
+              const amb = ambassadors.find(a => a.user_id === u.user_id);
+              return (
               <div
                 key={u.id}
-                className={`flex items-center justify-between p-4 rounded-xl border transition-all ${
+                className={`p-4 rounded-xl border transition-all ${
                   u.is_active
                     ? 'border-border bg-muted/30'
                     : 'border-destructive/20 bg-destructive/5 opacity-60'
                 }`}
               >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-foreground truncate">{u.username}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${
-                      u.is_active
-                        ? 'bg-green-500/10 text-green-600 dark:text-green-400'
-                        : 'bg-destructive/10 text-destructive'
-                    }`}>
-                      {u.is_active ? 'Активен' : 'Деактивирован'}
-                    </span>
-                  </div>
-                  {u.display_name && u.display_name !== u.username && (
-                    <p className="text-sm text-muted-foreground">{u.display_name}</p>
-                  )}
-                  {u.created_at && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Создан: {new Date(u.created_at).toLocaleDateString('ru-RU')}
-                    </p>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  {resetForm?.username === u.username ? (
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <Input
-                        type="text"
-                        value={resetForm.password}
-                        onChange={(e) => setResetForm({ ...resetForm, password: e.target.value })}
-                        placeholder="Новый пароль"
-                        className="w-32 h-8 text-sm bg-muted/50"
-                      />
+                      <span className="font-bold text-foreground truncate">{u.username}</span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${
+                        u.is_active
+                          ? 'bg-green-500/10 text-green-600 dark:text-green-400'
+                          : 'bg-destructive/10 text-destructive'
+                      }`}>
+                        {u.is_active ? 'Активен' : 'Деактивирован'}
+                      </span>
+                    </div>
+                    {u.display_name && u.display_name !== u.username && (
+                      <p className="text-sm text-muted-foreground">{u.display_name}</p>
+                    )}
+                    {u.created_at && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Создан: {new Date(u.created_at).toLocaleDateString('ru-RU')}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {resetForm?.username === u.username ? (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="text"
+                          value={resetForm.password}
+                          onChange={(e) => setResetForm({ ...resetForm, password: e.target.value })}
+                          placeholder="Новый пароль"
+                          className="w-32 h-8 text-sm bg-muted/50"
+                        />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={resetting || !resetForm.password}
+                          onClick={() => resetPassword(u.username, resetForm.password)}
+                          className="text-primary"
+                        >
+                          {resetting ? <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" /> : '✓'}
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => setResetForm(null)}>✕</Button>
+                      </div>
+                    ) : (
                       <Button
                         variant="ghost"
                         size="sm"
-                        disabled={resetting || !resetForm.password}
-                        onClick={() => resetPassword(u.username, resetForm.password)}
-                        className="text-primary"
+                        onClick={() => setResetForm({ username: u.username, password: '' })}
+                        className="text-muted-foreground hover:text-foreground"
                       >
-                        {resetting ? <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" /> : '✓'}
+                        <KeyRound size={16} />
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => setResetForm(null)}>✕</Button>
-                    </div>
-                  ) : (
+                    )}
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => setResetForm({ username: u.username, password: '' })}
-                      className="text-muted-foreground hover:text-foreground"
+                      onClick={() => toggleActive(u.username, u.is_active)}
+                      disabled={togglingUser === u.username}
+                      className={u.is_active ? 'text-destructive hover:text-destructive' : 'text-green-600 hover:text-green-600'}
                     >
-                      <KeyRound size={16} />
+                      {togglingUser === u.username ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
+                      ) : u.is_active ? (
+                        <>
+                          <UserX size={16} className="mr-1" />
+                          Деактивировать
+                        </>
+                      ) : (
+                        <>
+                          <UserCheck size={16} className="mr-1" />
+                          Активировать
+                        </>
+                      )}
                     </Button>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => toggleActive(u.username, u.is_active)}
-                    disabled={togglingUser === u.username}
-                    className={u.is_active ? 'text-destructive hover:text-destructive' : 'text-green-600 hover:text-green-600'}
-                  >
-                    {togglingUser === u.username ? (
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
-                    ) : u.is_active ? (
-                      <>
-                        <UserX size={16} className="mr-1" />
-                        Деактивировать
-                      </>
-                    ) : (
-                      <>
-                        <UserCheck size={16} className="mr-1" />
-                        Активировать
-                      </>
-                    )}
-                  </Button>
+                  </div>
                 </div>
+
+                {/* Unique code & Ambassador link */}
+                {u.user_id && (
+                  <div className="mt-3 pt-3 border-t border-border space-y-2">
+                    {/* Unique code */}
+                    <div className="flex items-center gap-2 text-sm">
+                      <Hash size={14} className="text-primary shrink-0" />
+                      <span className="text-muted-foreground shrink-0">Код:</span>
+                      {editingCode?.userId === u.user_id ? (
+                        <div className="flex items-center gap-1 flex-1">
+                          <Input
+                            value={editingCode.code}
+                            onChange={(e) => setEditingCode({ ...editingCode, code: e.target.value })}
+                            className="h-7 text-sm flex-1"
+                            placeholder="Уникальный код"
+                          />
+                          <Button size="sm" variant="ghost" className="h-7 px-2" disabled={savingField}
+                            onClick={() => saveUniqueCode(u.user_id!, editingCode.code)}>✓</Button>
+                          <Button size="sm" variant="ghost" className="h-7 px-2"
+                            onClick={() => setEditingCode(null)}>✕</Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1 flex-1">
+                          <span className="font-mono font-medium text-foreground">{u.unique_code || '—'}</span>
+                          <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-muted-foreground"
+                            onClick={() => setEditingCode({ userId: u.user_id!, code: u.unique_code || '' })}>
+                            ✏️
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Ambassador link */}
+                    <div className="flex items-center gap-2 text-sm">
+                      <Link2 size={14} className="text-amber-500 shrink-0" />
+                      <span className="text-muted-foreground shrink-0">Ссылка:</span>
+                      {editingLink?.userId === u.user_id ? (
+                        <div className="flex items-center gap-1 flex-1">
+                          <Input
+                            value={editingLink.link}
+                            onChange={(e) => setEditingLink({ ...editingLink, link: e.target.value })}
+                            className="h-7 text-sm flex-1"
+                            placeholder="https://t.me/..."
+                          />
+                          <Button size="sm" variant="ghost" className="h-7 px-2" disabled={savingField}
+                            onClick={() => saveAmbassadorLink(u.user_id!, editingLink.link)}>✓</Button>
+                          <Button size="sm" variant="ghost" className="h-7 px-2"
+                            onClick={() => setEditingLink(null)}>✕</Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1 flex-1 min-w-0">
+                          <span className="font-mono text-xs text-foreground truncate">{amb?.referral_link || '—'}</span>
+                          <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-muted-foreground shrink-0"
+                            onClick={() => setEditingLink({ userId: u.user_id!, link: amb?.referral_link || '' })}>
+                            ✏️
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

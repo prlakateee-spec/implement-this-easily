@@ -329,6 +329,7 @@ export type Database = {
           id: string
           is_active: boolean
           registered_at: string | null
+          unique_code: string | null
           updated_at: string | null
           user_id: string | null
           username: string
@@ -340,6 +341,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           registered_at?: string | null
+          unique_code?: string | null
           updated_at?: string | null
           user_id?: string | null
           username: string
@@ -351,6 +353,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           registered_at?: string | null
+          unique_code?: string | null
           updated_at?: string | null
           user_id?: string | null
           username?: string
