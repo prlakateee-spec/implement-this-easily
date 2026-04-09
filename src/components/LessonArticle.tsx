@@ -1,4 +1,4 @@
-import { CheckCircle, ChevronRight, Loader2 } from 'lucide-react';
+import { CheckCircle, ChevronRight, Loader2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { Lesson, LessonImage } from '@/lib/lessonApi';
 interface LessonArticleProps {
@@ -8,6 +8,8 @@ interface LessonArticleProps {
   isLoading: boolean;
   isCompleted: boolean;
   onComplete: () => void;
+  onCompleteAndNext?: () => void;
+  hasNext: boolean;
 }
 export function LessonArticle({
   title,
@@ -15,7 +17,9 @@ export function LessonArticle({
   images,
   isLoading,
   isCompleted,
-  onComplete
+  onComplete,
+  onCompleteAndNext,
+  hasNext
 }: LessonArticleProps) {
   // Parse content into paragraphs
   const paragraphs = content.split('\n\n').filter((p) => p.trim());
@@ -118,16 +122,22 @@ export function LessonArticle({
       </div>
 
       {/* Complete Button */}
-      <footer className="mt-12 pt-8 border-t border-border">
-        <Button onClick={onComplete} size="lg" className={`w-full md:w-auto px-10 py-6 text-lg font-bold shadow-lg ${isCompleted ? 'bg-success text-success-foreground hover:bg-success/90' : 'gradient-primary text-primary-foreground'}`}>
+      <footer className="mt-12 pt-8 border-t border-border flex flex-col sm:flex-row gap-3">
+        <Button onClick={onComplete} size="lg" className={`px-8 py-6 text-lg font-bold shadow-lg ${isCompleted ? 'bg-success text-success-foreground hover:bg-success/90' : 'gradient-primary text-primary-foreground'}`}>
           {isCompleted ? <>
               <CheckCircle size={22} className="mr-2" />
               Урок пройден
             </> : <>
               Завершить урок
-              <ChevronRight size={22} className="ml-2" />
+              <CheckCircle size={22} className="ml-2" />
             </>}
         </Button>
+        {hasNext && (
+          <Button onClick={onCompleteAndNext} size="lg" variant={isCompleted ? "default" : "outline"} className="px-8 py-6 text-lg font-bold">
+            {isCompleted ? 'Следующий урок' : 'Завершить и далее'}
+            <ArrowRight size={22} className="ml-2" />
+          </Button>
+        )}
       </footer>
     </article>;
 }

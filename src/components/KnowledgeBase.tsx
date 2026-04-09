@@ -126,6 +126,19 @@ export function KnowledgeBase({ completedModules, onToggleModule, userEmail }: K
     if (!module) return null;
     
     const isCompleted = completedModules.includes(module.id);
+    const moduleIndex = activeCourse.modules.findIndex(m => m.id === activeModuleId);
+    const hasNext = moduleIndex < activeCourse.modules.length - 1;
+
+    const goToNext = () => {
+      if (!isCompleted) {
+        handleModuleComplete(module.id);
+      }
+      if (hasNext) {
+        const nextModule = activeCourse.modules[moduleIndex + 1];
+        setActiveModuleId(nextModule.id);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
 
     // Use database content if available, otherwise fallback
     const lessonContent = dbLesson?.content || 'Контент урока загружается...';
@@ -153,6 +166,8 @@ export function KnowledgeBase({ completedModules, onToggleModule, userEmail }: K
             isLoading={isLoading}
             isCompleted={isCompleted}
             onComplete={() => handleModuleComplete(module.id)}
+            onCompleteAndNext={goToNext}
+            hasNext={hasNext}
           />
         </div>
 
