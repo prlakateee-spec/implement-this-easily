@@ -271,19 +271,19 @@ export function Dashboard({
     const hasTracking = activeDeliveries.length > 0 || activeOrders.length > 0;
 
     return (
-      <div className="p-6 lg:p-10 space-y-8 animate-fade-in-up">
-        <div className="gradient-primary rounded-3xl p-8 lg:p-10 text-primary-foreground relative overflow-hidden">
+      <div className="p-4 sm:p-6 lg:p-10 space-y-6 sm:space-y-8 animate-fade-in-up">
+        <div className="gradient-primary rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 text-primary-foreground relative overflow-hidden">
           <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.4)_0%,transparent_50%)]" />
           <div className="relative z-10">
-            <h1 className="text-3xl lg:text-4xl font-bold mb-2">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">
               Привет, {displayName}! 🚀
             </h1>
-            <p className="text-primary-foreground/80 mb-6 max-w-md">
+            <p className="text-primary-foreground/80 mb-4 sm:mb-6 max-w-md text-sm sm:text-base">
               Продолжай обучение и стань настоящим профи в импорте из Китая
             </p>
             <Button
               onClick={() => setActiveTab('knowledge')}
-              className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-bold shadow-lg"
+              className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-bold shadow-lg text-sm sm:text-base"
             >
               Продолжить обучение
               <ChevronRight size={18} className="ml-1" />
