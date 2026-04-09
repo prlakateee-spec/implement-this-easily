@@ -155,7 +155,7 @@ export function PickForMeModule({ userId }: Props) {
 
   if (showForm) {
     return (
-      <div className="p-6 lg:p-10 space-y-6 animate-fade-in-up">
+      <div className="p-4 sm:p-6 lg:p-10 space-y-4 sm:space-y-6 animate-fade-in-up">
         <button onClick={() => setShowForm(false)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
           <ChevronLeft size={18} /> Назад
         </button>
@@ -186,7 +186,7 @@ export function PickForMeModule({ userId }: Props) {
                 <Input type="number" value={item.priceRub} onChange={e => updateCartItem(idx, 'priceRub', e.target.value)} placeholder="0" />
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-foreground flex items-center gap-1"><Palette size={12} /> Цвет</label>
                   <Input value={item.color} onChange={e => updateCartItem(idx, 'color', e.target.value)} placeholder="Красный" />
@@ -228,7 +228,7 @@ export function PickForMeModule({ userId }: Props) {
   }
 
   return (
-    <div className="p-6 lg:p-10 space-y-6 animate-fade-in-up">
+    <div className="p-4 sm:p-6 lg:p-10 space-y-4 sm:space-y-6 animate-fade-in-up">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">Подберите мне</h1>
         <Button onClick={() => setShowForm(true)} size="sm">

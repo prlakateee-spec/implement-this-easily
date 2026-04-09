@@ -126,7 +126,7 @@ export function SettingsPage({ userName, onSaveName, userId }: SettingsPageProps
   }, [userId]);
 
   return (
-    <div className="p-6 lg:p-10 space-y-8 animate-fade-in-up">
+    <div className="p-4 sm:p-6 lg:p-10 space-y-8 animate-fade-in-up">
       <h1 className="text-3xl font-bold text-foreground">Личный кабинет</h1>
 
       {/* Unique code */}

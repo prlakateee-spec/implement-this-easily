@@ -190,7 +190,7 @@ export function AdminPanel() {
   };
 
   return (
-    <div className="p-6 lg:p-10 space-y-8 animate-fade-in-up">
+    <div className="p-4 sm:p-6 lg:p-10 space-y-8 animate-fade-in-up">
       <h1 className="text-2xl font-bold text-foreground">Управление пользователями</h1>
 
       {/* Create User Form */}

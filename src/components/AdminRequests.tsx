@@ -27,7 +27,7 @@ function AmbassadorDetail({ ambassador: a, profiles, onBack, onActivate, onUpdat
   const p = profiles[a.user_id];
 
   return (
-    <div className="p-6 lg:p-10 space-y-6 animate-fade-in-up">
+    <div className="p-4 sm:p-6 lg:p-10 space-y-6 animate-fade-in-up">
       <button onClick={onBack} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
         <ChevronLeft size={18} /> Назад к амбассадорам
       </button>
@@ -402,7 +402,7 @@ export function AdminRequests() {
   if (selectedPick) {
     const p = selectedPick;
     return (
-      <div className="p-6 lg:p-10 space-y-6 animate-fade-in-up">
+      <div className="p-4 sm:p-6 lg:p-10 space-y-6 animate-fade-in-up">
         <button onClick={() => setSelectedPick(null)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
           <ChevronLeft size={18} /> Назад к заявкам
         </button>
@@ -475,7 +475,7 @@ export function AdminRequests() {
   if (selectedDelivery) {
     const d = selectedDelivery;
     return (
-      <div className="p-6 lg:p-10 space-y-6 animate-fade-in-up">
+      <div className="p-4 sm:p-6 lg:p-10 space-y-6 animate-fade-in-up">
         <button onClick={() => setSelectedDelivery(null)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
           <ChevronLeft size={18} /> Назад к заявкам
         </button>
@@ -526,7 +526,7 @@ export function AdminRequests() {
   if (selectedOrder) {
     const o = selectedOrder;
     return (
-      <div className="p-6 lg:p-10 space-y-6 animate-fade-in-up">
+      <div className="p-4 sm:p-6 lg:p-10 space-y-6 animate-fade-in-up">
         <button onClick={() => setSelectedOrder(null)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
           <ChevronLeft size={18} /> Назад к заявкам
         </button>
@@ -604,7 +604,7 @@ export function AdminRequests() {
 
   // List view
   return (
-    <div className="p-6 lg:p-10 space-y-6 animate-fade-in-up">
+    <div className="p-4 sm:p-6 lg:p-10 space-y-6 animate-fade-in-up">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">Заявки</h1>
         <Button variant="ghost" size="sm" onClick={loadAll} disabled={loading}>
@@ -613,15 +613,15 @@ export function AdminRequests() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 bg-muted/50 p-1 rounded-xl">
+      <div className="flex gap-2 bg-muted/50 p-1 rounded-xl overflow-x-auto scrollbar-hide">
         <button
           onClick={() => setTab('deliveries')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all relative ${
+          className={`flex items-center justify-center gap-1.5 py-2.5 px-3 lg:px-4 rounded-lg text-xs lg:text-sm font-semibold transition-all relative whitespace-nowrap shrink-0 ${
             tab === 'deliveries' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          <Truck size={16} />
-          Посылки ({deliveries.length})
+          <Truck size={14} className="lg:w-4 lg:h-4 shrink-0" />
+          <span className="hidden sm:inline">Посылки</span> ({deliveries.length})
           {newDeliveriesCount > 0 && (
             <Badge className="bg-destructive text-destructive-foreground text-[10px] px-1.5 py-0 min-w-[18px] h-[18px] flex items-center justify-center">
               {newDeliveriesCount}
@@ -630,12 +630,12 @@ export function AdminRequests() {
         </button>
         <button
           onClick={() => setTab('orders')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all relative ${
+          className={`flex items-center justify-center gap-1.5 py-2.5 px-3 lg:px-4 rounded-lg text-xs lg:text-sm font-semibold transition-all relative whitespace-nowrap shrink-0 ${
             tab === 'orders' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          <ShoppingBag size={16} />
-          Закажите мне ({orders.length})
+          <ShoppingBag size={14} className="lg:w-4 lg:h-4 shrink-0" />
+          <span className="hidden sm:inline">Закажите</span> ({orders.length})
           {newOrdersCount > 0 && (
             <Badge className="bg-destructive text-destructive-foreground text-[10px] px-1.5 py-0 min-w-[18px] h-[18px] flex items-center justify-center">
               {newOrdersCount}
@@ -644,12 +644,12 @@ export function AdminRequests() {
         </button>
         <button
           onClick={() => setTab('picks')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all relative ${
+          className={`flex items-center justify-center gap-1.5 py-2.5 px-3 lg:px-4 rounded-lg text-xs lg:text-sm font-semibold transition-all relative whitespace-nowrap shrink-0 ${
             tab === 'picks' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          <Search size={16} />
-          Подбор ({picks.length})
+          <Search size={14} className="lg:w-4 lg:h-4 shrink-0" />
+          <span className="hidden sm:inline">Подбор</span> ({picks.length})
           {newPicksCount > 0 && (
             <Badge className="bg-destructive text-destructive-foreground text-[10px] px-1.5 py-0 min-w-[18px] h-[18px] flex items-center justify-center">
               {newPicksCount}
@@ -658,12 +658,12 @@ export function AdminRequests() {
         </button>
         <button
           onClick={() => setTab('ambassadors')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all relative ${
+          className={`flex items-center justify-center gap-1.5 py-2.5 px-3 lg:px-4 rounded-lg text-xs lg:text-sm font-semibold transition-all relative whitespace-nowrap shrink-0 ${
             tab === 'ambassadors' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          <Sparkles size={16} />
-          Амбассадоры ({ambassadors.length})
+          <Sparkles size={14} className="lg:w-4 lg:h-4 shrink-0" />
+          <span className="hidden sm:inline">Амбассадоры</span><span className="sm:hidden">Амб.</span> ({ambassadors.filter(a => a.is_active).length})
           {newAmbassadorsCount > 0 && (
             <Badge className="bg-destructive text-destructive-foreground text-[10px] px-1.5 py-0 min-w-[18px] h-[18px] flex items-center justify-center">
               {newAmbassadorsCount}

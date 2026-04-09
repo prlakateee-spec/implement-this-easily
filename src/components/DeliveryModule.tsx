@@ -259,7 +259,7 @@ export function DeliveryModule({ userId }: DeliveryModuleProps) {
   const doneItems = items.filter(i => i.status === 'received');
 
   return (
-    <div className="p-6 lg:p-10 space-y-6 animate-fade-in-up max-w-3xl mx-auto">
+    <div className="p-4 sm:p-6 lg:p-10 space-y-6 animate-fade-in-up max-w-3xl mx-auto">
       {/* Header */}
       <div className="bg-primary/10 border border-primary/20 rounded-2xl p-6">
         <div className="flex items-center justify-between mb-3">

@@ -282,7 +282,7 @@ export function OrderForMeModule({ userId }: OrderForMeModuleProps) {
   const doneOrders = orders.filter(o => o.status === 'received' || o.status === 'completed');
 
   return (
-    <div className="p-6 lg:p-10 space-y-6 animate-fade-in-up max-w-3xl mx-auto">
+    <div className="p-4 sm:p-6 lg:p-10 space-y-6 animate-fade-in-up max-w-3xl mx-auto">
       {/* Header */}
       <div className="bg-accent/30 border border-accent/40 rounded-2xl p-6">
         <div className="flex items-center justify-between mb-3">

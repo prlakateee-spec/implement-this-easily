@@ -185,19 +185,21 @@ export function Dashboard({
 
   const MobileMenu = () => (
     mobileMenuOpen ? (
-      <div className="lg:hidden fixed inset-0 z-40 bg-background/95 backdrop-blur-sm pt-20 p-6 animate-fade-in">
-        <div className="space-y-4">
+      <div className="lg:hidden fixed inset-0 z-40 bg-background/95 backdrop-blur-sm pt-16 p-4 sm:p-6 animate-fade-in overflow-y-auto">
+        <div className="space-y-2 sm:space-y-3 max-w-md mx-auto">
           {navItems.map(item => (
             <button
               key={item.id}
               onClick={() => { setActiveTab(item.id); setMobileMenuOpen(false); }}
-              className={`w-full flex items-center gap-3 p-4 rounded-2xl font-bold text-lg relative ${
+              className={`w-full flex items-center gap-3 p-3.5 sm:p-4 rounded-2xl font-semibold text-base sm:text-lg relative ${
                 item.highlight
                   ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md'
-                  : 'bg-muted'
+                  : activeTab === item.id
+                    ? 'bg-secondary text-secondary-foreground'
+                    : 'bg-muted'
               }`}
             >
-              <item.icon size={24} />
+              <item.icon size={22} />
               {item.label}
               {item.badge > 0 && (
                 <span className="ml-auto bg-destructive text-destructive-foreground text-xs font-bold min-w-[22px] h-[22px] flex items-center justify-center rounded-full px-1.5">
@@ -208,9 +210,9 @@ export function Dashboard({
           ))}
           <button
             onClick={onLogout}
-            className="w-full flex items-center gap-3 p-4 bg-destructive/10 text-destructive rounded-2xl font-bold text-lg"
+            className="w-full flex items-center gap-3 p-3.5 sm:p-4 bg-destructive/10 text-destructive rounded-2xl font-semibold text-base sm:text-lg"
           >
-            <LogOut size={24} />
+            <LogOut size={22} />
             Выйти
           </button>
         </div>
@@ -269,19 +271,19 @@ export function Dashboard({
     const hasTracking = activeDeliveries.length > 0 || activeOrders.length > 0;
 
     return (
-      <div className="p-6 lg:p-10 space-y-8 animate-fade-in-up">
-        <div className="gradient-primary rounded-3xl p-8 lg:p-10 text-primary-foreground relative overflow-hidden">
+      <div className="p-4 sm:p-6 lg:p-10 space-y-6 sm:space-y-8 animate-fade-in-up">
+        <div className="gradient-primary rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 text-primary-foreground relative overflow-hidden">
           <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.4)_0%,transparent_50%)]" />
           <div className="relative z-10">
-            <h1 className="text-3xl lg:text-4xl font-bold mb-2">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">
               Привет, {displayName}! 🚀
             </h1>
-            <p className="text-primary-foreground/80 mb-6 max-w-md">
+            <p className="text-primary-foreground/80 mb-4 sm:mb-6 max-w-md text-sm sm:text-base">
               Продолжай обучение и стань настоящим профи в импорте из Китая
             </p>
             <Button
               onClick={() => setActiveTab('knowledge')}
-              className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-bold shadow-lg"
+              className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-bold shadow-lg text-sm sm:text-base"
             >
               Продолжить обучение
               <ChevronRight size={18} className="ml-1" />
@@ -290,7 +292,7 @@ export function Dashboard({
         </div>
 
         {!loadingTracking && hasTracking && (
-          <div className="bg-card rounded-2xl p-6 shadow-soft border border-border space-y-4">
+          <div className="bg-card rounded-2xl p-4 sm:p-6 shadow-soft border border-border space-y-4">
             <div className="flex items-center gap-2 mb-1">
               <Truck className="text-primary" size={20} />
               <h2 className="text-lg font-bold text-foreground">Мои посылки</h2>
@@ -359,8 +361,8 @@ export function Dashboard({
           </div>
         )}
 
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="bg-card rounded-2xl p-6 shadow-soft border border-border">
+        <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
+          <div className="bg-card rounded-2xl p-4 sm:p-6 shadow-soft border border-border">
             <h2 className="text-lg font-bold text-foreground mb-2">Общий прогресс</h2>
             <div className="flex items-center gap-3 mb-4">
               <span className="text-sm font-medium text-primary bg-primary/10 px-3 py-1 rounded-full">
@@ -378,7 +380,7 @@ export function Dashboard({
             </p>
           </div>
 
-          <div className="bg-card rounded-2xl p-6 shadow-soft border border-border">
+          <div className="bg-card rounded-2xl p-4 sm:p-6 shadow-soft border border-border">
             <div className="flex items-center gap-2 mb-6">
               <Link2 className="text-primary" size={20} />
               <h2 className="text-lg font-bold text-foreground">Мои подборки</h2>
