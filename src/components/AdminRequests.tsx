@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import {
   RefreshCw, Truck, ShoppingBag, Package, User, Phone, MapPin,
   Calendar, ExternalLink, ChevronLeft, MessageCircle, Eye, Sparkles,
-  DollarSign, Users, Link2, Check
+  DollarSign, Users, Link2, Check, Search, Palette, Ruler, Hash, Image as ImageIcon
 } from 'lucide-react';
 
 function AmbassadorDetail({ ambassador: a, profiles, onBack, onActivate, onUpdateBalance, onUpdateStats, formatDate }: {
@@ -169,23 +169,39 @@ interface AmbassadorProfile {
   created_at: string;
 }
 
+interface PickRequest {
+  id: string;
+  user_id: string;
+  product_link: string;
+  price_rub: number;
+  image_url: string | null;
+  color: string;
+  size: string;
+  quantity: number;
+  status: string;
+  created_at: string;
+  admin_viewed_at: string | null;
+}
+
 interface Profile {
   username: string;
   display_name: string | null;
 }
 
-type Tab = 'deliveries' | 'orders' | 'ambassadors';
+type Tab = 'deliveries' | 'orders' | 'ambassadors' | 'picks';
 
 export function AdminRequests() {
   const [tab, setTab] = useState<Tab>('deliveries');
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [orders, setOrders] = useState<OrderRequest[]>([]);
   const [ambassadors, setAmbassadors] = useState<AmbassadorProfile[]>([]);
+  const [picks, setPicks] = useState<PickRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [profiles, setProfiles] = useState<Record<string, Profile>>({});
   const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<OrderRequest | null>(null);
   const [selectedAmbassador, setSelectedAmbassador] = useState<AmbassadorProfile | null>(null);
+  const [selectedPick, setSelectedPick] = useState<PickRequest | null>(null);
 
   const loadProfiles = async () => {
     const { data } = await supabase.from('user_profiles').select('user_id, username, display_name');
@@ -223,9 +239,17 @@ export function AdminRequests() {
     if (data) setAmbassadors(data as AmbassadorProfile[]);
   };
 
+  const loadPicks = async () => {
+    const { data } = await supabase
+      .from('pick_requests')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (data) setPicks(data as PickRequest[]);
+  };
+
   const loadAll = async () => {
     setLoading(true);
-    await Promise.all([loadProfiles(), loadDeliveries(), loadOrders(), loadAmbassadors()]);
+    await Promise.all([loadProfiles(), loadDeliveries(), loadOrders(), loadAmbassadors(), loadPicks()]);
     setLoading(false);
   };
 
