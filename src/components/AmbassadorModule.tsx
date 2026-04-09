@@ -169,12 +169,24 @@ export function AmbassadorModule({ userId }: AmbassadorModuleProps) {
 
   const handleRequest = async () => {
     setRequesting(true);
-    const { error } = await supabase.from('ambassador_profiles').insert({ user_id: userId, is_active: true });
-    if (error) {
-      toast({ title: 'Ошибка', description: 'Не удалось активировать программу', variant: 'destructive' });
+    if (profile && !profile.is_active) {
+      // Profile exists (admin pre-created with link) — just activate
+      const { error } = await supabase.from('ambassador_profiles').update({ is_active: true }).eq('user_id', userId);
+      if (error) {
+        toast({ title: 'Ошибка', description: 'Не удалось активировать программу', variant: 'destructive' });
+      } else {
+        toast({ title: '🎉 Программа активирована!', description: 'Теперь ты амбассадор!' });
+        fetchProfile();
+      }
     } else {
-      toast({ title: '🎉 Программа активирована!', description: 'Теперь ты амбассадор! Реферальную ссылку добавит администратор.' });
-      fetchProfile();
+      // No profile at all — create new
+      const { error } = await supabase.from('ambassador_profiles').insert({ user_id: userId, is_active: true });
+      if (error) {
+        toast({ title: 'Ошибка', description: 'Не удалось активировать программу', variant: 'destructive' });
+      } else {
+        toast({ title: '🎉 Программа активирована!', description: 'Теперь ты амбассадор! Реферальную ссылку добавит администратор.' });
+        fetchProfile();
+      }
     }
     setRequesting(false);
   };
@@ -196,8 +208,8 @@ export function AmbassadorModule({ userId }: AmbassadorModuleProps) {
     );
   }
 
-  // Not yet an ambassador — show CTA
-  if (!profile) {
+  // Not yet an ambassador or not activated — show CTA
+  if (!profile || !profile.is_active) {
     return (
       <div className="p-6 lg:p-10 space-y-8 animate-fade-in-up max-w-3xl mx-auto">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500 p-1">
