@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import {
   RefreshCw, Truck, ShoppingBag, Package, User, Phone, MapPin,
   Calendar, ExternalLink, ChevronLeft, MessageCircle, Eye, Sparkles,
-  DollarSign, Users, Link2, Check
+  DollarSign, Users, Link2, Check, Search, Palette, Ruler, Hash, Image as ImageIcon
 } from 'lucide-react';
 
 function AmbassadorDetail({ ambassador: a, profiles, onBack, onActivate, onUpdateBalance, onUpdateStats, formatDate }: {
@@ -169,23 +169,39 @@ interface AmbassadorProfile {
   created_at: string;
 }
 
+interface PickRequest {
+  id: string;
+  user_id: string;
+  product_link: string;
+  price_rub: number;
+  image_url: string | null;
+  color: string;
+  size: string;
+  quantity: number;
+  status: string;
+  created_at: string;
+  admin_viewed_at: string | null;
+}
+
 interface Profile {
   username: string;
   display_name: string | null;
 }
 
-type Tab = 'deliveries' | 'orders' | 'ambassadors';
+type Tab = 'deliveries' | 'orders' | 'ambassadors' | 'picks';
 
 export function AdminRequests() {
   const [tab, setTab] = useState<Tab>('deliveries');
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [orders, setOrders] = useState<OrderRequest[]>([]);
   const [ambassadors, setAmbassadors] = useState<AmbassadorProfile[]>([]);
+  const [picks, setPicks] = useState<PickRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [profiles, setProfiles] = useState<Record<string, Profile>>({});
   const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<OrderRequest | null>(null);
   const [selectedAmbassador, setSelectedAmbassador] = useState<AmbassadorProfile | null>(null);
+  const [selectedPick, setSelectedPick] = useState<PickRequest | null>(null);
 
   const loadProfiles = async () => {
     const { data } = await supabase.from('user_profiles').select('user_id, username, display_name');
@@ -223,16 +239,32 @@ export function AdminRequests() {
     if (data) setAmbassadors(data as AmbassadorProfile[]);
   };
 
+  const loadPicks = async () => {
+    const { data } = await supabase
+      .from('pick_requests')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (data) setPicks(data as PickRequest[]);
+  };
+
   const loadAll = async () => {
     setLoading(true);
-    await Promise.all([loadProfiles(), loadDeliveries(), loadOrders(), loadAmbassadors()]);
+    await Promise.all([loadProfiles(), loadDeliveries(), loadOrders(), loadAmbassadors(), loadPicks()]);
     setLoading(false);
   };
 
   useEffect(() => { loadAll(); }, []);
 
-  const markViewed = async (table: 'deliveries' | 'order_requests', id: string) => {
+  const markViewed = async (table: 'deliveries' | 'order_requests' | 'pick_requests', id: string) => {
     await supabase.from(table).update({ admin_viewed_at: new Date().toISOString() }).eq('id', id);
+  };
+
+  const openPick = (p: PickRequest) => {
+    setSelectedPick(p);
+    if (!p.admin_viewed_at) {
+      markViewed('pick_requests', p.id);
+      setPicks(prev => prev.map(x => x.id === p.id ? { ...x, admin_viewed_at: new Date().toISOString() } : x));
+    }
   };
 
   const openDelivery = (d: Delivery) => {
@@ -264,6 +296,7 @@ export function AdminRequests() {
     packed: 'Посылка сформирована', sent_to_moscow: 'Отправлена в Москву',
     arrived_moscow: 'Прибытие в Москву', handed_to_tk: 'Передана в ТК',
     in_transit: 'Едет к вам', received: 'Получена',
+    found: 'Подобран', approved: 'Подтверждён', rejected: 'Отклонён',
   };
   const statusColor: Record<string, string> = {
     sent: 'bg-blue-500/10 text-blue-600', warehouse: 'bg-yellow-500/10 text-yellow-600',
@@ -273,6 +306,8 @@ export function AdminRequests() {
     sent_to_moscow: 'bg-blue-500/10 text-blue-600', arrived_moscow: 'bg-teal-500/10 text-teal-600',
     handed_to_tk: 'bg-sky-500/10 text-sky-600', in_transit: 'bg-amber-500/10 text-amber-600',
     received: 'bg-green-500/10 text-green-600',
+    found: 'bg-blue-500/10 text-blue-600', approved: 'bg-emerald-500/10 text-emerald-600',
+    rejected: 'bg-red-500/10 text-red-600',
   };
 
   const updateOrderStatus = async (id: string, newStatus: string) => {
@@ -306,6 +341,22 @@ export function AdminRequests() {
   };
 
   const newAmbassadorsCount = ambassadors.filter(a => !a.is_active).length;
+  const newPicksCount = picks.filter(p => isNew(p.admin_viewed_at)).length;
+
+  const PICK_STATUSES = [
+    { value: 'pending', label: 'В обработке' },
+    { value: 'found', label: 'Подобран' },
+    { value: 'approved', label: 'Подтверждён' },
+    { value: 'ordered', label: 'Заказан' },
+    { value: 'completed', label: 'Завершён' },
+    { value: 'rejected', label: 'Отклонён' },
+  ];
+
+  const updatePickStatus = async (id: string, newStatus: string) => {
+    await supabase.from('pick_requests').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', id);
+    setPicks(prev => prev.map(p => p.id === id ? { ...p, status: newStatus } : p));
+    if (selectedPick?.id === id) setSelectedPick({ ...selectedPick, status: newStatus });
+  };
 
   const ProfileInfo = ({ userId }: { userId: string }) => {
     const p = profiles[userId];
@@ -337,6 +388,66 @@ export function AdminRequests() {
       </div>
     );
   };
+
+  // Pick detail view
+  if (selectedPick) {
+    const p = selectedPick;
+    return (
+      <div className="p-6 lg:p-10 space-y-6 animate-fade-in-up">
+        <button onClick={() => setSelectedPick(null)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ChevronLeft size={18} /> Назад к заявкам
+        </button>
+        <div className="bg-card rounded-2xl p-6 border border-border shadow-soft space-y-5">
+          <h2 className="text-xl font-bold text-foreground">Заявка на подбор</h2>
+
+          <div className="bg-muted/50 rounded-xl p-4 space-y-2">
+            <p className="text-xs text-muted-foreground font-semibold uppercase">Статус</p>
+            <Select value={p.status} onValueChange={(v) => updatePickStatus(p.id, v)}>
+              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {PICK_STATUSES.map(s => (
+                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="bg-muted/50 rounded-xl p-4">
+            <p className="text-xs text-muted-foreground mb-2 font-semibold uppercase">Пользователь</p>
+            <ProfileInfo userId={p.user_id} />
+          </div>
+
+          {p.product_link && (
+            <a href={p.product_link} target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm text-primary hover:underline bg-primary/5 rounded-xl p-3">
+              <ExternalLink size={16} /> Ссылка на товар
+            </a>
+          )}
+
+          {p.image_url && (
+            <a href={p.image_url} target="_blank" rel="noopener noreferrer" className="block">
+              <p className="text-xs text-muted-foreground mb-1">Скриншот товара</p>
+              <img src={p.image_url} alt="Product" className="max-h-48 rounded-xl border border-border object-contain" />
+            </a>
+          )}
+
+          {p.price_rub > 0 && (
+            <div className="bg-primary/5 rounded-xl p-4 text-center">
+              <p className="text-xs text-muted-foreground">Стоимость</p>
+              <p className="text-2xl font-bold text-primary">₽{p.price_rub}</p>
+            </div>
+          )}
+
+          <div className="space-y-0">
+            <InfoRow icon={Palette} label="Цвет" value={p.color || undefined} />
+            <InfoRow icon={Ruler} label="Размер" value={p.size || undefined} />
+            <InfoRow icon={Hash} label="Количество" value={`${p.quantity} шт`} />
+            <InfoRow icon={Calendar} label="Дата создания" value={formatDate(p.created_at)} />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Ambassador detail view
   if (selectedAmbassador) {
@@ -523,6 +634,20 @@ export function AdminRequests() {
           )}
         </button>
         <button
+          onClick={() => setTab('picks')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all relative ${
+            tab === 'picks' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <Search size={16} />
+          Подбор ({picks.length})
+          {newPicksCount > 0 && (
+            <Badge className="bg-destructive text-destructive-foreground text-[10px] px-1.5 py-0 min-w-[18px] h-[18px] flex items-center justify-center">
+              {newPicksCount}
+            </Badge>
+          )}
+        </button>
+        <button
           onClick={() => setTab('ambassadors')}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all relative ${
             tab === 'ambassadors' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
@@ -592,6 +717,38 @@ export function AdminRequests() {
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${statusColor[o.status] || 'bg-muted text-muted-foreground'}`}>
                   {statusLabel[o.status] || o.status}
                 </span>
+              </div>
+            </button>
+          ))}
+        </div>
+      ) : tab === 'picks' ? (
+        <div className="space-y-3">
+          {picks.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">Нет заявок на подбор</p>
+          ) : picks.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => openPick(p)}
+              className={`w-full text-left bg-card rounded-2xl p-4 border shadow-soft transition-all hover:shadow-md ${
+                isNew(p.admin_viewed_at) ? 'border-primary ring-2 ring-primary/20' : 'border-border'
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                {p.image_url && <img src={p.image_url} alt="" className="w-12 h-12 rounded-lg object-cover border border-border shrink-0" />}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-2">
+                      {isNew(p.admin_viewed_at) && <span className="w-2.5 h-2.5 rounded-full bg-primary shrink-0 animate-pulse" />}
+                      <p className="font-bold text-foreground truncate">@{profiles[p.user_id]?.username || '?'}</p>
+                    </div>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${statusColor[p.status] || 'bg-muted text-muted-foreground'}`}>
+                      {statusLabel[p.status] || p.status}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {p.price_rub > 0 ? `₽${p.price_rub} · ` : ''}{p.color ? `${p.color} · ` : ''}{p.size ? `${p.size} · ` : ''}{p.quantity} шт · {formatDate(p.created_at)}
+                  </p>
+                </div>
               </div>
             </button>
           ))}
