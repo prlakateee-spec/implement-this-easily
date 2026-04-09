@@ -208,8 +208,8 @@ export function AmbassadorModule({ userId }: AmbassadorModuleProps) {
     );
   }
 
-  // Not yet an ambassador — show CTA
-  if (!profile) {
+  // Not yet an ambassador or not activated — show CTA
+  if (!profile || !profile.is_active) {
     return (
       <div className="p-6 lg:p-10 space-y-8 animate-fade-in-up max-w-3xl mx-auto">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500 p-1">
