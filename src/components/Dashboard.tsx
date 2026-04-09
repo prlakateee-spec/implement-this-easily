@@ -407,31 +407,23 @@ export function Dashboard({
         <div className="hidden lg:flex justify-end p-4 pb-0">
           <ThemeToggle />
         </div>
-        {activeTab === 'dashboard' && <DashboardContent />}
-        {activeTab === 'knowledge' && (
+        <div className={activeTab === 'dashboard' ? '' : 'hidden'}><DashboardContent /></div>
+        <div className={activeTab === 'knowledge' ? '' : 'hidden'}>
           <KnowledgeBase
             completedModules={completedModules}
             onToggleModule={onToggleModule}
             userEmail={user.email}
           />
-        )}
-        {activeTab === 'delivery' && (
-          <DeliveryModule userId={user.id} />
-        )}
-        {activeTab === 'order' && (
-          <OrderForMeModule userId={user.id} />
-        )}
-        {activeTab === 'pick' && (
-          <PickForMeModule userId={user.id} />
-        )}
-        {activeTab === 'ambassador' && (
-          <AmbassadorModule userId={user.id} />
-        )}
-        {activeTab === 'settings' && (
+        </div>
+        <div className={activeTab === 'delivery' ? '' : 'hidden'}><DeliveryModule userId={user.id} /></div>
+        <div className={activeTab === 'order' ? '' : 'hidden'}><OrderForMeModule userId={user.id} /></div>
+        <div className={activeTab === 'pick' ? '' : 'hidden'}><PickForMeModule userId={user.id} /></div>
+        <div className={activeTab === 'ambassador' ? '' : 'hidden'}><AmbassadorModule userId={user.id} /></div>
+        <div className={activeTab === 'settings' ? '' : 'hidden'}>
           <SettingsPage userName={displayName} onSaveName={handleSaveName} userId={user.id} />
-        )}
-        {activeTab === 'requests' && isAdmin && <AdminRequests />}
-        {activeTab === 'admin' && isAdmin && <AdminPanel />}
+        </div>
+        {isAdmin && <div className={activeTab === 'requests' ? '' : 'hidden'}><AdminRequests /></div>}
+        {isAdmin && <div className={activeTab === 'admin' ? '' : 'hidden'}><AdminPanel /></div>}
       </div>
     </div>
   );
