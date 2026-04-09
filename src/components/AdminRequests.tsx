@@ -662,8 +662,8 @@ export function AdminRequests() {
             tab === 'ambassadors' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          <Sparkles size={16} />
-          Амбассадоры ({ambassadors.length})
+          <Sparkles size={14} className="lg:w-4 lg:h-4 shrink-0" />
+          <span className="hidden sm:inline">Амбассадоры</span><span className="sm:hidden">Амб.</span> ({ambassadors.filter(a => a.is_active).length})
           {newAmbassadorsCount > 0 && (
             <Badge className="bg-destructive text-destructive-foreground text-[10px] px-1.5 py-0 min-w-[18px] h-[18px] flex items-center justify-center">
               {newAmbassadorsCount}
