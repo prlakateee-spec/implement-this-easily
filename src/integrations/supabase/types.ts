@@ -282,6 +282,7 @@ export type Database = {
       pick_requests: {
         Row: {
           admin_viewed_at: string | null
+          batch_id: string | null
           color: string | null
           created_at: string
           id: string
@@ -296,6 +297,7 @@ export type Database = {
         }
         Insert: {
           admin_viewed_at?: string | null
+          batch_id?: string | null
           color?: string | null
           created_at?: string
           id?: string
@@ -310,6 +312,7 @@ export type Database = {
         }
         Update: {
           admin_viewed_at?: string | null
+          batch_id?: string | null
           color?: string | null
           created_at?: string
           id?: string
