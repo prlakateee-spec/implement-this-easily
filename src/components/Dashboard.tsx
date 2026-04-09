@@ -15,7 +15,8 @@ import {
   Truck,
   ShoppingBag,
   ClipboardList,
-  Sparkles
+  Sparkles,
+  Search
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/hooks/useAuth';
@@ -25,6 +26,7 @@ import { SettingsPage } from './SettingsPage';
 import { AdminPanel } from './AdminPanel';
 import { DeliveryModule } from './DeliveryModule';
 import { OrderForMeModule } from './OrderForMeModule';
+import { PickForMeModule } from './PickForMeModule';
 import { AdminRequests } from './AdminRequests';
 import { AmbassadorModule } from './AmbassadorModule';
 import { TOTAL_MODULES, ADMIN_EMAIL } from '@/lib/data';
@@ -52,7 +54,7 @@ export function Dashboard({
   progressPercentage,
   onToggleModule 
 }: DashboardProps) {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'knowledge' | 'delivery' | 'order' | 'ambassador' | 'settings' | 'admin' | 'requests'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'knowledge' | 'delivery' | 'order' | 'pick' | 'ambassador' | 'settings' | 'admin' | 'requests'>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unviewedCount, setUnviewedCount] = useState(0);
   const { theme, toggleTheme } = useTheme();
@@ -94,6 +96,7 @@ export function Dashboard({
     { id: 'settings' as const, icon: UserIcon, label: 'Личный кабинет', badge: 0, highlight: false },
     { id: 'delivery' as const, icon: Truck, label: 'Доставка', badge: 0, highlight: false },
     { id: 'order' as const, icon: ShoppingBag, label: 'Закажите мне', badge: 0, highlight: false },
+    { id: 'pick' as const, icon: Search, label: 'Подберите мне', badge: 0, highlight: false },
     ...(isAdmin ? [
       { id: 'requests' as const, icon: ClipboardList, label: 'Заявки', badge: unviewedCount, highlight: false },
       { id: 'admin' as const, icon: Shield, label: 'Пользователи', badge: 0, highlight: false },
@@ -416,6 +419,9 @@ export function Dashboard({
         )}
         {activeTab === 'order' && (
           <OrderForMeModule userId={user.id} />
+        )}
+        {activeTab === 'pick' && (
+          <PickForMeModule userId={user.id} />
         )}
         {activeTab === 'ambassador' && (
           <AmbassadorModule userId={user.id} />
