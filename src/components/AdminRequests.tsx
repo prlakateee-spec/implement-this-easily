@@ -634,6 +634,20 @@ export function AdminRequests() {
           )}
         </button>
         <button
+          onClick={() => setTab('picks')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all relative ${
+            tab === 'picks' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <Search size={16} />
+          Подбор ({picks.length})
+          {newPicksCount > 0 && (
+            <Badge className="bg-destructive text-destructive-foreground text-[10px] px-1.5 py-0 min-w-[18px] h-[18px] flex items-center justify-center">
+              {newPicksCount}
+            </Badge>
+          )}
+        </button>
+        <button
           onClick={() => setTab('ambassadors')}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all relative ${
             tab === 'ambassadors' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
@@ -703,6 +717,38 @@ export function AdminRequests() {
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${statusColor[o.status] || 'bg-muted text-muted-foreground'}`}>
                   {statusLabel[o.status] || o.status}
                 </span>
+              </div>
+            </button>
+          ))}
+        </div>
+      ) : tab === 'picks' ? (
+        <div className="space-y-3">
+          {picks.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">Нет заявок на подбор</p>
+          ) : picks.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => openPick(p)}
+              className={`w-full text-left bg-card rounded-2xl p-4 border shadow-soft transition-all hover:shadow-md ${
+                isNew(p.admin_viewed_at) ? 'border-primary ring-2 ring-primary/20' : 'border-border'
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                {p.image_url && <img src={p.image_url} alt="" className="w-12 h-12 rounded-lg object-cover border border-border shrink-0" />}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-2">
+                      {isNew(p.admin_viewed_at) && <span className="w-2.5 h-2.5 rounded-full bg-primary shrink-0 animate-pulse" />}
+                      <p className="font-bold text-foreground truncate">@{profiles[p.user_id]?.username || '?'}</p>
+                    </div>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${statusColor[p.status] || 'bg-muted text-muted-foreground'}`}>
+                      {statusLabel[p.status] || p.status}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {p.price_rub > 0 ? `₽${p.price_rub} · ` : ''}{p.color ? `${p.color} · ` : ''}{p.size ? `${p.size} · ` : ''}{p.quantity} шт · {formatDate(p.created_at)}
+                  </p>
+                </div>
               </div>
             </button>
           ))}
