@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       ambassador_profiles: {
         Row: {
+          admin_viewed_at: string | null
           balance_usd: number
           created_at: string
           id: string
@@ -28,6 +29,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          admin_viewed_at?: string | null
           balance_usd?: number
           created_at?: string
           id?: string
@@ -40,6 +42,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          admin_viewed_at?: string | null
           balance_usd?: number
           created_at?: string
           id?: string
