@@ -187,7 +187,11 @@ export function Dashboard({
             <button
               key={item.id}
               onClick={() => { setActiveTab(item.id); setMobileMenuOpen(false); }}
-              className="w-full flex items-center gap-3 p-4 bg-muted rounded-2xl font-bold text-lg relative"
+              className={`w-full flex items-center gap-3 p-4 rounded-2xl font-bold text-lg relative ${
+                item.highlight
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md'
+                  : 'bg-muted'
+              }`}
             >
               <item.icon size={24} />
               {item.label}
