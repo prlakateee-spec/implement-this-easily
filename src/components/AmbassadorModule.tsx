@@ -26,7 +26,7 @@ interface AmbassadorProfile {
 }
 
 const BONUS_TIERS = [
-  { icon: Users, amount: '$0.1', description: 'за каждого подписчика в канал, пришедшего по твоей ссылке', color: 'text-blue-500', bg: 'bg-blue-500/10' },
+  { icon: Users, amount: '$0.3', description: 'за каждого подписчика в канал, пришедшего по твоей ссылке', color: 'text-blue-500', bg: 'bg-blue-500/10' },
   { icon: ShoppingBag, amount: '$2', description: 'если человек вступает в клуб или делает заказ через нашу команду', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
   { icon: Percent, amount: '-10%', description: 'скидка для твоего друга: 900₽ вместо 1000₽ за первый месяц в клубе', color: 'text-amber-500', bg: 'bg-amber-500/10' },
   { icon: Package, amount: 'до 30%', description: 'стоимости доставки можно закрыть бонусами', color: 'text-purple-500', bg: 'bg-purple-500/10' },
@@ -44,7 +44,7 @@ function DeliveryCalculator({ balance }: { balance: number }) {
   const canCover = Math.min(balance, maxDiscount);
   const finalCost = deliveryCost - canCover;
 
-  const potentialEarnings = targetSubs * 0.1 + targetClub * 2;
+  const potentialEarnings = targetSubs * 0.3 + targetClub * 2;
   const potentialCover = Math.min(potentialEarnings, deliveryCost * 0.3);
 
   return (
@@ -114,7 +114,7 @@ function DeliveryCalculator({ balance }: { balance: number }) {
                   className="w-20 h-8 text-right text-sm font-bold text-blue-500"
                   min={0}
                 />
-                <span className="text-xs text-muted-foreground">= ${(targetSubs * 0.1).toFixed(1)}</span>
+                <span className="text-xs text-muted-foreground">= ${(targetSubs * 0.3).toFixed(1)}</span>
               </div>
             </div>
             <Slider value={[targetSubs]} onValueChange={([v]) => setTargetSubs(v)} min={0} max={500} step={10} />
@@ -169,11 +169,11 @@ export function AmbassadorModule({ userId }: AmbassadorModuleProps) {
 
   const handleRequest = async () => {
     setRequesting(true);
-    const { error } = await supabase.from('ambassador_profiles').insert({ user_id: userId });
+    const { error } = await supabase.from('ambassador_profiles').insert({ user_id: userId, is_active: true });
     if (error) {
-      toast({ title: 'Ошибка', description: 'Не удалось отправить заявку', variant: 'destructive' });
+      toast({ title: 'Ошибка', description: 'Не удалось активировать программу', variant: 'destructive' });
     } else {
-      toast({ title: '🎉 Заявка отправлена!', description: 'Администратор активирует вашу ссылку в ближайшее время' });
+      toast({ title: '🎉 Программа активирована!', description: 'Теперь ты амбассадор! Реферальную ссылку добавит администратор.' });
       fetchProfile();
     }
     setRequesting(false);
@@ -218,9 +218,10 @@ export function AmbassadorModule({ userId }: AmbassadorModuleProps) {
                 полноценную валюту для оплаты доставки из Китая в Москву!
               </p>
               <Button onClick={handleRequest} disabled={requesting} size="lg"
-                className="bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-bold text-lg px-8 py-6 rounded-2xl shadow-lg hover:shadow-xl transition-all">
-                {requesting ? 'Отправка...' : (<><Star className="w-5 h-5 mr-2" />Хочу стать амбассадором<ArrowRight className="w-5 h-5 ml-2" /></>)}
+                className="w-full sm:w-auto bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-bold text-xl px-10 py-7 rounded-2xl shadow-lg hover:shadow-xl transition-all animate-pulse hover:animate-none">
+                {requesting ? 'Активация...' : (<><Star className="w-6 h-6 mr-2" />🔥 Активировать программу амбассадора<ArrowRight className="w-6 h-6 ml-2" /></>)}
               </Button>
+              <p className="text-xs text-muted-foreground mt-3">Нажми чтобы сразу стать частью команды!</p>
             </div>
           </div>
         </div>
@@ -254,25 +255,8 @@ export function AmbassadorModule({ userId }: AmbassadorModuleProps) {
     );
   }
 
-  // Pending activation
-  if (!profile.is_active) {
-    return (
-      <div className="p-6 lg:p-10 space-y-6 animate-fade-in-up max-w-3xl mx-auto">
-        <Card className="border-amber-500/30 bg-amber-500/5">
-          <CardContent className="p-8 text-center">
-            <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
-              <Sparkles className="w-8 h-8 text-amber-500" />
-            </div>
-            <h2 className="text-xl font-bold text-foreground mb-2">Заявка отправлена! 🎉</h2>
-            <p className="text-muted-foreground max-w-md mx-auto">
-              Администратор активирует твой профиль амбассадора и добавит персональную реферальную ссылку в ближайшее время.
-            </p>
-            <Badge variant="secondary" className="mt-4">Ожидает активации</Badge>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Profile exists but not active — still show dashboard (self-activated)
+  // No more "pending" state since users activate themselves
 
   // Active ambassador dashboard
   return (
