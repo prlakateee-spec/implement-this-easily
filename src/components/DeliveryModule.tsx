@@ -70,11 +70,14 @@ export function DeliveryModule({ userId }: DeliveryModuleProps) {
   const [newName, setNewName] = useState('');
   const [newTrack, setNewTrack] = useState('');
   const [loading, setLoading] = useState(false);
+  const [uniqueCode, setUniqueCode] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     loadProfiles();
     loadItems();
+    supabase.from('user_profiles').select('unique_code').eq('user_id', userId).maybeSingle()
+      .then(({ data }) => { if (data?.unique_code) setUniqueCode(data.unique_code); });
   }, []);
 
   // --- Shipping profiles ---
