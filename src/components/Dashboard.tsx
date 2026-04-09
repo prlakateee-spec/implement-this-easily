@@ -65,7 +65,7 @@ export function Dashboard({
       const [{ count: c1 }, { count: c2 }, { count: c3 }, { count: c4 }] = await Promise.all([
         supabase.from('deliveries').select('*', { count: 'exact', head: true }).is('admin_viewed_at', null).neq('status', 'warehouse'),
         supabase.from('order_requests').select('*', { count: 'exact', head: true }).is('admin_viewed_at', null),
-        supabase.from('ambassador_profiles').select('*', { count: 'exact', head: true }).eq('is_active', false),
+        supabase.from('ambassador_profiles').select('*', { count: 'exact', head: true }).eq('is_active', true).is('admin_viewed_at', null),
         supabase.from('pick_requests').select('*', { count: 'exact', head: true }).is('admin_viewed_at', null),
       ]);
       setUnviewedCount((c1 || 0) + (c2 || 0) + (c3 || 0) + (c4 || 0));
