@@ -211,7 +211,7 @@ export function AmbassadorModule({ userId }: AmbassadorModuleProps) {
     return (
       <div className="p-4 sm:p-6 lg:p-10 space-y-8 animate-fade-in-up max-w-3xl mx-auto">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500 p-1">
-          <div className="rounded-[22px] bg-card p-8 lg:p-10 relative overflow-hidden">
+          <div className="rounded-[22px] bg-card p-5 sm:p-8 lg:p-10 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-amber-500/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
             <div className="relative z-10">
               <div className="flex items-center gap-3 mb-4">
