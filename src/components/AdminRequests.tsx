@@ -256,8 +256,16 @@ export function AdminRequests() {
 
   useEffect(() => { loadAll(); }, []);
 
-  const markViewed = async (table: 'deliveries' | 'order_requests' | 'pick_requests', id: string) => {
+  const markViewed = async (table: 'deliveries' | 'order_requests' | 'pick_requests' | 'ambassador_profiles', id: string) => {
     await supabase.from(table).update({ admin_viewed_at: new Date().toISOString() }).eq('id', id);
+  };
+
+  const openAmbassador = (a: AmbassadorProfile) => {
+    setSelectedAmbassador(a);
+    if (!a.admin_viewed_at) {
+      markViewed('ambassador_profiles', a.id);
+      setAmbassadors(prev => prev.map(x => x.id === a.id ? { ...x, admin_viewed_at: new Date().toISOString() } : x));
+    }
   };
 
   const openPick = (p: PickRequest) => {
