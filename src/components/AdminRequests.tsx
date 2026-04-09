@@ -255,8 +255,16 @@ export function AdminRequests() {
 
   useEffect(() => { loadAll(); }, []);
 
-  const markViewed = async (table: 'deliveries' | 'order_requests', id: string) => {
+  const markViewed = async (table: 'deliveries' | 'order_requests' | 'pick_requests', id: string) => {
     await supabase.from(table).update({ admin_viewed_at: new Date().toISOString() }).eq('id', id);
+  };
+
+  const openPick = (p: PickRequest) => {
+    setSelectedPick(p);
+    if (!p.admin_viewed_at) {
+      markViewed('pick_requests', p.id);
+      setPicks(prev => prev.map(x => x.id === p.id ? { ...x, admin_viewed_at: new Date().toISOString() } : x));
+    }
   };
 
   const openDelivery = (d: Delivery) => {
@@ -288,6 +296,7 @@ export function AdminRequests() {
     packed: 'Посылка сформирована', sent_to_moscow: 'Отправлена в Москву',
     arrived_moscow: 'Прибытие в Москву', handed_to_tk: 'Передана в ТК',
     in_transit: 'Едет к вам', received: 'Получена',
+    found: 'Подобран', approved: 'Подтверждён', rejected: 'Отклонён',
   };
   const statusColor: Record<string, string> = {
     sent: 'bg-blue-500/10 text-blue-600', warehouse: 'bg-yellow-500/10 text-yellow-600',
@@ -297,6 +306,8 @@ export function AdminRequests() {
     sent_to_moscow: 'bg-blue-500/10 text-blue-600', arrived_moscow: 'bg-teal-500/10 text-teal-600',
     handed_to_tk: 'bg-sky-500/10 text-sky-600', in_transit: 'bg-amber-500/10 text-amber-600',
     received: 'bg-green-500/10 text-green-600',
+    found: 'bg-blue-500/10 text-blue-600', approved: 'bg-emerald-500/10 text-emerald-600',
+    rejected: 'bg-red-500/10 text-red-600',
   };
 
   const updateOrderStatus = async (id: string, newStatus: string) => {
