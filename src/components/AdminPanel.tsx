@@ -65,28 +65,34 @@ export function AdminPanel() {
     setLoading(false);
   };
 
-  const saveUniqueCode = async (userId: string, code: string) => {
-    setSavingField(true);
-    await supabase.from('user_profiles').update({ unique_code: code.trim() || null }).eq('user_id', userId);
-    setEditingCode(null);
-    setSavingField(false);
-    setSuccess('Код сохранён');
+  const saveCodeAndLink = async (userId: string) => {
+    const fields = editFields[userId];
+    if (!fields) return;
+    setSavingField(userId);
+    
+    // Save unique code
+    await supabase.from('user_profiles').update({ unique_code: fields.code.trim() || null }).eq('user_id', userId);
+    
+    // Save ambassador link
+    const link = fields.link.trim() || null;
+    const existing = ambassadors.find(a => a.user_id === userId);
+    if (existing) {
+      await supabase.from('ambassador_profiles').update({ referral_link: link, is_active: true }).eq('user_id', userId);
+    } else if (link) {
+      await supabase.from('ambassador_profiles').insert({ user_id: userId, referral_link: link, is_active: true });
+    }
+    
+    setSavingField(null);
+    setSuccess('Код и ссылка сохранены');
     await loadUsers();
   };
 
-  const saveAmbassadorLink = async (userId: string, link: string) => {
-    setSavingField(true);
-    // Upsert ambassador profile with the link
-    const existing = ambassadors.find(a => a.user_id === userId);
-    if (existing) {
-      await supabase.from('ambassador_profiles').update({ referral_link: link.trim() || null, is_active: true }).eq('user_id', userId);
-    } else {
-      await supabase.from('ambassador_profiles').insert({ user_id: userId, referral_link: link.trim() || null, is_active: true });
+  const getEditFields = (userId: string, currentCode: string | null, currentLink: string | null) => {
+    if (!editFields[userId]) {
+      setEditFields(prev => ({ ...prev, [userId]: { code: currentCode || '', link: currentLink || '' } }));
+      return { code: currentCode || '', link: currentLink || '' };
     }
-    setEditingLink(null);
-    setSavingField(false);
-    setSuccess('Ссылка амбассадора сохранена');
-    await loadUsers();
+    return editFields[userId];
   };
 
   useEffect(() => {
