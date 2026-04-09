@@ -613,15 +613,15 @@ export function AdminRequests() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 bg-muted/50 p-1 rounded-xl">
+      <div className="flex gap-2 bg-muted/50 p-1 rounded-xl overflow-x-auto scrollbar-hide">
         <button
           onClick={() => setTab('deliveries')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all relative ${
+          className={`flex items-center justify-center gap-1.5 py-2.5 px-3 lg:px-4 rounded-lg text-xs lg:text-sm font-semibold transition-all relative whitespace-nowrap shrink-0 ${
             tab === 'deliveries' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          <Truck size={16} />
-          Посылки ({deliveries.length})
+          <Truck size={14} className="lg:w-4 lg:h-4 shrink-0" />
+          <span className="hidden sm:inline">Посылки</span> ({deliveries.length})
           {newDeliveriesCount > 0 && (
             <Badge className="bg-destructive text-destructive-foreground text-[10px] px-1.5 py-0 min-w-[18px] h-[18px] flex items-center justify-center">
               {newDeliveriesCount}
@@ -630,12 +630,12 @@ export function AdminRequests() {
         </button>
         <button
           onClick={() => setTab('orders')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all relative ${
+          className={`flex items-center justify-center gap-1.5 py-2.5 px-3 lg:px-4 rounded-lg text-xs lg:text-sm font-semibold transition-all relative whitespace-nowrap shrink-0 ${
             tab === 'orders' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          <ShoppingBag size={16} />
-          Закажите мне ({orders.length})
+          <ShoppingBag size={14} className="lg:w-4 lg:h-4 shrink-0" />
+          <span className="hidden sm:inline">Закажите</span> ({orders.length})
           {newOrdersCount > 0 && (
             <Badge className="bg-destructive text-destructive-foreground text-[10px] px-1.5 py-0 min-w-[18px] h-[18px] flex items-center justify-center">
               {newOrdersCount}
@@ -644,12 +644,12 @@ export function AdminRequests() {
         </button>
         <button
           onClick={() => setTab('picks')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all relative ${
+          className={`flex items-center justify-center gap-1.5 py-2.5 px-3 lg:px-4 rounded-lg text-xs lg:text-sm font-semibold transition-all relative whitespace-nowrap shrink-0 ${
             tab === 'picks' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          <Search size={16} />
-          Подбор ({picks.length})
+          <Search size={14} className="lg:w-4 lg:h-4 shrink-0" />
+          <span className="hidden sm:inline">Подбор</span> ({picks.length})
           {newPicksCount > 0 && (
             <Badge className="bg-destructive text-destructive-foreground text-[10px] px-1.5 py-0 min-w-[18px] h-[18px] flex items-center justify-center">
               {newPicksCount}
@@ -658,7 +658,7 @@ export function AdminRequests() {
         </button>
         <button
           onClick={() => setTab('ambassadors')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all relative ${
+          className={`flex items-center justify-center gap-1.5 py-2.5 px-3 lg:px-4 rounded-lg text-xs lg:text-sm font-semibold transition-all relative whitespace-nowrap shrink-0 ${
             tab === 'ambassadors' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
           }`}
         >
