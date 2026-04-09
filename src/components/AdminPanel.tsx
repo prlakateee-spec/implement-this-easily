@@ -40,9 +40,8 @@ export function AdminPanel() {
   const [form, setForm] = useState({ username: '', password: '', display_name: '' });
   const [resetForm, setResetForm] = useState<{ username: string; password: string } | null>(null);
   const [resetting, setResetting] = useState(false);
-  const [editingCode, setEditingCode] = useState<{ userId: string; code: string } | null>(null);
-  const [editingLink, setEditingLink] = useState<{ userId: string; link: string } | null>(null);
-  const [savingField, setSavingField] = useState(false);
+  const [editFields, setEditFields] = useState<Record<string, { code: string; link: string }>>({});
+  const [savingField, setSavingField] = useState<string | null>(null);
 
   const loadUsers = async () => {
     setLoading(true);
