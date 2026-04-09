@@ -12,6 +12,13 @@ interface UserProfile {
   is_active: boolean;
   registered_at: string | null;
   created_at: string | null;
+  unique_code: string | null;
+}
+
+interface AmbassadorInfo {
+  user_id: string;
+  referral_link: string | null;
+  is_active: boolean;
 }
 
 interface CreatedUser {
