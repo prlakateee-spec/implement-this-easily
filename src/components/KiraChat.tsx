@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Trash2, ImagePlus, Camera, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import ReactMarkdown from 'react-markdown';
 
 type ContentPart = 
   | { type: 'text'; text: string }
