@@ -236,7 +236,7 @@ export function KiraChat() {
                     <Bot className="w-4 h-4 text-white" />
                   </div>
                 )}
-                <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                   m.role === 'user'
                     ? 'bg-primary text-primary-foreground rounded-br-md'
                     : 'bg-muted text-foreground rounded-bl-md'
@@ -248,7 +248,13 @@ export function KiraChat() {
                       ))}
                     </div>
                   )}
-                  {text && <span className="whitespace-pre-wrap">{text}</span>}
+                  {text && m.role === 'assistant' ? (
+                    <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-headings:my-2 prose-strong:text-foreground">
+                      <ReactMarkdown>{text}</ReactMarkdown>
+                    </div>
+                  ) : text ? (
+                    <span className="whitespace-pre-wrap">{text}</span>
+                  ) : null}
                 </div>
                 {m.role === 'user' && (
                   <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center shrink-0 mt-1">
