@@ -94,6 +94,28 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
+function compressImage(file: File, maxDim: number, quality: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        const ratio = Math.min(maxDim / width, maxDim / height);
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
 const SUGGESTIONS = [
   '📱 Как зарегистрироваться на TaoBao?',
   '👗 Помоги подобрать размер одежды',
@@ -178,14 +200,14 @@ export function KiraChat({ userId }: KiraChatProps) {
 
   const handleImageFiles = async (files: FileList | null) => {
     if (!files) return;
-    const maxSize = 4 * 1024 * 1024;
     const newImages: string[] = [];
     for (const file of Array.from(files)) {
       if (!file.type.startsWith('image/')) continue;
-      if (file.size > maxSize) { alert(`Файл "${file.name}" слишком большой (макс 4 МБ)`); continue; }
-      newImages.push(await fileToBase64(file));
+      // Resize large images to reduce base64 payload
+      const base64 = await compressImage(file, 1600, 0.85);
+      newImages.push(base64);
     }
-    setPendingImages(prev => [...prev, ...newImages].slice(0, 4));
+    setPendingImages(prev => [...prev, ...newImages]);
   };
 
   const startNewChat = async () => {
