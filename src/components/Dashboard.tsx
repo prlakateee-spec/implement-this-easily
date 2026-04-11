@@ -59,6 +59,7 @@ export function Dashboard({
   const [activeTab, setActiveTab] = useState<'dashboard' | 'knowledge' | 'delivery' | 'order' | 'pick' | 'ambassador' | 'settings' | 'admin' | 'requests' | 'kira'>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unviewedCount, setUnviewedCount] = useState(0);
+  const [hasKira, setHasKira] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
