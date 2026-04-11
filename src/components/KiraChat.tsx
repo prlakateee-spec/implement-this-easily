@@ -246,35 +246,18 @@ export function KiraChat({ userId }: KiraChatProps) {
     const isFirst = messages.length === 0;
     const autoTitle = isFirst ? (text.trim() || 'Анализ фото').slice(0, 60) : undefined;
 
-    let assistantSoFar = '';
-    const upsert = (chunk: string) => {
-      assistantSoFar += chunk;
-      setMessages(prev => {
-        const last = prev[prev.length - 1];
-        if (last?.role === 'assistant') {
-          return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantSoFar } : m);
-        }
-        return [...prev, { role: 'assistant', content: assistantSoFar }];
-      });
-    };
-
     try {
-      await streamChat({
-        messages: newMessages,
-        onDelta: upsert,
-        onDone: () => {
-          setLoading(false);
-          // Save after streaming completes
-          const finalMsgs = [...newMessages, { role: 'assistant' as const, content: assistantSoFar }];
-          setMessages(finalMsgs);
-          saveMessages(convId!, finalMsgs, autoTitle);
-        },
-      });
+      const reply = await fetchChat(newMessages);
+      const assistantMsg: Msg = { role: 'assistant', content: reply };
+      const finalMsgs = [...newMessages, assistantMsg];
+      setMessages(finalMsgs);
+      saveMessages(convId!, finalMsgs, autoTitle);
     } catch (e: any) {
       const errorMsg: Msg = { role: 'assistant', content: `❌ ${e.message}` };
       const finalMsgs = [...newMessages, errorMsg];
       setMessages(finalMsgs);
       saveMessages(convId!, finalMsgs, autoTitle);
+    } finally {
       setLoading(false);
     }
   };
