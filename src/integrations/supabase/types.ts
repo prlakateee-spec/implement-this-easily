@@ -404,6 +404,7 @@ export type Database = {
           collections: Json | null
           created_at: string | null
           display_name: string | null
+          has_kira: boolean
           id: string
           is_active: boolean
           registered_at: string | null
@@ -416,6 +417,7 @@ export type Database = {
           collections?: Json | null
           created_at?: string | null
           display_name?: string | null
+          has_kira?: boolean
           id?: string
           is_active?: boolean
           registered_at?: string | null
@@ -428,6 +430,7 @@ export type Database = {
           collections?: Json | null
           created_at?: string | null
           display_name?: string | null
+          has_kira?: boolean
           id?: string
           is_active?: boolean
           registered_at?: string | null
