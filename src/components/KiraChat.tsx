@@ -346,7 +346,7 @@ export function KiraChat({ userId }: KiraChatProps) {
 
         {/* Chat area */}
         <div className="flex-1 flex flex-col min-w-0">
-          <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-1">
+          <div className="flex-1 overflow-y-auto space-y-6 mb-4 pr-1">
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center space-y-6">
                 <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shadow-xl">
@@ -375,7 +375,7 @@ export function KiraChat({ userId }: KiraChatProps) {
                 const text = getTextContent(m);
                 const imgs = getImages(m);
                 return (
-                  <div key={i} className={`flex gap-3 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div key={i} className={`flex gap-3 ${m.role === 'user' ? 'justify-end' : 'justify-start'} ${m.role === 'assistant' && i === messages.length - 1 ? 'animate-fade-in' : ''}`}>
                     {m.role === 'assistant' && (
                       <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shrink-0 mt-1">
                         <Bot className="w-4 h-4 text-white" />
@@ -420,16 +420,19 @@ export function KiraChat({ userId }: KiraChatProps) {
                 );
               })
             )}
-            {loading && messages[messages.length - 1]?.role !== 'assistant' && (
-              <div className="flex gap-3">
+            {loading && (
+              <div className="flex gap-3 animate-fade-in">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shrink-0">
                   <Bot className="w-4 h-4 text-white" />
                 </div>
-                <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
-                  <div className="flex gap-1">
-                    <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <div className="bg-muted rounded-2xl rounded-bl-md px-5 py-4">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <div className="flex gap-1">
+                      <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                    <span>Кира думает...</span>
                   </div>
                 </div>
               </div>
