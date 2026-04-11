@@ -29,6 +29,7 @@ import { OrderForMeModule } from './OrderForMeModule';
 import { PickForMeModule } from './PickForMeModule';
 import { AdminRequests } from './AdminRequests';
 import { AmbassadorModule } from './AmbassadorModule';
+import { KiraChat } from './KiraChat';
 import { TOTAL_MODULES, ADMIN_EMAIL } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { useTheme } from './ThemeProvider';
