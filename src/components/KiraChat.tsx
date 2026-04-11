@@ -396,13 +396,13 @@ export function KiraChat({ userId }: KiraChatProps) {
                       {text && m.role === 'assistant' ? (
                         <div className="prose prose-sm dark:prose-invert max-w-none
                           prose-headings:text-foreground prose-headings:font-bold
-                          prose-h3:text-base prose-h3:mt-5 prose-h3:mb-2 prose-h3:pb-1 prose-h3:border-b prose-h3:border-border/50
-                          prose-h2:text-lg prose-h2:mt-6 prose-h2:mb-2.5 prose-h2:pb-1.5 prose-h2:border-b prose-h2:border-border/50
-                          prose-p:my-2.5 prose-p:leading-[1.75]
-                          prose-ul:my-2.5 prose-ul:space-y-1.5 prose-ol:my-2.5 prose-ol:space-y-1.5
-                          prose-li:my-0 prose-li:leading-[1.75]
+                          prose-h3:text-base prose-h3:mt-6 prose-h3:mb-3 prose-h3:pb-1.5 prose-h3:border-b prose-h3:border-border/30
+                          prose-h2:text-lg prose-h2:mt-7 prose-h2:mb-3 prose-h2:pb-2 prose-h2:border-b prose-h2:border-border/30
+                          prose-p:my-3.5 prose-p:leading-[1.85]
+                          prose-ul:my-3 prose-ul:space-y-2 prose-ol:my-3 prose-ol:space-y-2
+                          prose-li:my-0 prose-li:leading-[1.85]
                           prose-strong:text-foreground prose-strong:font-semibold
-                          prose-hr:my-5 prose-hr:border-border/40
+                          prose-hr:my-6 prose-hr:border-border/30
                           prose-code:bg-background/50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:text-xs
                           [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
                           <ReactMarkdown>{text}</ReactMarkdown>
