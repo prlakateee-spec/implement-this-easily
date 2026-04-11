@@ -94,6 +94,20 @@ export function Dashboard({
 
   const isAdmin = user.email === ADMIN_EMAIL || user.email === 'terra_ai_team@kitay.club';
 
+  // Check if user has Kira access
+  useEffect(() => {
+    if (isAdmin) { setHasKira(true); return; }
+    const checkKira = async () => {
+      const { data } = await supabase
+        .from('user_profiles')
+        .select('has_kira')
+        .eq('user_id', user.id)
+        .single();
+      if (data?.has_kira) setHasKira(true);
+    };
+    checkKira();
+  }, [user.id, isAdmin]);
+
   const navItems = [
     { id: 'dashboard' as const, icon: Layout, label: 'Главная', badge: 0, highlight: false },
     { id: 'knowledge' as const, icon: BookOpen, label: 'База знаний', badge: 0, highlight: false },
@@ -101,8 +115,10 @@ export function Dashboard({
     { id: 'delivery' as const, icon: Truck, label: 'Доставка', badge: 0, highlight: false },
     { id: 'order' as const, icon: ShoppingBag, label: 'Закажите мне', badge: 0, highlight: false },
     { id: 'pick' as const, icon: Search, label: 'Подберите мне', badge: 0, highlight: false },
-    ...(isAdmin ? [
+    ...(hasKira ? [
       { id: 'kira' as const, icon: MessageCircle, label: 'Кира — байер', badge: 0, highlight: false },
+    ] : []),
+    ...(isAdmin ? [
       { id: 'requests' as const, icon: ClipboardList, label: 'Заявки', badge: unviewedCount, highlight: false },
       { id: 'admin' as const, icon: Shield, label: 'Пользователи', badge: 0, highlight: false },
     ] : []),
