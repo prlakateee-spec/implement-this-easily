@@ -1,14 +1,22 @@
-import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Trash2, ImagePlus, Camera, X } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { Send, Bot, User, Trash2, ImagePlus, Camera, X, Plus, MessageSquare, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import ReactMarkdown from 'react-markdown';
+import { supabase } from '@/integrations/supabase/client';
 
-type ContentPart = 
+type ContentPart =
   | { type: 'text'; text: string }
   | { type: 'image_url'; image_url: { url: string } };
 
 type Msg = { role: 'user' | 'assistant'; content: string | ContentPart[] };
+
+interface Conversation {
+  id: string;
+  title: string;
+  messages: Msg[];
+  updated_at: string;
+}
 
 function getTextContent(msg: Msg): string {
   if (typeof msg.content === 'string') return msg.content;
@@ -87,20 +95,82 @@ function fileToBase64(file: File): Promise<string> {
 }
 
 const SUGGESTIONS = [
-  'Как зарегистрироваться на TaoBao?',
-  'Помоги подобрать размер одежды',
-  'Сколько стоит доставка 15 кг в Донецк?',
-  'Переведи с китайского на русский',
+  '📱 Как зарегистрироваться на TaoBao?',
+  '👗 Помоги подобрать размер одежды',
+  '📦 Сколько стоит доставка 15 кг в Донецк?',
+  '🈶 Переведи с китайского на русский',
 ];
 
-export function KiraChat() {
+interface KiraChatProps {
+  userId: string;
+}
+
+export function KiraChat({ userId }: KiraChatProps) {
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [activeConvId, setActiveConvId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [pendingImages, setPendingImages] = useState<string[]>([]);
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [loadingConvs, setLoadingConvs] = useState(true);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Load conversations list
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await supabase
+        .from('kira_conversations')
+        .select('id, title, messages, updated_at')
+        .eq('user_id', userId)
+        .order('updated_at', { ascending: false });
+      if (data) {
+        const convs = data.map(d => ({ ...d, messages: (d.messages as any) || [] })) as Conversation[];
+        setConversations(convs);
+        // Auto-open last conversation
+        if (convs.length > 0 && !activeConvId) {
+          setActiveConvId(convs[0].id);
+          setMessages(convs[0].messages);
+        }
+      }
+      setLoadingConvs(false);
+    };
+    load();
+  }, [userId]);
+
+  // Auto-save messages to DB (debounced)
+  const saveMessages = useCallback((convId: string, msgs: Msg[], autoTitle?: string) => {
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(async () => {
+      // Strip base64 images from saved messages to save space — keep only text
+      const cleanMsgs = msgs.map(m => {
+        if (typeof m.content === 'string') return m;
+        const parts = m.content.map(p => {
+          if (p.type === 'image_url') return { type: 'text' as const, text: '[📸 Фото]' };
+          return p;
+        });
+        return { ...m, content: parts };
+      });
+
+      const updates: any = { messages: cleanMsgs };
+      if (autoTitle) updates.title = autoTitle;
+
+      await supabase
+        .from('kira_conversations')
+        .update(updates)
+        .eq('id', convId);
+
+      // Update local list
+      setConversations(prev => prev.map(c =>
+        c.id === convId
+          ? { ...c, messages: cleanMsgs, updated_at: new Date().toISOString(), ...(autoTitle ? { title: autoTitle } : {}) }
+          : c
+      ));
+    }, 1000);
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -108,18 +178,46 @@ export function KiraChat() {
 
   const handleImageFiles = async (files: FileList | null) => {
     if (!files) return;
-    const maxSize = 4 * 1024 * 1024; // 4MB
+    const maxSize = 4 * 1024 * 1024;
     const newImages: string[] = [];
     for (const file of Array.from(files)) {
       if (!file.type.startsWith('image/')) continue;
-      if (file.size > maxSize) {
-        alert(`Файл "${file.name}" слишком большой (макс 4 МБ)`);
-        continue;
-      }
-      const base64 = await fileToBase64(file);
-      newImages.push(base64);
+      if (file.size > maxSize) { alert(`Файл "${file.name}" слишком большой (макс 4 МБ)`); continue; }
+      newImages.push(await fileToBase64(file));
     }
     setPendingImages(prev => [...prev, ...newImages].slice(0, 4));
+  };
+
+  const startNewChat = async () => {
+    const { data } = await supabase
+      .from('kira_conversations')
+      .insert({ user_id: userId, title: 'Новый чат', messages: [] })
+      .select('id, title, messages, updated_at')
+      .single();
+
+    if (data) {
+      const conv = { ...data, messages: [] as Msg[] };
+      setConversations(prev => [conv, ...prev]);
+      setActiveConvId(conv.id);
+      setMessages([]);
+      setShowSidebar(false);
+    }
+  };
+
+  const openConversation = (conv: Conversation) => {
+    setActiveConvId(conv.id);
+    setMessages(conv.messages);
+    setShowSidebar(false);
+  };
+
+  const deleteConversation = async (convId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await supabase.from('kira_conversations').delete().eq('id', convId);
+    setConversations(prev => prev.filter(c => c.id !== convId));
+    if (activeConvId === convId) {
+      setActiveConvId(null);
+      setMessages([]);
+    }
   };
 
   const send = async (text: string, images: string[] = []) => {
@@ -127,27 +225,40 @@ export function KiraChat() {
     if (!text.trim() && allImages.length === 0) return;
     if (loading) return;
 
+    // Create conversation if none active
+    let convId = activeConvId;
+    if (!convId) {
+      const { data } = await supabase
+        .from('kira_conversations')
+        .insert({ user_id: userId, title: 'Новый чат', messages: [] })
+        .select('id, title, messages, updated_at')
+        .single();
+      if (!data) return;
+      convId = data.id;
+      setActiveConvId(convId);
+      setConversations(prev => [{ ...data, messages: [] as Msg[] }, ...prev]);
+    }
+
     let userContent: string | ContentPart[];
     if (allImages.length > 0) {
       const parts: ContentPart[] = [];
-      if (text.trim()) {
-        parts.push({ type: 'text', text: text.trim() });
-      } else {
-        parts.push({ type: 'text', text: 'Проанализируй это изображение — что ты видишь? Дай рекомендации.' });
-      }
-      allImages.forEach(img => {
-        parts.push({ type: 'image_url', image_url: { url: img } });
-      });
+      parts.push({ type: 'text', text: text.trim() || 'Проанализируй это изображение — что ты видишь? Дай рекомендации.' });
+      allImages.forEach(img => parts.push({ type: 'image_url', image_url: { url: img } }));
       userContent = parts;
     } else {
       userContent = text.trim();
     }
 
     const userMsg: Msg = { role: 'user', content: userContent };
-    setMessages(prev => [...prev, userMsg]);
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages);
     setInput('');
     setPendingImages([]);
     setLoading(true);
+
+    // Auto-title from first message
+    const isFirst = messages.length === 0;
+    const autoTitle = isFirst ? (text.trim() || 'Анализ фото').slice(0, 60) : undefined;
 
     let assistantSoFar = '';
     const upsert = (chunk: string) => {
@@ -163,12 +274,21 @@ export function KiraChat() {
 
     try {
       await streamChat({
-        messages: [...messages, userMsg],
+        messages: newMessages,
         onDelta: upsert,
-        onDone: () => setLoading(false),
+        onDone: () => {
+          setLoading(false);
+          // Save after streaming completes
+          const finalMsgs = [...newMessages, { role: 'assistant' as const, content: assistantSoFar }];
+          setMessages(finalMsgs);
+          saveMessages(convId!, finalMsgs, autoTitle);
+        },
       });
     } catch (e: any) {
-      setMessages(prev => [...prev, { role: 'assistant', content: `❌ ${e.message}` }]);
+      const errorMsg: Msg = { role: 'assistant', content: `❌ ${e.message}` };
+      const finalMsgs = [...newMessages, errorMsg];
+      setMessages(finalMsgs);
+      saveMessages(convId!, finalMsgs, autoTitle);
       setLoading(false);
     }
   };
@@ -185,190 +305,224 @@ export function KiraChat() {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="shrink-0 text-muted-foreground"
+            onClick={() => setShowSidebar(!showSidebar)}
+          >
+            {showSidebar ? <ChevronLeft size={20} /> : <MessageSquare size={20} />}
+          </Button>
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shadow-lg">
             <Bot className="w-5 h-5 text-white" />
           </div>
-          <div>
-            <h1 className="text-lg font-bold text-foreground">Кира — карманный байер</h1>
-            <p className="text-xs text-muted-foreground">AI-эксперт по закупкам в Китае</p>
+          <div className="min-w-0">
+            <h1 className="text-lg font-bold text-foreground truncate">Кира — карманный байер</h1>
+            <p className="text-xs text-muted-foreground">Помню все наши разговоры 🧠</p>
           </div>
         </div>
-        {messages.length > 0 && (
-          <Button variant="ghost" size="sm" onClick={() => setMessages([])} className="text-muted-foreground">
-            <Trash2 size={16} className="mr-1" /> Очистить
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" onClick={startNewChat} className="text-muted-foreground">
+            <Plus size={16} className="mr-1" /> Новый
           </Button>
-        )}
+        </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-1">
-        {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center space-y-6">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shadow-xl">
-              <Bot className="w-10 h-10 text-white" />
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* Conversations sidebar */}
+        {showSidebar && (
+          <div className="absolute inset-0 z-20 bg-background lg:relative lg:w-72 lg:inset-auto flex flex-col border-r border-border">
+            <div className="p-3 border-b border-border flex items-center justify-between">
+              <span className="text-sm font-semibold text-foreground">💬 Чаты ({conversations.length})</span>
+              <Button variant="ghost" size="sm" onClick={startNewChat}>
+                <Plus size={16} />
+              </Button>
             </div>
-            <div>
-              <h2 className="text-xl font-bold text-foreground mb-2">Привет! Я Кира 👋</h2>
-              <p className="text-muted-foreground text-sm max-w-md">
-                Твой карманный байер и эксперт по Китаю. Отправь фото карточки товара или размерной сетки — я проанализирую и дам рекомендации!
-              </p>
+            <div className="flex-1 overflow-y-auto p-2 space-y-1">
+              {loadingConvs ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent" />
+                </div>
+              ) : conversations.length === 0 ? (
+                <p className="text-center text-muted-foreground text-sm py-8">Пока нет чатов</p>
+              ) : (
+                conversations.map(c => (
+                  <button
+                    key={c.id}
+                    onClick={() => openConversation(c)}
+                    className={`w-full text-left p-3 rounded-xl transition-all group flex items-start gap-2 ${
+                      c.id === activeConvId ? 'bg-secondary text-secondary-foreground' : 'hover:bg-muted text-foreground'
+                    }`}
+                  >
+                    <MessageSquare size={14} className="shrink-0 mt-0.5 text-muted-foreground" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{c.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(c.updated_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
+                        {' · '}{(c.messages?.length || 0)} сообщ.
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => deleteConversation(c.id, e)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:text-destructive"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </button>
+                ))
+              )}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-lg">
-              {SUGGESTIONS.map((s, i) => (
-                <button
-                  key={i}
-                  onClick={() => send(s)}
-                  className="text-left text-sm p-3 rounded-xl border border-border bg-card hover:bg-muted transition-colors text-foreground"
-                >
-                  {s}
-                </button>
+          </div>
+        )}
+
+        {/* Chat area */}
+        <div className="flex-1 flex flex-col min-w-0">
+          <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-1">
+            {messages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-center space-y-6">
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shadow-xl">
+                  <Bot className="w-10 h-10 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-foreground mb-2">Привет! Я Кира 👋</h2>
+                  <p className="text-muted-foreground text-sm max-w-md">
+                    Твой карманный байер и эксперт по Китаю. Я запоминаю все наши разговоры — можем продолжить с того места, где остановились! 🧠
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-lg">
+                  {SUGGESTIONS.map((s, i) => (
+                    <button
+                      key={i}
+                      onClick={() => send(s)}
+                      className="text-left text-sm p-3 rounded-xl border border-border bg-card hover:bg-muted transition-colors text-foreground"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              messages.map((m, i) => {
+                const text = getTextContent(m);
+                const imgs = getImages(m);
+                return (
+                  <div key={i} className={`flex gap-3 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    {m.role === 'assistant' && (
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shrink-0 mt-1">
+                        <Bot className="w-4 h-4 text-white" />
+                      </div>
+                    )}
+                    <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                      m.role === 'user'
+                        ? 'bg-primary text-primary-foreground rounded-br-md'
+                        : 'bg-muted text-foreground rounded-bl-md'
+                    }`}>
+                      {imgs.length > 0 && (
+                        <div className={`flex flex-wrap gap-2 ${text ? 'mb-2' : ''}`}>
+                          {imgs.map((src, j) => (
+                            <img key={j} src={src} alt="Фото" className="rounded-lg max-h-48 max-w-full object-cover" />
+                          ))}
+                        </div>
+                      )}
+                      {text && m.role === 'assistant' ? (
+                        <div className="prose prose-sm dark:prose-invert max-w-none
+                          prose-headings:text-foreground prose-headings:font-bold
+                          prose-h3:text-[15px] prose-h3:mt-4 prose-h3:mb-1.5
+                          prose-h2:text-base prose-h2:mt-4 prose-h2:mb-1.5
+                          prose-p:my-1.5 prose-p:leading-relaxed
+                          prose-ul:my-1.5 prose-ol:my-1.5
+                          prose-li:my-0.5 prose-li:leading-relaxed
+                          prose-strong:text-foreground prose-strong:font-semibold
+                          prose-hr:my-3 prose-hr:border-border
+                          [&>*:first-child]:mt-0">
+                          <ReactMarkdown>{text}</ReactMarkdown>
+                        </div>
+                      ) : text ? (
+                        <span className="whitespace-pre-wrap">{text}</span>
+                      ) : null}
+                    </div>
+                    {m.role === 'user' && (
+                      <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center shrink-0 mt-1">
+                        <User className="w-4 h-4 text-secondary-foreground" />
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
+            {loading && messages[messages.length - 1]?.role !== 'assistant' && (
+              <div className="flex gap-3">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shrink-0">
+                  <Bot className="w-4 h-4 text-white" />
+                </div>
+                <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
+                  <div className="flex gap-1">
+                    <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={bottomRef} />
+          </div>
+
+          {/* Pending images */}
+          {pendingImages.length > 0 && (
+            <div className="flex gap-2 mb-2 flex-wrap">
+              {pendingImages.map((img, i) => (
+                <div key={i} className="relative group">
+                  <img src={img} alt="" className="w-16 h-16 rounded-lg object-cover border border-border" />
+                  <button
+                    onClick={() => setPendingImages(prev => prev.filter((_, j) => j !== i))}
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
               ))}
             </div>
+          )}
+
+          {/* Hidden file inputs */}
+          <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden"
+            onChange={e => { handleImageFiles(e.target.files); e.target.value = ''; }} />
+          <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden"
+            onChange={e => { handleImageFiles(e.target.files); e.target.value = ''; }} />
+
+          {/* Input */}
+          <div className="flex gap-2 items-end">
+            <div className="flex gap-1">
+              <Button type="button" variant="ghost" size="icon"
+                className="h-11 w-11 shrink-0 rounded-xl text-muted-foreground hover:text-foreground"
+                onClick={() => fileInputRef.current?.click()} disabled={loading} title="Фото из галереи">
+                <ImagePlus size={20} />
+              </Button>
+              <Button type="button" variant="ghost" size="icon"
+                className="h-11 w-11 shrink-0 rounded-xl text-muted-foreground hover:text-foreground"
+                onClick={() => cameraInputRef.current?.click()} disabled={loading} title="Сфотографировать">
+                <Camera size={20} />
+              </Button>
+            </div>
+            <Textarea
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Спроси Киру или отправь фото..."
+              className="resize-none min-h-[44px] max-h-32 bg-muted/50 rounded-xl"
+              rows={1}
+              disabled={loading}
+            />
+            <Button
+              onClick={() => send(input)}
+              disabled={(!input.trim() && pendingImages.length === 0) || loading}
+              className="h-11 w-11 shrink-0 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white"
+              size="icon"
+            >
+              <Send size={18} />
+            </Button>
           </div>
-        ) : (
-          messages.map((m, i) => {
-            const text = getTextContent(m);
-            const imgs = getImages(m);
-            return (
-              <div key={i} className={`flex gap-3 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                {m.role === 'assistant' && (
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shrink-0 mt-1">
-                    <Bot className="w-4 h-4 text-white" />
-                  </div>
-                )}
-                <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                  m.role === 'user'
-                    ? 'bg-primary text-primary-foreground rounded-br-md'
-                    : 'bg-muted text-foreground rounded-bl-md'
-                }`}>
-                  {imgs.length > 0 && (
-                    <div className={`flex flex-wrap gap-2 ${text ? 'mb-2' : ''}`}>
-                      {imgs.map((src, j) => (
-                        <img key={j} src={src} alt="Прикреплённое фото" className="rounded-lg max-h-48 max-w-full object-cover" />
-                      ))}
-                    </div>
-                  )}
-                  {text && m.role === 'assistant' ? (
-                    <div className="prose prose-sm dark:prose-invert max-w-none
-                      prose-headings:text-foreground prose-headings:font-bold
-                      prose-h3:text-[15px] prose-h3:mt-4 prose-h3:mb-1.5
-                      prose-h2:text-base prose-h2:mt-4 prose-h2:mb-1.5
-                      prose-p:my-1.5 prose-p:leading-relaxed
-                      prose-ul:my-1.5 prose-ol:my-1.5
-                      prose-li:my-0.5 prose-li:leading-relaxed
-                      prose-strong:text-foreground prose-strong:font-semibold
-                      prose-hr:my-3 prose-hr:border-border
-                      [&>*:first-child]:mt-0">
-                      <ReactMarkdown>{text}</ReactMarkdown>
-                    </div>
-                  ) : text ? (
-                    <span className="whitespace-pre-wrap">{text}</span>
-                  ) : null}
-                </div>
-                {m.role === 'user' && (
-                  <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center shrink-0 mt-1">
-                    <User className="w-4 h-4 text-secondary-foreground" />
-                  </div>
-                )}
-              </div>
-            );
-          })
-        )}
-        {loading && messages[messages.length - 1]?.role !== 'assistant' && (
-          <div className="flex gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shrink-0">
-              <Bot className="w-4 h-4 text-white" />
-            </div>
-            <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
-              <div className="flex gap-1">
-                <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-              </div>
-            </div>
-          </div>
-        )}
-        <div ref={bottomRef} />
-      </div>
-
-      {/* Pending images preview */}
-      {pendingImages.length > 0 && (
-        <div className="flex gap-2 mb-2 flex-wrap">
-          {pendingImages.map((img, i) => (
-            <div key={i} className="relative group">
-              <img src={img} alt="" className="w-16 h-16 rounded-lg object-cover border border-border" />
-              <button
-                onClick={() => setPendingImages(prev => prev.filter((_, j) => j !== i))}
-                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <X size={12} />
-              </button>
-            </div>
-          ))}
         </div>
-      )}
-
-      {/* Hidden file inputs */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        multiple
-        className="hidden"
-        onChange={e => { handleImageFiles(e.target.files); e.target.value = ''; }}
-      />
-      <input
-        ref={cameraInputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        className="hidden"
-        onChange={e => { handleImageFiles(e.target.files); e.target.value = ''; }}
-      />
-
-      {/* Input */}
-      <div className="flex gap-2 items-end">
-        <div className="flex gap-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-11 w-11 shrink-0 rounded-xl text-muted-foreground hover:text-foreground"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={loading}
-            title="Фото из галереи"
-          >
-            <ImagePlus size={20} />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-11 w-11 shrink-0 rounded-xl text-muted-foreground hover:text-foreground"
-            onClick={() => cameraInputRef.current?.click()}
-            disabled={loading}
-            title="Сфотографировать"
-          >
-            <Camera size={20} />
-          </Button>
-        </div>
-        <Textarea
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Спроси Киру или отправь фото..."
-          className="resize-none min-h-[44px] max-h-32 bg-muted/50 rounded-xl"
-          rows={1}
-          disabled={loading}
-        />
-        <Button
-          onClick={() => send(input)}
-          disabled={(!input.trim() && pendingImages.length === 0) || loading}
-          className="h-11 w-11 shrink-0 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white"
-          size="icon"
-        >
-          <Send size={18} />
-        </Button>
       </div>
     </div>
   );
