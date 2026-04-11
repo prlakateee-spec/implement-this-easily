@@ -30,15 +30,7 @@ function getImages(msg: Msg): string[] {
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kira-chat`;
 
-async function streamChat({
-  messages,
-  onDelta,
-  onDone,
-}: {
-  messages: Msg[];
-  onDelta: (t: string) => void;
-  onDone: () => void;
-}) {
+async function fetchChat(messages: Msg[]): Promise<string> {
   const resp = await fetch(CHAT_URL, {
     method: 'POST',
     headers: {
@@ -48,41 +40,13 @@ async function streamChat({
     body: JSON.stringify({ messages }),
   });
 
-  if (!resp.ok || !resp.body) {
+  if (!resp.ok) {
     const err = await resp.json().catch(() => ({}));
     throw new Error(err.error || 'Ошибка подключения к Кире');
   }
 
-  const reader = resp.body.getReader();
-  const decoder = new TextDecoder();
-  let buf = '';
-  let done = false;
-
-  while (!done) {
-    const { done: d, value } = await reader.read();
-    if (d) break;
-    buf += decoder.decode(value, { stream: true });
-
-    let nl: number;
-    while ((nl = buf.indexOf('\n')) !== -1) {
-      let line = buf.slice(0, nl);
-      buf = buf.slice(nl + 1);
-      if (line.endsWith('\r')) line = line.slice(0, -1);
-      if (line.startsWith(':') || line.trim() === '') continue;
-      if (!line.startsWith('data: ')) continue;
-      const json = line.slice(6).trim();
-      if (json === '[DONE]') { done = true; break; }
-      try {
-        const parsed = JSON.parse(json);
-        const c = parsed.choices?.[0]?.delta?.content;
-        if (c) onDelta(c);
-      } catch {
-        buf = line + '\n' + buf;
-        break;
-      }
-    }
-  }
-  onDone();
+  const data = await resp.json();
+  return data.content || 'Не удалось получить ответ.';
 }
 
 function fileToBase64(file: File): Promise<string> {
@@ -282,35 +246,18 @@ export function KiraChat({ userId }: KiraChatProps) {
     const isFirst = messages.length === 0;
     const autoTitle = isFirst ? (text.trim() || 'Анализ фото').slice(0, 60) : undefined;
 
-    let assistantSoFar = '';
-    const upsert = (chunk: string) => {
-      assistantSoFar += chunk;
-      setMessages(prev => {
-        const last = prev[prev.length - 1];
-        if (last?.role === 'assistant') {
-          return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantSoFar } : m);
-        }
-        return [...prev, { role: 'assistant', content: assistantSoFar }];
-      });
-    };
-
     try {
-      await streamChat({
-        messages: newMessages,
-        onDelta: upsert,
-        onDone: () => {
-          setLoading(false);
-          // Save after streaming completes
-          const finalMsgs = [...newMessages, { role: 'assistant' as const, content: assistantSoFar }];
-          setMessages(finalMsgs);
-          saveMessages(convId!, finalMsgs, autoTitle);
-        },
-      });
+      const reply = await fetchChat(newMessages);
+      const assistantMsg: Msg = { role: 'assistant', content: reply };
+      const finalMsgs = [...newMessages, assistantMsg];
+      setMessages(finalMsgs);
+      saveMessages(convId!, finalMsgs, autoTitle);
     } catch (e: any) {
       const errorMsg: Msg = { role: 'assistant', content: `❌ ${e.message}` };
       const finalMsgs = [...newMessages, errorMsg];
       setMessages(finalMsgs);
       saveMessages(convId!, finalMsgs, autoTitle);
+    } finally {
       setLoading(false);
     }
   };
@@ -399,7 +346,7 @@ export function KiraChat({ userId }: KiraChatProps) {
 
         {/* Chat area */}
         <div className="flex-1 flex flex-col min-w-0">
-          <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-1">
+          <div className="flex-1 overflow-y-auto space-y-6 mb-4 pr-1">
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center space-y-6">
                 <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shadow-xl">
@@ -428,7 +375,7 @@ export function KiraChat({ userId }: KiraChatProps) {
                 const text = getTextContent(m);
                 const imgs = getImages(m);
                 return (
-                  <div key={i} className={`flex gap-3 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div key={i} className={`flex gap-3 ${m.role === 'user' ? 'justify-end' : 'justify-start'} ${m.role === 'assistant' && i === messages.length - 1 ? 'animate-fade-in' : ''}`}>
                     {m.role === 'assistant' && (
                       <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shrink-0 mt-1">
                         <Bot className="w-4 h-4 text-white" />
@@ -449,13 +396,13 @@ export function KiraChat({ userId }: KiraChatProps) {
                       {text && m.role === 'assistant' ? (
                         <div className="prose prose-sm dark:prose-invert max-w-none
                           prose-headings:text-foreground prose-headings:font-bold
-                          prose-h3:text-base prose-h3:mt-5 prose-h3:mb-2 prose-h3:pb-1 prose-h3:border-b prose-h3:border-border/50
-                          prose-h2:text-lg prose-h2:mt-6 prose-h2:mb-2.5 prose-h2:pb-1.5 prose-h2:border-b prose-h2:border-border/50
-                          prose-p:my-2.5 prose-p:leading-[1.75]
-                          prose-ul:my-2.5 prose-ul:space-y-1.5 prose-ol:my-2.5 prose-ol:space-y-1.5
-                          prose-li:my-0 prose-li:leading-[1.75]
+                          prose-h3:text-base prose-h3:mt-6 prose-h3:mb-3 prose-h3:pb-1.5 prose-h3:border-b prose-h3:border-border/30
+                          prose-h2:text-lg prose-h2:mt-7 prose-h2:mb-3 prose-h2:pb-2 prose-h2:border-b prose-h2:border-border/30
+                          prose-p:my-3.5 prose-p:leading-[1.85]
+                          prose-ul:my-3 prose-ul:space-y-2 prose-ol:my-3 prose-ol:space-y-2
+                          prose-li:my-0 prose-li:leading-[1.85]
                           prose-strong:text-foreground prose-strong:font-semibold
-                          prose-hr:my-5 prose-hr:border-border/40
+                          prose-hr:my-6 prose-hr:border-border/30
                           prose-code:bg-background/50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:text-xs
                           [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
                           <ReactMarkdown>{text}</ReactMarkdown>
@@ -473,16 +420,19 @@ export function KiraChat({ userId }: KiraChatProps) {
                 );
               })
             )}
-            {loading && messages[messages.length - 1]?.role !== 'assistant' && (
-              <div className="flex gap-3">
+            {loading && (
+              <div className="flex gap-3 animate-fade-in">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shrink-0">
                   <Bot className="w-4 h-4 text-white" />
                 </div>
-                <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
-                  <div className="flex gap-1">
-                    <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <div className="bg-muted rounded-2xl rounded-bl-md px-5 py-4">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <div className="flex gap-1">
+                      <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                    <span>Кира думает...</span>
                   </div>
                 </div>
               </div>
