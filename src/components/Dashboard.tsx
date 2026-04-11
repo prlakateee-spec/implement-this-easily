@@ -16,7 +16,8 @@ import {
   ShoppingBag,
   ClipboardList,
   Sparkles,
-  Search
+  Search,
+  MessageCircle
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/hooks/useAuth';
@@ -55,7 +56,7 @@ export function Dashboard({
   progressPercentage,
   onToggleModule 
 }: DashboardProps) {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'knowledge' | 'delivery' | 'order' | 'pick' | 'ambassador' | 'settings' | 'admin' | 'requests'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'knowledge' | 'delivery' | 'order' | 'pick' | 'ambassador' | 'settings' | 'admin' | 'requests' | 'kira'>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unviewedCount, setUnviewedCount] = useState(0);
   const { theme, toggleTheme } = useTheme();
@@ -100,6 +101,7 @@ export function Dashboard({
     { id: 'order' as const, icon: ShoppingBag, label: 'Закажите мне', badge: 0, highlight: false },
     { id: 'pick' as const, icon: Search, label: 'Подберите мне', badge: 0, highlight: false },
     ...(isAdmin ? [
+      { id: 'kira' as const, icon: MessageCircle, label: 'Кира — байер', badge: 0, highlight: false },
       { id: 'requests' as const, icon: ClipboardList, label: 'Заявки', badge: unviewedCount, highlight: false },
       { id: 'admin' as const, icon: Shield, label: 'Пользователи', badge: 0, highlight: false },
     ] : []),
@@ -425,6 +427,7 @@ export function Dashboard({
         <div className={activeTab === 'settings' ? '' : 'hidden'}>
           <SettingsPage userName={displayName} onSaveName={handleSaveName} userId={user.id} />
         </div>
+        {isAdmin && <div className={activeTab === 'kira' ? '' : 'hidden'}><KiraChat /></div>}
         {isAdmin && <div className={activeTab === 'requests' ? '' : 'hidden'}><AdminRequests /></div>}
         {isAdmin && <div className={activeTab === 'admin' ? '' : 'hidden'}><AdminPanel /></div>}
       </div>
