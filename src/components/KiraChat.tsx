@@ -249,7 +249,16 @@ export function KiraChat() {
                     </div>
                   )}
                   {text && m.role === 'assistant' ? (
-                    <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-headings:my-2 prose-strong:text-foreground">
+                    <div className="prose prose-sm dark:prose-invert max-w-none
+                      prose-headings:text-foreground prose-headings:font-bold
+                      prose-h3:text-[15px] prose-h3:mt-4 prose-h3:mb-1.5
+                      prose-h2:text-base prose-h2:mt-4 prose-h2:mb-1.5
+                      prose-p:my-1.5 prose-p:leading-relaxed
+                      prose-ul:my-1.5 prose-ol:my-1.5
+                      prose-li:my-0.5 prose-li:leading-relaxed
+                      prose-strong:text-foreground prose-strong:font-semibold
+                      prose-hr:my-3 prose-hr:border-border
+                      [&>*:first-child]:mt-0">
                       <ReactMarkdown>{text}</ReactMarkdown>
                     </div>
                   ) : text ? (
