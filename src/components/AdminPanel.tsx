@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { UserPlus, UserX, UserCheck, RefreshCw, Eye, EyeOff, AlertCircle, KeyRound, Hash, Link2 } from 'lucide-react';
+import { UserPlus, UserX, UserCheck, RefreshCw, Eye, EyeOff, AlertCircle, KeyRound, Hash, Link2, Bot } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -13,6 +13,7 @@ interface UserProfile {
   registered_at: string | null;
   created_at: string | null;
   unique_code: string | null;
+  has_kira: boolean;
 }
 
 interface AmbassadorInfo {
@@ -341,6 +342,11 @@ export function AdminPanel() {
                       }`}>
                         {u.is_active ? 'Активен' : 'Деактивирован'}
                       </span>
+                      {u.has_kira && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-600 dark:text-violet-400 font-medium">
+                          🤖 Кира
+                        </span>
+                      )}
                     </div>
                     {u.display_name && u.display_name !== u.username && (
                       <p className="text-sm text-muted-foreground">{u.display_name}</p>
@@ -394,15 +400,31 @@ export function AdminPanel() {
                       ) : u.is_active ? (
                         <>
                           <UserX size={16} className="mr-1" />
-                          Деактивировать
+                          <span className="hidden sm:inline">Деактивировать</span>
                         </>
                       ) : (
                         <>
                           <UserCheck size={16} className="mr-1" />
-                          Активировать
+                          <span className="hidden sm:inline">Активировать</span>
                         </>
                       )}
                     </Button>
+                    {u.user_id && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={async () => {
+                          await supabase.from('user_profiles').update({ has_kira: !u.has_kira }).eq('user_id', u.user_id);
+                          setSuccess(`Кира ${!u.has_kira ? 'подключена' : 'отключена'} для "${u.username}"`);
+                          await loadUsers();
+                        }}
+                        className={u.has_kira ? 'text-violet-600 hover:text-violet-600' : 'text-muted-foreground hover:text-violet-600'}
+                        title={u.has_kira ? 'Отключить Киру' : 'Подключить Киру'}
+                      >
+                        <Bot size={16} className="mr-1" />
+                        <span className="hidden sm:inline">{u.has_kira ? 'Кира ✓' : 'Кира'}</span>
+                      </Button>
+                    )}
                   </div>
                 </div>
 
