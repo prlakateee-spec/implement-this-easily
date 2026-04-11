@@ -412,13 +412,13 @@ export function KiraChat({ userId }: KiraChatProps) {
                         <Bot className="w-4 h-4 text-white" />
                       </div>
                     )}
-                    <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                    <div className={`max-w-[85%] rounded-2xl text-sm ${
                       m.role === 'user'
-                        ? 'bg-primary text-primary-foreground rounded-br-md'
-                        : 'bg-muted text-foreground rounded-bl-md'
+                        ? 'bg-primary text-primary-foreground rounded-br-md px-4 py-3'
+                        : 'bg-muted/60 text-foreground rounded-bl-md px-5 py-4'
                     }`}>
                       {imgs.length > 0 && (
-                        <div className={`flex flex-wrap gap-2 ${text ? 'mb-2' : ''}`}>
+                        <div className={`flex flex-wrap gap-2 ${text ? 'mb-3' : ''}`}>
                           {imgs.map((src, j) => (
                             <img key={j} src={src} alt="Фото" className="rounded-lg max-h-48 max-w-full object-cover" />
                           ))}
@@ -427,18 +427,19 @@ export function KiraChat({ userId }: KiraChatProps) {
                       {text && m.role === 'assistant' ? (
                         <div className="prose prose-sm dark:prose-invert max-w-none
                           prose-headings:text-foreground prose-headings:font-bold
-                          prose-h3:text-[15px] prose-h3:mt-4 prose-h3:mb-1.5
-                          prose-h2:text-base prose-h2:mt-4 prose-h2:mb-1.5
-                          prose-p:my-1.5 prose-p:leading-relaxed
-                          prose-ul:my-1.5 prose-ol:my-1.5
-                          prose-li:my-0.5 prose-li:leading-relaxed
+                          prose-h3:text-base prose-h3:mt-5 prose-h3:mb-2 prose-h3:pb-1 prose-h3:border-b prose-h3:border-border/50
+                          prose-h2:text-lg prose-h2:mt-6 prose-h2:mb-2.5 prose-h2:pb-1.5 prose-h2:border-b prose-h2:border-border/50
+                          prose-p:my-2.5 prose-p:leading-[1.75]
+                          prose-ul:my-2.5 prose-ul:space-y-1.5 prose-ol:my-2.5 prose-ol:space-y-1.5
+                          prose-li:my-0 prose-li:leading-[1.75]
                           prose-strong:text-foreground prose-strong:font-semibold
-                          prose-hr:my-3 prose-hr:border-border
-                          [&>*:first-child]:mt-0">
+                          prose-hr:my-5 prose-hr:border-border/40
+                          prose-code:bg-background/50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:text-xs
+                          [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
                           <ReactMarkdown>{text}</ReactMarkdown>
                         </div>
                       ) : text ? (
-                        <span className="whitespace-pre-wrap">{text}</span>
+                        <span className="whitespace-pre-wrap leading-[1.75]">{text}</span>
                       ) : null}
                     </div>
                     {m.role === 'user' && (
