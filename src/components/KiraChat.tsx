@@ -30,15 +30,7 @@ function getImages(msg: Msg): string[] {
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kira-chat`;
 
-async function streamChat({
-  messages,
-  onDelta,
-  onDone,
-}: {
-  messages: Msg[];
-  onDelta: (t: string) => void;
-  onDone: () => void;
-}) {
+async function fetchChat(messages: Msg[]): Promise<string> {
   const resp = await fetch(CHAT_URL, {
     method: 'POST',
     headers: {
@@ -48,41 +40,13 @@ async function streamChat({
     body: JSON.stringify({ messages }),
   });
 
-  if (!resp.ok || !resp.body) {
+  if (!resp.ok) {
     const err = await resp.json().catch(() => ({}));
     throw new Error(err.error || 'Ошибка подключения к Кире');
   }
 
-  const reader = resp.body.getReader();
-  const decoder = new TextDecoder();
-  let buf = '';
-  let done = false;
-
-  while (!done) {
-    const { done: d, value } = await reader.read();
-    if (d) break;
-    buf += decoder.decode(value, { stream: true });
-
-    let nl: number;
-    while ((nl = buf.indexOf('\n')) !== -1) {
-      let line = buf.slice(0, nl);
-      buf = buf.slice(nl + 1);
-      if (line.endsWith('\r')) line = line.slice(0, -1);
-      if (line.startsWith(':') || line.trim() === '') continue;
-      if (!line.startsWith('data: ')) continue;
-      const json = line.slice(6).trim();
-      if (json === '[DONE]') { done = true; break; }
-      try {
-        const parsed = JSON.parse(json);
-        const c = parsed.choices?.[0]?.delta?.content;
-        if (c) onDelta(c);
-      } catch {
-        buf = line + '\n' + buf;
-        break;
-      }
-    }
-  }
-  onDone();
+  const data = await resp.json();
+  return data.content || 'Не удалось получить ответ.';
 }
 
 function fileToBase64(file: File): Promise<string> {
