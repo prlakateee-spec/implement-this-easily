@@ -404,7 +404,10 @@ export type Database = {
           collections: Json | null
           created_at: string | null
           display_name: string | null
+          has_delivery: boolean
           has_kira: boolean
+          has_order: boolean
+          has_pick: boolean
           id: string
           is_active: boolean
           level: number
@@ -418,7 +421,10 @@ export type Database = {
           collections?: Json | null
           created_at?: string | null
           display_name?: string | null
+          has_delivery?: boolean
           has_kira?: boolean
+          has_order?: boolean
+          has_pick?: boolean
           id?: string
           is_active?: boolean
           level?: number
@@ -432,7 +438,10 @@ export type Database = {
           collections?: Json | null
           created_at?: string | null
           display_name?: string | null
+          has_delivery?: boolean
           has_kira?: boolean
+          has_order?: boolean
+          has_pick?: boolean
           id?: string
           is_active?: boolean
           level?: number
