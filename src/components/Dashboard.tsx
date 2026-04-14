@@ -439,9 +439,9 @@ export function Dashboard({
             userLevel={userLevel}
           />
         </div>
-        <div className={activeTab === 'delivery' ? '' : 'hidden'}><DeliveryModule userId={user.id} /></div>
-        <div className={activeTab === 'order' ? '' : 'hidden'}><OrderForMeModule userId={user.id} /></div>
-        <div className={activeTab === 'pick' ? '' : 'hidden'}><PickForMeModule userId={user.id} /></div>
+        {hasDelivery && <div className={activeTab === 'delivery' ? '' : 'hidden'}><DeliveryModule userId={user.id} /></div>}
+        {hasOrder && <div className={activeTab === 'order' ? '' : 'hidden'}><OrderForMeModule userId={user.id} /></div>}
+        {hasPick && <div className={activeTab === 'pick' ? '' : 'hidden'}><PickForMeModule userId={user.id} /></div>}
         <div className={activeTab === 'ambassador' ? '' : 'hidden'}><AmbassadorModule userId={user.id} /></div>
         <div className={activeTab === 'settings' ? '' : 'hidden'}>
           <SettingsPage userName={displayName} onSaveName={handleSaveName} userId={user.id} />
