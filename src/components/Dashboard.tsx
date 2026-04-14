@@ -103,7 +103,7 @@ export function Dashboard({
     const checkProfile = async () => {
       const { data } = await supabase
         .from('user_profiles')
-        .select('has_kira, has_delivery, has_order, has_pick, level')
+        .select('has_kira, has_delivery, has_order, has_pick, level, is_client')
         .eq('user_id', user.id)
         .single();
       if (data?.has_kira) setHasKira(true);
@@ -111,6 +111,7 @@ export function Dashboard({
       if (data?.has_order) setHasOrder(true);
       if (data?.has_pick) setHasPick(true);
       if (data?.level) setUserLevel(data.level);
+      if (data?.is_client) setIsClient(true);
     };
     checkProfile();
   }, [user.id, isAdmin]);
