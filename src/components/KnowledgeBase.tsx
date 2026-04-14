@@ -18,9 +18,10 @@ interface KnowledgeBaseProps {
   completedModules: string[];
   onToggleModule: (moduleId: string) => void;
   userEmail: string;
+  userLevel?: number;
 }
 
-export function KnowledgeBase({ completedModules, onToggleModule, userEmail }: KnowledgeBaseProps) {
+export function KnowledgeBase({ completedModules, onToggleModule, userEmail, userLevel = 1 }: KnowledgeBaseProps) {
   const [activeCourse, setActiveCourse] = useState<Course | null>(null);
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
