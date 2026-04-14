@@ -111,7 +111,10 @@ export function Dashboard({
       if (data?.has_order) setHasOrder(true);
       if (data?.has_pick) setHasPick(true);
       if (data?.level) setUserLevel(data.level);
-      if (data?.is_client) setIsClient(true);
+      if (data?.is_client) {
+        setIsClient(true);
+        setActiveTab('settings');
+      }
     };
     checkProfile();
   }, [user.id, isAdmin]);
