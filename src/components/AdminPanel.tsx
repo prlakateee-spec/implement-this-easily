@@ -411,20 +411,37 @@ export function AdminPanel() {
                       )}
                     </Button>
                     {u.user_id && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={async () => {
-                          await supabase.from('user_profiles').update({ has_kira: !u.has_kira }).eq('user_id', u.user_id);
-                          setSuccess(`Кира ${!u.has_kira ? 'подключена' : 'отключена'} для "${u.username}"`);
-                          await loadUsers();
-                        }}
-                        className={u.has_kira ? 'text-violet-600 hover:text-violet-600' : 'text-muted-foreground hover:text-violet-600'}
-                        title={u.has_kira ? 'Отключить Киру' : 'Подключить Киру'}
-                      >
-                        <Bot size={16} className="mr-1" />
-                        <span className="hidden sm:inline">{u.has_kira ? 'Кира ✓' : 'Кира'}</span>
-                      </Button>
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={async () => {
+                            await supabase.from('user_profiles').update({ has_kira: !u.has_kira }).eq('user_id', u.user_id);
+                            setSuccess(`Кира ${!u.has_kira ? 'подключена' : 'отключена'} для "${u.username}"`);
+                            await loadUsers();
+                          }}
+                          className={u.has_kira ? 'text-violet-600 hover:text-violet-600' : 'text-muted-foreground hover:text-violet-600'}
+                          title={u.has_kira ? 'Отключить Киру' : 'Подключить Киру'}
+                        >
+                          <Bot size={16} className="mr-1" />
+                          <span className="hidden sm:inline">{u.has_kira ? 'Кира ✓' : 'Кира'}</span>
+                        </Button>
+                        <select
+                          value={u.level}
+                          onChange={async (e) => {
+                            const newLevel = parseInt(e.target.value);
+                            await supabase.from('user_profiles').update({ level: newLevel }).eq('user_id', u.user_id);
+                            setSuccess(`Уровень "${u.username}" изменён на ${newLevel}`);
+                            await loadUsers();
+                          }}
+                          className="h-8 px-2 text-sm rounded-lg border border-border bg-muted/50 text-foreground cursor-pointer"
+                          title="Уровень доступа"
+                        >
+                          {[1, 2, 3, 4, 5].map(lvl => (
+                            <option key={lvl} value={lvl}>Ур. {lvl}</option>
+                          ))}
+                        </select>
+                      </>
                     )}
                   </div>
                 </div>
