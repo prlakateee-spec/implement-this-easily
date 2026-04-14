@@ -14,6 +14,9 @@ interface UserProfile {
   created_at: string | null;
   unique_code: string | null;
   has_kira: boolean;
+  has_delivery: boolean;
+  has_order: boolean;
+  has_pick: boolean;
   level: number;
 }
 
