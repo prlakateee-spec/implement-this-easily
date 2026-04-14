@@ -452,6 +452,7 @@ export function Dashboard({
           <SettingsPage userName={displayName} onSaveName={handleSaveName} userId={user.id} />
         </div>
         {hasKira && <div className={activeTab === 'kira' ? '' : 'hidden'}><KiraChat userId={user.id} /></div>}
+        {isAdmin && <div className={activeTab === 'clients' ? '' : 'hidden'}><ClientsPanel /></div>}
         {isAdmin && <div className={activeTab === 'requests' ? '' : 'hidden'}><AdminRequests /></div>}
         {isAdmin && <div className={activeTab === 'admin' ? '' : 'hidden'}><AdminPanel /></div>}
       </div>
