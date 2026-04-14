@@ -96,14 +96,17 @@ export function Dashboard({
 
   // Check if user has Kira access and fetch level
   useEffect(() => {
-    if (isAdmin) { setHasKira(true); setUserLevel(99); return; }
+    if (isAdmin) { setHasKira(true); setHasDelivery(true); setHasOrder(true); setHasPick(true); setUserLevel(99); return; }
     const checkProfile = async () => {
       const { data } = await supabase
         .from('user_profiles')
-        .select('has_kira, level')
+        .select('has_kira, has_delivery, has_order, has_pick, level')
         .eq('user_id', user.id)
         .single();
       if (data?.has_kira) setHasKira(true);
+      if (data?.has_delivery) setHasDelivery(true);
+      if (data?.has_order) setHasOrder(true);
+      if (data?.has_pick) setHasPick(true);
       if (data?.level) setUserLevel(data.level);
     };
     checkProfile();
