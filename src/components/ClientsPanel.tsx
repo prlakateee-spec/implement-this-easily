@@ -95,9 +95,9 @@ export function ClientsPanel() {
   };
 
   const toggleModule = async (userId: string, field: 'has_order' | 'has_pick', current: boolean, label: string, username: string) => {
+    setClients(prev => prev.map(c => c.user_id === userId ? { ...c, [field]: !current } as ClientProfile : c));
     await supabase.from('user_profiles').update({ [field]: !current }).eq('user_id', userId);
     setSuccess(`${label} ${!current ? 'подключена' : 'отключена'} для "${username}"`);
-    await loadClients();
   };
 
   const toggleActive = async (username: string, currentActive: boolean) => {

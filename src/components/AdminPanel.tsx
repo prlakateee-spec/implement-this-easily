@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { UserPlus, UserX, UserCheck, RefreshCw, Eye, EyeOff, AlertCircle, KeyRound, Hash, Link2, Bot, Truck, ShoppingBag, Search } from 'lucide-react';
+import { UserPlus, UserX, UserCheck, RefreshCw, Eye, EyeOff, AlertCircle, KeyRound, Hash, Link2, Bot, ShoppingBag, Star } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -17,6 +17,7 @@ interface UserProfile {
   has_delivery: boolean;
   has_order: boolean;
   has_pick: boolean;
+  is_client: boolean;
   level: number;
 }
 
@@ -346,24 +347,19 @@ export function AdminPanel() {
                       }`}>
                         {u.is_active ? 'Активен' : 'Деактивирован'}
                       </span>
+                      {!u.is_client && u.has_delivery && u.has_order && u.has_pick && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium">
+                          ⭐ Клуб
+                        </span>
+                      )}
+                      {u.is_client && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-400 font-medium">
+                          🛒 Клиент
+                        </span>
+                      )}
                       {u.has_kira && (
                         <span className="text-xs px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-600 dark:text-violet-400 font-medium">
                           🤖 Кира
-                        </span>
-                      )}
-                      {u.has_delivery && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium">
-                          🚚 Доставка
-                        </span>
-                      )}
-                      {u.has_order && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-400 font-medium">
-                          🛒 Выкуп
-                        </span>
-                      )}
-                      {u.has_pick && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-medium">
-                          🔍 Подбор
                         </span>
                       )}
                       <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium">
@@ -433,62 +429,58 @@ export function AdminPanel() {
                     </Button>
                     {u.user_id && (
                       <>
+                        {/* Preset: Клуб */}
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={async () => {
+                            const isClub = !u.is_client && u.has_delivery && u.has_order && u.has_pick;
+                            const updates = isClub
+                              ? { has_delivery: false, has_order: false, has_pick: false }
+                              : { is_client: false, has_delivery: true, has_order: true, has_pick: true, level: Math.max(u.level, 1) };
+                            setUsers(prev => prev.map(p => p.id === u.id ? { ...p, ...updates } as UserProfile : p));
+                            await supabase.from('user_profiles').update(updates).eq('user_id', u.user_id);
+                            setSuccess(isClub ? `Клуб отключён для "${u.username}"` : `Клуб подключён для "${u.username}"`);
+                          }}
+                          className={!u.is_client && u.has_delivery && u.has_order && u.has_pick ? 'text-emerald-600 hover:text-emerald-600' : 'text-muted-foreground hover:text-emerald-600'}
+                          title="Клуб = База знаний + все логист. модули"
+                        >
+                          <Star size={16} className="mr-1" />
+                          <span className="hidden sm:inline">{!u.is_client && u.has_delivery && u.has_order && u.has_pick ? 'Клуб ✓' : 'Клуб'}</span>
+                        </Button>
+                        {/* Preset: Клиент */}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={async () => {
+                            const newIsClient = !u.is_client;
+                            const updates = newIsClient
+                              ? { is_client: true, has_delivery: true, has_order: true, has_pick: true }
+                              : { is_client: false };
+                            setUsers(prev => prev.map(p => p.id === u.id ? { ...p, ...updates } as UserProfile : p));
+                            await supabase.from('user_profiles').update(updates).eq('user_id', u.user_id);
+                            setSuccess(newIsClient ? `"${u.username}" теперь клиент` : `"${u.username}" больше не клиент`);
+                          }}
+                          className={u.is_client ? 'text-orange-600 hover:text-orange-600' : 'text-muted-foreground hover:text-orange-600'}
+                          title="Клиент = только логистика, без базы знаний"
+                        >
+                          <ShoppingBag size={16} className="mr-1" />
+                          <span className="hidden sm:inline">{u.is_client ? 'Клиент ✓' : 'Клиент'}</span>
+                        </Button>
+                        {/* Kira toggle */}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={async () => {
+                            setUsers(prev => prev.map(p => p.id === u.id ? { ...p, has_kira: !u.has_kira } as UserProfile : p));
                             await supabase.from('user_profiles').update({ has_kira: !u.has_kira }).eq('user_id', u.user_id);
                             setSuccess(`Кира ${!u.has_kira ? 'подключена' : 'отключена'} для "${u.username}"`);
-                            await loadUsers();
                           }}
                           className={u.has_kira ? 'text-violet-600 hover:text-violet-600' : 'text-muted-foreground hover:text-violet-600'}
                           title={u.has_kira ? 'Отключить Киру' : 'Подключить Киру'}
                         >
                           <Bot size={16} className="mr-1" />
                           <span className="hidden sm:inline">{u.has_kira ? 'Кира ✓' : 'Кира'}</span>
-                        </Button>
-                        {/* Module access toggles */}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={async () => {
-                            await supabase.from('user_profiles').update({ has_delivery: !u.has_delivery }).eq('user_id', u.user_id);
-                            setSuccess(`Доставка ${!u.has_delivery ? 'подключена' : 'отключена'} для "${u.username}"`);
-                            await loadUsers();
-                          }}
-                          className={u.has_delivery ? 'text-emerald-600 hover:text-emerald-600' : 'text-muted-foreground hover:text-emerald-600'}
-                          title={u.has_delivery ? 'Отключить Доставку' : 'Подключить Доставку'}
-                        >
-                          <Truck size={16} className="mr-1" />
-                          <span className="hidden sm:inline">{u.has_delivery ? '✓' : ''}</span>
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={async () => {
-                            await supabase.from('user_profiles').update({ has_order: !u.has_order }).eq('user_id', u.user_id);
-                            setSuccess(`Выкуп ${!u.has_order ? 'подключен' : 'отключён'} для "${u.username}"`);
-                            await loadUsers();
-                          }}
-                          className={u.has_order ? 'text-orange-600 hover:text-orange-600' : 'text-muted-foreground hover:text-orange-600'}
-                          title={u.has_order ? 'Отключить Выкуп' : 'Подключить Выкуп'}
-                        >
-                          <ShoppingBag size={16} className="mr-1" />
-                          <span className="hidden sm:inline">{u.has_order ? '✓' : ''}</span>
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={async () => {
-                            await supabase.from('user_profiles').update({ has_pick: !u.has_pick }).eq('user_id', u.user_id);
-                            setSuccess(`Подбор ${!u.has_pick ? 'подключён' : 'отключён'} для "${u.username}"`);
-                            await loadUsers();
-                          }}
-                          className={u.has_pick ? 'text-cyan-600 hover:text-cyan-600' : 'text-muted-foreground hover:text-cyan-600'}
-                          title={u.has_pick ? 'Отключить Подбор' : 'Подключить Подбор'}
-                        >
-                          <Search size={16} className="mr-1" />
-                          <span className="hidden sm:inline">{u.has_pick ? '✓' : ''}</span>
                         </Button>
                         <select
                           value={u.level}
