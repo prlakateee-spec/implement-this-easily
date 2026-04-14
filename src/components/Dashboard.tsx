@@ -56,6 +56,9 @@ export function Dashboard({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unviewedCount, setUnviewedCount] = useState(0);
   const [hasKira, setHasKira] = useState(false);
+  const [hasDelivery, setHasDelivery] = useState(false);
+  const [hasOrder, setHasOrder] = useState(false);
+  const [hasPick, setHasPick] = useState(false);
   const [userLevel, setUserLevel] = useState(1);
   const { theme, toggleTheme } = useTheme();
 
@@ -93,14 +96,17 @@ export function Dashboard({
 
   // Check if user has Kira access and fetch level
   useEffect(() => {
-    if (isAdmin) { setHasKira(true); setUserLevel(99); return; }
+    if (isAdmin) { setHasKira(true); setHasDelivery(true); setHasOrder(true); setHasPick(true); setUserLevel(99); return; }
     const checkProfile = async () => {
       const { data } = await supabase
         .from('user_profiles')
-        .select('has_kira, level')
+        .select('has_kira, has_delivery, has_order, has_pick, level')
         .eq('user_id', user.id)
         .single();
       if (data?.has_kira) setHasKira(true);
+      if (data?.has_delivery) setHasDelivery(true);
+      if (data?.has_order) setHasOrder(true);
+      if (data?.has_pick) setHasPick(true);
       if (data?.level) setUserLevel(data.level);
     };
     checkProfile();
@@ -110,9 +116,9 @@ export function Dashboard({
     { id: 'dashboard' as const, icon: Layout, label: 'Главная', badge: 0, highlight: false },
     { id: 'knowledge' as const, icon: BookOpen, label: 'База знаний', badge: 0, highlight: false },
     { id: 'settings' as const, icon: UserIcon, label: 'Личный кабинет', badge: 0, highlight: false },
-    { id: 'delivery' as const, icon: Truck, label: 'Доставка', badge: 0, highlight: false },
-    { id: 'order' as const, icon: ShoppingBag, label: 'Закажите мне', badge: 0, highlight: false },
-    { id: 'pick' as const, icon: Search, label: 'Подберите мне', badge: 0, highlight: false },
+    ...(hasDelivery ? [{ id: 'delivery' as const, icon: Truck, label: 'Доставка', badge: 0, highlight: false }] : []),
+    ...(hasOrder ? [{ id: 'order' as const, icon: ShoppingBag, label: 'Закажите мне', badge: 0, highlight: false }] : []),
+    ...(hasPick ? [{ id: 'pick' as const, icon: Search, label: 'Подберите мне', badge: 0, highlight: false }] : []),
     ...(hasKira ? [
       { id: 'kira' as const, icon: MessageCircle, label: 'Кира — байер', badge: 0, highlight: false },
     ] : []),
@@ -433,9 +439,9 @@ export function Dashboard({
             userLevel={userLevel}
           />
         </div>
-        <div className={activeTab === 'delivery' ? '' : 'hidden'}><DeliveryModule userId={user.id} /></div>
-        <div className={activeTab === 'order' ? '' : 'hidden'}><OrderForMeModule userId={user.id} /></div>
-        <div className={activeTab === 'pick' ? '' : 'hidden'}><PickForMeModule userId={user.id} /></div>
+        {hasDelivery && <div className={activeTab === 'delivery' ? '' : 'hidden'}><DeliveryModule userId={user.id} /></div>}
+        {hasOrder && <div className={activeTab === 'order' ? '' : 'hidden'}><OrderForMeModule userId={user.id} /></div>}
+        {hasPick && <div className={activeTab === 'pick' ? '' : 'hidden'}><PickForMeModule userId={user.id} /></div>}
         <div className={activeTab === 'ambassador' ? '' : 'hidden'}><AmbassadorModule userId={user.id} /></div>
         <div className={activeTab === 'settings' ? '' : 'hidden'}>
           <SettingsPage userName={displayName} onSaveName={handleSaveName} userId={user.id} />
