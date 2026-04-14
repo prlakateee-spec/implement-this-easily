@@ -91,18 +91,19 @@ export function Dashboard({
 
   const isAdmin = user.email === ADMIN_EMAIL || user.email === 'terra_ai_team@kitay.club';
 
-  // Check if user has Kira access
+  // Check if user has Kira access and fetch level
   useEffect(() => {
-    if (isAdmin) { setHasKira(true); return; }
-    const checkKira = async () => {
+    if (isAdmin) { setHasKira(true); setUserLevel(99); return; }
+    const checkProfile = async () => {
       const { data } = await supabase
         .from('user_profiles')
-        .select('has_kira')
+        .select('has_kira, level')
         .eq('user_id', user.id)
         .single();
       if (data?.has_kira) setHasKira(true);
+      if (data?.level) setUserLevel(data.level);
     };
-    checkKira();
+    checkProfile();
   }, [user.id, isAdmin]);
 
   const navItems = [
