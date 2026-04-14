@@ -264,7 +264,7 @@ export function KnowledgeBase({ completedModules, onToggleModule, userEmail, use
           ).length;
           const totalModules = course.modules.length;
           const courseProgress = Math.round((completedCount / totalModules) * 100);
-          const isAccessible = isCourseAccessible(course.id, userEmail);
+          const isAccessible = isCourseAccessible(course.id, userEmail, userLevel);
 
           if (viewMode === 'grid') {
             return (

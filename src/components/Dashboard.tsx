@@ -43,11 +43,7 @@ interface DashboardProps {
   onToggleModule: (moduleId: string) => void;
 }
 
-function getUserLevel(registeredAt?: string): number {
-  if (!registeredAt) return 1;
-  const months = Math.floor((Date.now() - new Date(registeredAt).getTime()) / (1000 * 60 * 60 * 24 * 30));
-  return Math.max(1, months + 1);
-}
+// Removed auto-calculation - now level comes from DB
 
 export function Dashboard({ 
   user, 
