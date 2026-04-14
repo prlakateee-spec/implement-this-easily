@@ -141,6 +141,23 @@ export function SettingsPage({ userName, onSaveName, userId }: SettingsPageProps
         </div>
       )}
 
+      {referralLink && (
+        <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-2xl p-6">
+          <h2 className="text-lg font-bold text-foreground mb-2">🔗 Твоя реферальная ссылка</h2>
+          <p className="text-sm text-muted-foreground mb-3">Ссылка для приглашения новых участников</p>
+          <div className="flex items-center gap-3">
+            <a href={referralLink} target="_blank" rel="noopener noreferrer"
+              className="text-primary hover:underline text-sm font-medium truncate flex-1">
+              {referralLink}
+            </a>
+            <Button variant="outline" size="sm"
+              onClick={() => navigator.clipboard.writeText(referralLink)}>
+              📋 Скопировать
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Name Settings */}
       <div className="bg-card rounded-2xl p-6 shadow-soft border border-border">
         <h2 className="text-lg font-bold text-foreground mb-4">Твоё имя</h2>
