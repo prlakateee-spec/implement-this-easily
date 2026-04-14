@@ -348,6 +348,9 @@ export function AdminPanel() {
                           🤖 Кира
                         </span>
                       )}
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium">
+                        🚀 Ур. {u.level}
+                      </span>
                     </div>
                     {u.display_name && u.display_name !== u.username && (
                       <p className="text-sm text-muted-foreground">{u.display_name}</p>
