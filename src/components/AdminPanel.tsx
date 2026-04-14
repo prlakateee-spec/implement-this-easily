@@ -14,6 +14,7 @@ interface UserProfile {
   created_at: string | null;
   unique_code: string | null;
   has_kira: boolean;
+  level: number;
 }
 
 interface AmbassadorInfo {
