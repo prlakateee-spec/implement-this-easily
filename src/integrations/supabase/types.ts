@@ -407,6 +407,7 @@ export type Database = {
           has_kira: boolean
           id: string
           is_active: boolean
+          level: number
           registered_at: string | null
           unique_code: string | null
           updated_at: string | null
@@ -420,6 +421,7 @@ export type Database = {
           has_kira?: boolean
           id?: string
           is_active?: boolean
+          level?: number
           registered_at?: string | null
           unique_code?: string | null
           updated_at?: string | null
@@ -433,6 +435,7 @@ export type Database = {
           has_kira?: boolean
           id?: string
           is_active?: boolean
+          level?: number
           registered_at?: string | null
           unique_code?: string | null
           updated_at?: string | null
