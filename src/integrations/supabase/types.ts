@@ -410,6 +410,7 @@ export type Database = {
           has_pick: boolean
           id: string
           is_active: boolean
+          is_client: boolean
           level: number
           registered_at: string | null
           unique_code: string | null
@@ -427,6 +428,7 @@ export type Database = {
           has_pick?: boolean
           id?: string
           is_active?: boolean
+          is_client?: boolean
           level?: number
           registered_at?: string | null
           unique_code?: string | null
@@ -444,6 +446,7 @@ export type Database = {
           has_pick?: boolean
           id?: string
           is_active?: boolean
+          is_client?: boolean
           level?: number
           registered_at?: string | null
           unique_code?: string | null
