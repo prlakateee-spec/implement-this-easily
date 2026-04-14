@@ -43,7 +43,7 @@ interface DashboardProps {
   onToggleModule: (moduleId: string) => void;
 }
 
-// Removed auto-calculation - now level comes from DB
+
 
 export function Dashboard({ 
   user, 
@@ -77,7 +77,7 @@ export function Dashboard({
 
   const [displayName, setDisplayName] = useState(user.name);
 
-  // Removed auto-calculation - level comes from DB
+  
 
   const handleSaveName = async (name: string) => {
     setDisplayName(name);
