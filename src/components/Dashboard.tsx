@@ -134,7 +134,7 @@ export function Dashboard({
       { id: 'requests' as const, icon: ClipboardList, label: 'Заявки', badge: unviewedCount, highlight: false },
       { id: 'admin' as const, icon: Shield, label: 'Пользователи', badge: 0, highlight: false },
     ] : []),
-    ...(!isClient ? [{ id: 'ambassador' as const, icon: Sparkles, label: 'Стать амбассадором', badge: 0, highlight: true }] : []),
+    { id: 'ambassador' as const, icon: Sparkles, label: 'Стать амбассадором', badge: 0, highlight: true },
   ];
 
   const ThemeToggle = () => (
