@@ -386,9 +386,6 @@ export function Dashboard({
               <span className="text-sm font-medium text-primary bg-primary/10 px-3 py-1 rounded-full">
                 Уровень {userLevel}
               </span>
-              <span className="text-xs text-muted-foreground">
-                1 уровень = 1 месяц в клубе
-              </span>
             </div>
             <div className="flex items-center justify-center">
               <ProgressRing radius={80} stroke={10} progress={progressPercentage} />
@@ -433,6 +430,7 @@ export function Dashboard({
             completedModules={completedModules}
             onToggleModule={onToggleModule}
             userEmail={user.email}
+            userLevel={userLevel}
           />
         </div>
         <div className={activeTab === 'delivery' ? '' : 'hidden'}><DeliveryModule userId={user.id} /></div>
