@@ -62,6 +62,7 @@ export function Dashboard({
   const [hasOrder, setHasOrder] = useState(false);
   const [hasPick, setHasPick] = useState(false);
   const [userLevel, setUserLevel] = useState(1);
+  const [isClient, setIsClient] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
