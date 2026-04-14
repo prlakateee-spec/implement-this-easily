@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { UserPlus, RefreshCw, Eye, EyeOff, AlertCircle, KeyRound, Truck, ShoppingBag, Search, UserX, UserCheck } from 'lucide-react';
+import { UserPlus, RefreshCw, Eye, EyeOff, AlertCircle, KeyRound, ShoppingBag, Search, UserX, UserCheck, Hash, Link2 } from 'lucide-react';
 
 interface ClientProfile {
   id: string;
@@ -10,33 +10,45 @@ interface ClientProfile {
   username: string;
   display_name: string | null;
   is_active: boolean;
-  has_delivery: boolean;
   has_order: boolean;
   has_pick: boolean;
+  unique_code: string | null;
   created_at: string | null;
+}
+
+interface AmbassadorInfo {
+  user_id: string;
+  referral_link: string | null;
 }
 
 export function ClientsPanel() {
   const [clients, setClients] = useState<ClientProfile[]>([]);
+  const [ambassadors, setAmbassadors] = useState<AmbassadorInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [form, setForm] = useState({ username: '', password: '', display_name: '' });
-  const [createdUser, setCreatedUser] = useState<{ username: string; password: string; display_name: string } | null>(null);
+  const [form, setForm] = useState({ username: '', password: '', display_name: '', unique_code: '', referral_link: '' });
+  const [createdUser, setCreatedUser] = useState<{ username: string; password: string } | null>(null);
   const [togglingUser, setTogglingUser] = useState<string | null>(null);
   const [resetForm, setResetForm] = useState<{ username: string; password: string } | null>(null);
   const [resetting, setResetting] = useState(false);
+  const [editFields, setEditFields] = useState<Record<string, { code: string; link: string }>>({});
+  const [savingField, setSavingField] = useState<string | null>(null);
 
   const loadClients = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from('user_profiles')
-      .select('id, user_id, username, display_name, is_active, has_delivery, has_order, has_pick, created_at')
-      .eq('is_client', true)
-      .order('created_at', { ascending: false });
-    setClients((data || []) as ClientProfile[]);
+    const [{ data: d }, { data: a }] = await Promise.all([
+      supabase
+        .from('user_profiles')
+        .select('id, user_id, username, display_name, is_active, has_order, has_pick, unique_code, created_at')
+        .eq('is_client', true)
+        .order('created_at', { ascending: false }),
+      supabase.from('ambassador_profiles').select('user_id, referral_link'),
+    ]);
+    setClients((d || []) as ClientProfile[]);
+    setAmbassadors((a || []) as AmbassadorInfo[]);
     setLoading(false);
   };
 
@@ -63,21 +75,17 @@ export function ClientsPanel() {
           password: form.password,
           display_name: form.display_name || normalizedUsername,
           is_client: true,
+          unique_code: form.unique_code || undefined,
+          referral_link: form.referral_link || undefined,
         },
       });
 
       if (error) throw new Error(error.message || 'Ошибка создания');
       if (data?.error) throw new Error(data.error);
 
-      // Mark as client
-      await supabase
-        .from('user_profiles')
-        .update({ is_client: true })
-        .eq('username', normalizedUsername);
-
-      setCreatedUser({ username: normalizedUsername, password: form.password, display_name: form.display_name || normalizedUsername });
+      setCreatedUser({ username: normalizedUsername, password: form.password });
       setSuccess(`Клиент "${normalizedUsername}" создан!`);
-      setForm({ username: '', password: '', display_name: '' });
+      setForm({ username: '', password: '', display_name: '', unique_code: '', referral_link: '' });
       await loadClients();
     } catch (err: any) {
       setError(err.message);
@@ -86,7 +94,7 @@ export function ClientsPanel() {
     }
   };
 
-  const toggleModule = async (userId: string, field: 'has_delivery' | 'has_order' | 'has_pick', current: boolean, label: string, username: string) => {
+  const toggleModule = async (userId: string, field: 'has_order' | 'has_pick', current: boolean, label: string, username: string) => {
     await supabase.from('user_profiles').update({ [field]: !current }).eq('user_id', userId);
     setSuccess(`${label} ${!current ? 'подключена' : 'отключена'} для "${username}"`);
     await loadClients();
@@ -120,7 +128,6 @@ export function ClientsPanel() {
         body: { username, new_password: newPassword },
       });
       if (error) throw new Error(error.message);
-      if (data?.results?.[0]?.error) throw new Error(data.results[0].error);
       setSuccess(`Пароль для "${username}" сброшен`);
       setResetForm(null);
     } catch (err: any) {
@@ -130,42 +137,32 @@ export function ClientsPanel() {
     }
   };
 
-  const moduleButtons = (c: ClientProfile) => {
-    if (!c.user_id) return null;
-    return (
-      <div className="flex items-center gap-1">
-        <Button variant="ghost" size="sm"
-          onClick={() => toggleModule(c.user_id!, 'has_delivery', c.has_delivery, 'Доставка', c.username)}
-          className={c.has_delivery ? 'text-emerald-600 hover:text-emerald-600' : 'text-muted-foreground hover:text-emerald-600'}
-          title={c.has_delivery ? 'Отключить Доставку' : 'Подключить Доставку'}
-        >
-          <Truck size={16} />
-          {c.has_delivery && <span className="ml-0.5 text-xs">✓</span>}
-        </Button>
-        <Button variant="ghost" size="sm"
-          onClick={() => toggleModule(c.user_id!, 'has_order', c.has_order, 'Выкуп', c.username)}
-          className={c.has_order ? 'text-orange-600 hover:text-orange-600' : 'text-muted-foreground hover:text-orange-600'}
-          title={c.has_order ? 'Отключить Выкуп' : 'Подключить Выкуп'}
-        >
-          <ShoppingBag size={16} />
-          {c.has_order && <span className="ml-0.5 text-xs">✓</span>}
-        </Button>
-        <Button variant="ghost" size="sm"
-          onClick={() => toggleModule(c.user_id!, 'has_pick', c.has_pick, 'Подбор', c.username)}
-          className={c.has_pick ? 'text-cyan-600 hover:text-cyan-600' : 'text-muted-foreground hover:text-cyan-600'}
-          title={c.has_pick ? 'Отключить Подбор' : 'Подключить Подбор'}
-        >
-          <Search size={16} />
-          {c.has_pick && <span className="ml-0.5 text-xs">✓</span>}
-        </Button>
-      </div>
-    );
+  const saveCodeAndLink = async (userId: string) => {
+    const fields = editFields[userId];
+    if (!fields) return;
+    setSavingField(userId);
+
+    await supabase.from('user_profiles').update({ unique_code: fields.code.trim() || null }).eq('user_id', userId);
+
+    const link = fields.link.trim() || null;
+    const existing = ambassadors.find(a => a.user_id === userId);
+    if (existing) {
+      await supabase.from('ambassador_profiles').update({ referral_link: link }).eq('user_id', userId);
+    } else if (link) {
+      await supabase.from('ambassador_profiles').insert({ user_id: userId, referral_link: link, is_active: false });
+    }
+
+    setSavingField(null);
+    setSuccess('Код и ссылка сохранены');
+    await loadClients();
   };
 
   return (
     <div className="p-4 sm:p-6 lg:p-10 space-y-8 animate-fade-in-up">
-      <h1 className="text-2xl font-bold text-foreground">Клиенты</h1>
-      <p className="text-muted-foreground text-sm -mt-4">Пользователи только для логистики — без базы знаний и обучения</p>
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Клиенты</h1>
+        <p className="text-muted-foreground text-sm mt-1">Пользователи для выкупа и подбора товаров — без базы знаний</p>
+      </div>
 
       {/* Create Client Form */}
       <div className="bg-card rounded-2xl p-6 shadow-soft border border-border">
@@ -202,7 +199,7 @@ export function ClientsPanel() {
         )}
 
         <form onSubmit={createClient} className="space-y-4">
-          <div className="grid sm:grid-cols-3 gap-4">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Логин *</label>
               <Input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })}
@@ -224,6 +221,16 @@ export function ClientsPanel() {
               <label className="text-sm text-muted-foreground mb-1 block">Имя</label>
               <Input value={form.display_name} onChange={(e) => setForm({ ...form, display_name: e.target.value })}
                 placeholder="Имя клиента" className="bg-muted/50" />
+            </div>
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Уникальный код</label>
+              <Input value={form.unique_code} onChange={(e) => setForm({ ...form, unique_code: e.target.value })}
+                placeholder="ABC123" className="bg-muted/50" />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="text-sm text-muted-foreground mb-1 block">Реферальная ссылка</label>
+              <Input value={form.referral_link} onChange={(e) => setForm({ ...form, referral_link: e.target.value })}
+                placeholder="https://t.me/..." className="bg-muted/50" />
             </div>
           </div>
           <Button type="submit" disabled={creating} className="gradient-primary text-primary-foreground">
@@ -250,59 +257,119 @@ export function ClientsPanel() {
           <p className="text-muted-foreground text-center py-8">Клиентов пока нет</p>
         ) : (
           <div className="space-y-3">
-            {clients.map((c) => (
-              <div key={c.id} className={`p-4 rounded-xl border transition-all ${
-                c.is_active ? 'border-border bg-muted/30' : 'border-destructive/20 bg-destructive/5 opacity-60'
-              }`}>
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-bold text-foreground">{c.username}</span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${
-                        c.is_active ? 'bg-green-500/10 text-green-600 dark:text-green-400' : 'bg-destructive/10 text-destructive'
-                      }`}>
-                        {c.is_active ? 'Активен' : 'Деактивирован'}
-                      </span>
-                      {c.has_delivery && <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">🚚 Доставка</span>}
-                      {c.has_order && <span className="text-xs px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-400">🛒 Выкуп</span>}
-                      {c.has_pick && <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">🔍 Подбор</span>}
+            {clients.map((c) => {
+              const amb = ambassadors.find(a => a.user_id === c.user_id);
+              const fields = editFields[c.user_id!] || { code: c.unique_code || '', link: amb?.referral_link || '' };
+              const hasChanges = c.user_id && (fields.code !== (c.unique_code || '') || fields.link !== (amb?.referral_link || ''));
+
+              if (c.user_id && !editFields[c.user_id]) {
+                setTimeout(() => setEditFields(prev => ({ ...prev, [c.user_id!]: { code: c.unique_code || '', link: amb?.referral_link || '' } })), 0);
+              }
+
+              return (
+                <div key={c.id} className={`p-4 rounded-xl border transition-all ${
+                  c.is_active ? 'border-border bg-muted/30' : 'border-destructive/20 bg-destructive/5 opacity-60'
+                }`}>
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-bold text-foreground">{c.username}</span>
+                        {c.unique_code && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-mono font-medium">
+                            #{c.unique_code}
+                          </span>
+                        )}
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${
+                          c.is_active ? 'bg-green-500/10 text-green-600 dark:text-green-400' : 'bg-destructive/10 text-destructive'
+                        }`}>
+                          {c.is_active ? 'Активен' : 'Деактивирован'}
+                        </span>
+                        {c.has_order && <span className="text-xs px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-400">🛒 Выкуп</span>}
+                        {c.has_pick && <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">🔍 Подбор</span>}
+                      </div>
+                      {c.display_name && c.display_name !== c.username && (
+                        <p className="text-sm text-muted-foreground">{c.display_name}</p>
+                      )}
                     </div>
-                    {c.display_name && c.display_name !== c.username && (
-                      <p className="text-sm text-muted-foreground">{c.display_name}</p>
-                    )}
+
+                    <div className="flex items-center gap-1">
+                      {resetForm?.username === c.username ? (
+                        <div className="flex items-center gap-2">
+                          <Input type="text" value={resetForm.password}
+                            onChange={(e) => setResetForm({ ...resetForm, password: e.target.value })}
+                            placeholder="Новый пароль" className="w-32 h-8 text-sm bg-muted/50" />
+                          <Button variant="ghost" size="sm" disabled={resetting || !resetForm.password}
+                            onClick={() => resetPassword(c.username, resetForm.password)} className="text-primary">
+                            {resetting ? <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" /> : '✓'}
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => setResetForm(null)}>✕</Button>
+                        </div>
+                      ) : (
+                        <Button variant="ghost" size="sm" onClick={() => setResetForm({ username: c.username, password: '' })}
+                          className="text-muted-foreground hover:text-foreground" title="Сбросить пароль">
+                          <KeyRound size={16} />
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="sm"
+                        onClick={() => toggleActive(c.username, c.is_active)}
+                        disabled={togglingUser === c.username}
+                        className={c.is_active ? 'text-destructive hover:text-destructive' : 'text-green-600 hover:text-green-600'}>
+                        {togglingUser === c.username ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
+                        ) : c.is_active ? <UserX size={16} /> : <UserCheck size={16} />}
+                      </Button>
+                      {c.user_id && (
+                        <>
+                          <Button variant="ghost" size="sm"
+                            onClick={() => toggleModule(c.user_id!, 'has_order', c.has_order, 'Выкуп', c.username)}
+                            className={c.has_order ? 'text-orange-600 hover:text-orange-600' : 'text-muted-foreground hover:text-orange-600'}
+                            title={c.has_order ? 'Отключить Выкуп' : 'Подключить Выкуп'}>
+                            <ShoppingBag size={16} />
+                            {c.has_order && <span className="ml-0.5 text-xs">✓</span>}
+                          </Button>
+                          <Button variant="ghost" size="sm"
+                            onClick={() => toggleModule(c.user_id!, 'has_pick', c.has_pick, 'Подбор', c.username)}
+                            className={c.has_pick ? 'text-cyan-600 hover:text-cyan-600' : 'text-muted-foreground hover:text-cyan-600'}
+                            title={c.has_pick ? 'Отключить Подбор' : 'Подключить Подбор'}>
+                            <Search size={16} />
+                            {c.has_pick && <span className="ml-0.5 text-xs">✓</span>}
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-1">
-                    {resetForm?.username === c.username ? (
-                      <div className="flex items-center gap-2">
-                        <Input type="text" value={resetForm.password}
-                          onChange={(e) => setResetForm({ ...resetForm, password: e.target.value })}
-                          placeholder="Новый пароль" className="w-32 h-8 text-sm bg-muted/50" />
-                        <Button variant="ghost" size="sm" disabled={resetting || !resetForm.password}
-                          onClick={() => resetPassword(c.username, resetForm.password)} className="text-primary">
-                          {resetting ? <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" /> : '✓'}
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => setResetForm(null)}>✕</Button>
+                  {/* Code & Link editing */}
+                  {c.user_id && (
+                    <div className="mt-3 pt-3 border-t border-border space-y-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Hash size={14} className="text-primary shrink-0" />
+                        <span className="text-muted-foreground shrink-0 w-14">Код:</span>
+                        <Input value={fields.code}
+                          onChange={(e) => setEditFields(prev => ({ ...prev, [c.user_id!]: { ...fields, code: e.target.value } }))}
+                          className="h-7 text-sm flex-1" placeholder="Уникальный код" />
                       </div>
-                    ) : (
-                      <Button variant="ghost" size="sm" onClick={() => setResetForm({ username: c.username, password: '' })}
-                        className="text-muted-foreground hover:text-foreground" title="Сбросить пароль">
-                        <KeyRound size={16} />
-                      </Button>
-                    )}
-                    <Button variant="ghost" size="sm"
-                      onClick={() => toggleActive(c.username, c.is_active)}
-                      disabled={togglingUser === c.username}
-                      className={c.is_active ? 'text-destructive hover:text-destructive' : 'text-green-600 hover:text-green-600'}>
-                      {togglingUser === c.username ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
-                      ) : c.is_active ? <UserX size={16} /> : <UserCheck size={16} />}
-                    </Button>
-                    {moduleButtons(c)}
-                  </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Link2 size={14} className="text-amber-500 shrink-0" />
+                        <span className="text-muted-foreground shrink-0 w-14">Ссылка:</span>
+                        <Input value={fields.link}
+                          onChange={(e) => setEditFields(prev => ({ ...prev, [c.user_id!]: { ...fields, link: e.target.value } }))}
+                          className="h-7 text-sm flex-1" placeholder="https://t.me/..." />
+                      </div>
+                      {hasChanges && (
+                        <Button size="sm" className="w-full mt-1 gradient-primary text-primary-foreground"
+                          disabled={savingField === c.user_id}
+                          onClick={() => saveCodeAndLink(c.user_id!)}>
+                          {savingField === c.user_id ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary-foreground border-t-transparent mr-2" />
+                          ) : '💾'} Сохранить
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

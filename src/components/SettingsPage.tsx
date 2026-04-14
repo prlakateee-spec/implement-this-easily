@@ -109,19 +109,20 @@ export function SettingsPage({ userName, onSaveName, userId }: SettingsPageProps
     ));
   };
 
-  // Unique code
+  // Unique code & referral link
   const [uniqueCode, setUniqueCode] = useState<string | null>(null);
+  const [referralLink, setReferralLink] = useState<string | null>(null);
 
   useEffect(() => {
     if (!userId) return;
     (async () => {
       const { supabase } = await import('@/integrations/supabase/client');
-      const { data } = await supabase
-        .from('user_profiles')
-        .select('unique_code')
-        .eq('user_id', userId)
-        .maybeSingle();
-      if (data?.unique_code) setUniqueCode(data.unique_code);
+      const [{ data: profile }, { data: amb }] = await Promise.all([
+        supabase.from('user_profiles').select('unique_code').eq('user_id', userId).maybeSingle(),
+        supabase.from('ambassador_profiles').select('referral_link').eq('user_id', userId).maybeSingle(),
+      ]);
+      if (profile?.unique_code) setUniqueCode(profile.unique_code);
+      if (amb?.referral_link) setReferralLink(amb.referral_link);
     })();
   }, [userId]);
 
@@ -136,6 +137,23 @@ export function SettingsPage({ userName, onSaveName, userId }: SettingsPageProps
           <p className="text-sm text-muted-foreground mb-3">Этот код закреплён за твоим аккаунтом</p>
           <div className="bg-card rounded-xl px-5 py-3 border border-border inline-block">
             <span className="font-mono text-xl font-bold text-primary tracking-wider">{uniqueCode}</span>
+          </div>
+        </div>
+      )}
+
+      {referralLink && (
+        <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-2xl p-6">
+          <h2 className="text-lg font-bold text-foreground mb-2">🔗 Твоя реферальная ссылка</h2>
+          <p className="text-sm text-muted-foreground mb-3">Ссылка для приглашения новых участников</p>
+          <div className="flex items-center gap-3">
+            <a href={referralLink} target="_blank" rel="noopener noreferrer"
+              className="text-primary hover:underline text-sm font-medium truncate flex-1">
+              {referralLink}
+            </a>
+            <Button variant="outline" size="sm"
+              onClick={() => navigator.clipboard.writeText(referralLink)}>
+              📋 Скопировать
+            </Button>
           </div>
         </div>
       )}

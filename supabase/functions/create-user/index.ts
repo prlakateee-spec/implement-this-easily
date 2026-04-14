@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { username: rawUsername, password, display_name } = await req.json();
+    const { username: rawUsername, password, display_name, is_client, unique_code, referral_link } = await req.json();
     const username = rawUsername?.trim().toLowerCase();
 
     if (!username || !password) {
@@ -76,16 +76,34 @@ Deno.serve(async (req) => {
     }
 
     // Create profile
-    const { error: profileError } = await supabase.from("user_profiles").insert({
+    const profileData: Record<string, any> = {
       user_id: authData.user.id,
       username,
       display_name: display_name || username,
-    });
+    };
+
+    if (is_client) {
+      profileData.is_client = true;
+    }
+    if (unique_code) {
+      profileData.unique_code = unique_code.trim();
+    }
+
+    const { error: profileError } = await supabase.from("user_profiles").insert(profileData);
 
     if (profileError) {
       return new Response(JSON.stringify({ error: profileError.message }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // If referral_link provided, create ambassador profile
+    if (referral_link?.trim()) {
+      await supabase.from("ambassador_profiles").insert({
+        user_id: authData.user.id,
+        referral_link: referral_link.trim(),
+        is_active: false,
       });
     }
 
