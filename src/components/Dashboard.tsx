@@ -3,7 +3,8 @@ import {
   Layout, 
   BookOpen, 
   LogOut, 
-  ChevronRight, 
+  ChevronRight,
+  Users,
   Star, 
   Menu, 
   X,
@@ -31,6 +32,7 @@ import { PickForMeModule } from './PickForMeModule';
 import { AdminRequests } from './AdminRequests';
 import { AmbassadorModule } from './AmbassadorModule';
 import { KiraChat } from './KiraChat';
+import { ClientsPanel } from './ClientsPanel';
 import { TOTAL_MODULES, ADMIN_EMAIL } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { useTheme } from './ThemeProvider';
@@ -52,7 +54,7 @@ export function Dashboard({
   progressPercentage,
   onToggleModule 
 }: DashboardProps) {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'knowledge' | 'delivery' | 'order' | 'pick' | 'ambassador' | 'settings' | 'admin' | 'requests' | 'kira'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'knowledge' | 'delivery' | 'order' | 'pick' | 'ambassador' | 'settings' | 'admin' | 'requests' | 'kira' | 'clients'>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unviewedCount, setUnviewedCount] = useState(0);
   const [hasKira, setHasKira] = useState(false);
@@ -60,6 +62,7 @@ export function Dashboard({
   const [hasOrder, setHasOrder] = useState(false);
   const [hasPick, setHasPick] = useState(false);
   const [userLevel, setUserLevel] = useState(1);
+  const [isClient, setIsClient] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -100,7 +103,7 @@ export function Dashboard({
     const checkProfile = async () => {
       const { data } = await supabase
         .from('user_profiles')
-        .select('has_kira, has_delivery, has_order, has_pick, level')
+        .select('has_kira, has_delivery, has_order, has_pick, level, is_client')
         .eq('user_id', user.id)
         .single();
       if (data?.has_kira) setHasKira(true);
@@ -108,25 +111,27 @@ export function Dashboard({
       if (data?.has_order) setHasOrder(true);
       if (data?.has_pick) setHasPick(true);
       if (data?.level) setUserLevel(data.level);
+      if (data?.is_client) setIsClient(true);
     };
     checkProfile();
   }, [user.id, isAdmin]);
 
   const navItems = [
     { id: 'dashboard' as const, icon: Layout, label: 'Главная', badge: 0, highlight: false },
-    { id: 'knowledge' as const, icon: BookOpen, label: 'База знаний', badge: 0, highlight: false },
+    ...(!isClient ? [{ id: 'knowledge' as const, icon: BookOpen, label: 'База знаний', badge: 0, highlight: false }] : []),
     { id: 'settings' as const, icon: UserIcon, label: 'Личный кабинет', badge: 0, highlight: false },
     ...(hasDelivery ? [{ id: 'delivery' as const, icon: Truck, label: 'Доставка', badge: 0, highlight: false }] : []),
     ...(hasOrder ? [{ id: 'order' as const, icon: ShoppingBag, label: 'Закажите мне', badge: 0, highlight: false }] : []),
     ...(hasPick ? [{ id: 'pick' as const, icon: Search, label: 'Подберите мне', badge: 0, highlight: false }] : []),
-    ...(hasKira ? [
+    ...(!isClient && hasKira ? [
       { id: 'kira' as const, icon: MessageCircle, label: 'Кира — байер', badge: 0, highlight: false },
     ] : []),
     ...(isAdmin ? [
+      { id: 'clients' as const, icon: Users, label: 'Клиенты', badge: 0, highlight: false },
       { id: 'requests' as const, icon: ClipboardList, label: 'Заявки', badge: unviewedCount, highlight: false },
       { id: 'admin' as const, icon: Shield, label: 'Пользователи', badge: 0, highlight: false },
     ] : []),
-    { id: 'ambassador' as const, icon: Sparkles, label: 'Стать амбассадором', badge: 0, highlight: true },
+    ...(!isClient ? [{ id: 'ambassador' as const, icon: Sparkles, label: 'Стать амбассадором', badge: 0, highlight: true }] : []),
   ];
 
   const ThemeToggle = () => (
@@ -447,6 +452,7 @@ export function Dashboard({
           <SettingsPage userName={displayName} onSaveName={handleSaveName} userId={user.id} />
         </div>
         {hasKira && <div className={activeTab === 'kira' ? '' : 'hidden'}><KiraChat userId={user.id} /></div>}
+        {isAdmin && <div className={activeTab === 'clients' ? '' : 'hidden'}><ClientsPanel /></div>}
         {isAdmin && <div className={activeTab === 'requests' ? '' : 'hidden'}><AdminRequests /></div>}
         {isAdmin && <div className={activeTab === 'admin' ? '' : 'hidden'}><AdminPanel /></div>}
       </div>
