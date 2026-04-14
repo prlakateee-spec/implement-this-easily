@@ -131,8 +131,10 @@ export const COURSE_LEVELS: Record<string, number> = {
   'wechat': 4,
 };
 
-export function isCourseAccessible(courseId: string, userEmail: string): boolean {
-  return OPEN_COURSES.includes(courseId) || userEmail === ADMIN_EMAIL || userEmail === 'terra_ai_team@kitay.club';
+export function isCourseAccessible(courseId: string, userEmail: string, userLevel: number = 1): boolean {
+  if (userEmail === ADMIN_EMAIL || userEmail === 'terra_ai_team@kitay.club') return true;
+  const requiredLevel = COURSE_LEVELS[courseId] || 1;
+  return userLevel >= requiredLevel;
 }
 
 export function getCourseLockMessage(courseId: string): string {

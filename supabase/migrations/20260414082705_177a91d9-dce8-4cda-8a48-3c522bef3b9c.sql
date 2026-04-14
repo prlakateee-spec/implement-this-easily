@@ -1,0 +1,1 @@
+ALTER TABLE public.user_profiles ADD COLUMN level integer NOT NULL DEFAULT 1;

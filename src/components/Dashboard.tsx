@@ -43,11 +43,7 @@ interface DashboardProps {
   onToggleModule: (moduleId: string) => void;
 }
 
-function getUserLevel(registeredAt?: string): number {
-  if (!registeredAt) return 1;
-  const months = Math.floor((Date.now() - new Date(registeredAt).getTime()) / (1000 * 60 * 60 * 24 * 30));
-  return Math.max(1, months + 1);
-}
+
 
 export function Dashboard({ 
   user, 
@@ -60,6 +56,7 @@ export function Dashboard({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unviewedCount, setUnviewedCount] = useState(0);
   const [hasKira, setHasKira] = useState(false);
+  const [userLevel, setUserLevel] = useState(1);
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -80,7 +77,7 @@ export function Dashboard({
 
   const [displayName, setDisplayName] = useState(user.name);
 
-  const userLevel = getUserLevel(user.registeredAt);
+  
 
   const handleSaveName = async (name: string) => {
     setDisplayName(name);
@@ -94,18 +91,19 @@ export function Dashboard({
 
   const isAdmin = user.email === ADMIN_EMAIL || user.email === 'terra_ai_team@kitay.club';
 
-  // Check if user has Kira access
+  // Check if user has Kira access and fetch level
   useEffect(() => {
-    if (isAdmin) { setHasKira(true); return; }
-    const checkKira = async () => {
+    if (isAdmin) { setHasKira(true); setUserLevel(99); return; }
+    const checkProfile = async () => {
       const { data } = await supabase
         .from('user_profiles')
-        .select('has_kira')
+        .select('has_kira, level')
         .eq('user_id', user.id)
         .single();
       if (data?.has_kira) setHasKira(true);
+      if (data?.level) setUserLevel(data.level);
     };
-    checkKira();
+    checkProfile();
   }, [user.id, isAdmin]);
 
   const navItems = [
@@ -388,9 +386,6 @@ export function Dashboard({
               <span className="text-sm font-medium text-primary bg-primary/10 px-3 py-1 rounded-full">
                 Уровень {userLevel}
               </span>
-              <span className="text-xs text-muted-foreground">
-                1 уровень = 1 месяц в клубе
-              </span>
             </div>
             <div className="flex items-center justify-center">
               <ProgressRing radius={80} stroke={10} progress={progressPercentage} />
@@ -435,6 +430,7 @@ export function Dashboard({
             completedModules={completedModules}
             onToggleModule={onToggleModule}
             userEmail={user.email}
+            userLevel={userLevel}
           />
         </div>
         <div className={activeTab === 'delivery' ? '' : 'hidden'}><DeliveryModule userId={user.id} /></div>

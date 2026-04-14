@@ -18,9 +18,10 @@ interface KnowledgeBaseProps {
   completedModules: string[];
   onToggleModule: (moduleId: string) => void;
   userEmail: string;
+  userLevel?: number;
 }
 
-export function KnowledgeBase({ completedModules, onToggleModule, userEmail }: KnowledgeBaseProps) {
+export function KnowledgeBase({ completedModules, onToggleModule, userEmail, userLevel = 1 }: KnowledgeBaseProps) {
   const [activeCourse, setActiveCourse] = useState<Course | null>(null);
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -263,7 +264,7 @@ export function KnowledgeBase({ completedModules, onToggleModule, userEmail }: K
           ).length;
           const totalModules = course.modules.length;
           const courseProgress = Math.round((completedCount / totalModules) * 100);
-          const isAccessible = isCourseAccessible(course.id, userEmail);
+          const isAccessible = isCourseAccessible(course.id, userEmail, userLevel);
 
           if (viewMode === 'grid') {
             return (
