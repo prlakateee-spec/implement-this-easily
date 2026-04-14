@@ -447,6 +447,49 @@ export function AdminPanel() {
                           <Bot size={16} className="mr-1" />
                           <span className="hidden sm:inline">{u.has_kira ? 'Кира ✓' : 'Кира'}</span>
                         </Button>
+                        {/* Module access toggles */}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={async () => {
+                            await supabase.from('user_profiles').update({ has_delivery: !u.has_delivery }).eq('user_id', u.user_id);
+                            setSuccess(`Доставка ${!u.has_delivery ? 'подключена' : 'отключена'} для "${u.username}"`);
+                            await loadUsers();
+                          }}
+                          className={u.has_delivery ? 'text-emerald-600 hover:text-emerald-600' : 'text-muted-foreground hover:text-emerald-600'}
+                          title={u.has_delivery ? 'Отключить Доставку' : 'Подключить Доставку'}
+                        >
+                          <Truck size={16} className="mr-1" />
+                          <span className="hidden sm:inline">{u.has_delivery ? '✓' : ''}</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={async () => {
+                            await supabase.from('user_profiles').update({ has_order: !u.has_order }).eq('user_id', u.user_id);
+                            setSuccess(`Выкуп ${!u.has_order ? 'подключен' : 'отключён'} для "${u.username}"`);
+                            await loadUsers();
+                          }}
+                          className={u.has_order ? 'text-orange-600 hover:text-orange-600' : 'text-muted-foreground hover:text-orange-600'}
+                          title={u.has_order ? 'Отключить Выкуп' : 'Подключить Выкуп'}
+                        >
+                          <ShoppingBag size={16} className="mr-1" />
+                          <span className="hidden sm:inline">{u.has_order ? '✓' : ''}</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={async () => {
+                            await supabase.from('user_profiles').update({ has_pick: !u.has_pick }).eq('user_id', u.user_id);
+                            setSuccess(`Подбор ${!u.has_pick ? 'подключён' : 'отключён'} для "${u.username}"`);
+                            await loadUsers();
+                          }}
+                          className={u.has_pick ? 'text-cyan-600 hover:text-cyan-600' : 'text-muted-foreground hover:text-cyan-600'}
+                          title={u.has_pick ? 'Отключить Подбор' : 'Подключить Подбор'}
+                        >
+                          <Search size={16} className="mr-1" />
+                          <span className="hidden sm:inline">{u.has_pick ? '✓' : ''}</span>
+                        </Button>
                         <select
                           value={u.level}
                           onChange={async (e) => {
