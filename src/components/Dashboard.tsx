@@ -56,6 +56,7 @@ export function Dashboard({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unviewedCount, setUnviewedCount] = useState(0);
   const [hasKira, setHasKira] = useState(false);
+  const [userLevel, setUserLevel] = useState(1);
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -76,7 +77,7 @@ export function Dashboard({
 
   const [displayName, setDisplayName] = useState(user.name);
 
-  const userLevel = getUserLevel(user.registeredAt);
+  // Removed auto-calculation - level comes from DB
 
   const handleSaveName = async (name: string) => {
     setDisplayName(name);
