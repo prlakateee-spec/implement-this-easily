@@ -109,19 +109,20 @@ export function SettingsPage({ userName, onSaveName, userId }: SettingsPageProps
     ));
   };
 
-  // Unique code
+  // Unique code & referral link
   const [uniqueCode, setUniqueCode] = useState<string | null>(null);
+  const [referralLink, setReferralLink] = useState<string | null>(null);
 
   useEffect(() => {
     if (!userId) return;
     (async () => {
       const { supabase } = await import('@/integrations/supabase/client');
-      const { data } = await supabase
-        .from('user_profiles')
-        .select('unique_code')
-        .eq('user_id', userId)
-        .maybeSingle();
-      if (data?.unique_code) setUniqueCode(data.unique_code);
+      const [{ data: profile }, { data: amb }] = await Promise.all([
+        supabase.from('user_profiles').select('unique_code').eq('user_id', userId).maybeSingle(),
+        supabase.from('ambassador_profiles').select('referral_link').eq('user_id', userId).maybeSingle(),
+      ]);
+      if (profile?.unique_code) setUniqueCode(profile.unique_code);
+      if (amb?.referral_link) setReferralLink(amb.referral_link);
     })();
   }, [userId]);
 
