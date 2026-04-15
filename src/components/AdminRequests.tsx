@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import {
   RefreshCw, Truck, ShoppingBag, Package, User, Phone, MapPin,
   Calendar, ExternalLink, ChevronLeft, MessageCircle, Eye, Sparkles,
-  DollarSign, Users, Link2, Check, Search, Palette, Ruler, Hash, Image as ImageIcon
+  DollarSign, Users, Link2, Check, Search, Palette, Ruler, Hash, Image as ImageIcon, Trash2
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 function AmbassadorDetail({ ambassador: a, profiles, onBack, onActivate, onUpdateBalance, onUpdateStats, formatDate }: {
   ambassador: { id: string; user_id: string; referral_link: string | null; balance_usd: number; is_active: boolean; referrals_channel: number; referrals_club: number; referrals_orders: number; created_at: string };
