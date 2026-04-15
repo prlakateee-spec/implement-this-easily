@@ -429,10 +429,14 @@ export function AdminRequests() {
           <ChevronLeft size={18} /> Назад к заявкам
         </button>
         <div className="bg-card rounded-2xl p-6 border border-border shadow-soft space-y-5">
-          <h2 className="text-xl font-bold text-foreground">Заявка на подбор</h2>
-          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => deletePick(p.id)}>
-            <Trash2 size={16} className="mr-1" /> Удалить
-          </Button>
+          <div className="flex items-start justify-between">
+            <h2 className="text-xl font-bold text-foreground">Заявка на подбор</h2>
+            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => deletePick(p.id)}>
+              <Trash2 size={16} className="mr-1" /> Удалить
+            </Button>
+          </div>
+
+          <div className="bg-muted/50 rounded-xl p-4 space-y-2">
             <p className="text-xs text-muted-foreground font-semibold uppercase">Статус</p>
             <Select value={p.status} onValueChange={(v) => updatePickStatus(p.id, v)}>
               <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
