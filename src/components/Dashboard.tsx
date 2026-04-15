@@ -54,7 +54,6 @@ export function Dashboard({
   progressPercentage,
   onToggleModule 
 }: DashboardProps) {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'knowledge' | 'delivery' | 'order' | 'pick' | 'ambassador' | 'settings' | 'admin' | 'requests' | 'kira' | 'clients'>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unviewedCount, setUnviewedCount] = useState(0);
   const [hasKira, setHasKira] = useState(false);
@@ -63,6 +62,8 @@ export function Dashboard({
   const [hasPick, setHasPick] = useState(false);
   const [userLevel, setUserLevel] = useState(1);
   const [isClient, setIsClient] = useState(false);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'knowledge' | 'delivery' | 'order' | 'pick' | 'ambassador' | 'settings' | 'admin' | 'requests' | 'kira' | 'clients'>('dashboard');
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
