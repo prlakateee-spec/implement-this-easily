@@ -350,6 +350,27 @@ export function AdminRequests() {
     if (selectedAmbassador?.id === id) setSelectedAmbassador({ ...selectedAmbassador, balance_usd: balance } as AmbassadorProfile);
   };
 
+  const deleteDelivery = async (id: string) => {
+    await supabase.from('deliveries').delete().eq('id', id);
+    setDeliveries(prev => prev.filter(d => d.id !== id));
+    setSelectedDelivery(null);
+    toast.success('Заявка удалена');
+  };
+
+  const deleteOrder = async (id: string) => {
+    await supabase.from('order_requests').delete().eq('id', id);
+    setOrders(prev => prev.filter(o => o.id !== id));
+    setSelectedOrder(null);
+    toast.success('Заявка удалена');
+  };
+
+  const deletePick = async (id: string) => {
+    await supabase.from('pick_requests').delete().eq('id', id);
+    setPicks(prev => prev.filter(p => p.id !== id));
+    setSelectedPick(null);
+    toast.success('Заявка удалена');
+  };
+
   const newAmbassadorsCount = ambassadors.filter(a => a.is_active && !a.admin_viewed_at).length;
   const newPicksCount = picks.filter(p => isNew(p.admin_viewed_at)).length;
 
