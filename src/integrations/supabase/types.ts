@@ -315,13 +315,20 @@ export type Database = {
           batch_id: string | null
           color: string | null
           created_at: string
+          delivery_address: string | null
+          delivery_type: string | null
           id: string
           image_url: string | null
+          packaging_price: number | null
+          packaging_type: string | null
           price_rub: number | null
           product_link: string
           quantity: number
+          recipient_name: string | null
+          recipient_phone: string | null
           size: string | null
           status: string
+          transport_company: string | null
           updated_at: string
           user_id: string
         }
@@ -330,13 +337,20 @@ export type Database = {
           batch_id?: string | null
           color?: string | null
           created_at?: string
+          delivery_address?: string | null
+          delivery_type?: string | null
           id?: string
           image_url?: string | null
+          packaging_price?: number | null
+          packaging_type?: string | null
           price_rub?: number | null
           product_link?: string
           quantity?: number
+          recipient_name?: string | null
+          recipient_phone?: string | null
           size?: string | null
           status?: string
+          transport_company?: string | null
           updated_at?: string
           user_id: string
         }
@@ -345,13 +359,20 @@ export type Database = {
           batch_id?: string | null
           color?: string | null
           created_at?: string
+          delivery_address?: string | null
+          delivery_type?: string | null
           id?: string
           image_url?: string | null
+          packaging_price?: number | null
+          packaging_type?: string | null
           price_rub?: number | null
           product_link?: string
           quantity?: number
+          recipient_name?: string | null
+          recipient_phone?: string | null
           size?: string | null
           status?: string
+          transport_company?: string | null
           updated_at?: string
           user_id?: string
         }
