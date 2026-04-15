@@ -509,6 +509,9 @@ export function AdminRequests() {
         <div className="bg-card rounded-2xl p-6 border border-border shadow-soft space-y-5">
           <div className="flex items-start justify-between gap-3">
             <h2 className="text-xl font-bold text-foreground">{d.product_name}</h2>
+            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => deleteDelivery(d.id)}>
+              <Trash2 size={16} className="mr-1" /> Удалить
+            </Button>
           </div>
 
           <div className="bg-muted/50 rounded-xl p-4 space-y-2">
@@ -560,6 +563,9 @@ export function AdminRequests() {
         <div className="bg-card rounded-2xl p-6 border border-border shadow-soft space-y-5">
           <div className="flex items-start justify-between gap-3">
             <h2 className="text-xl font-bold text-foreground">{o.product_name}</h2>
+            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => deleteOrder(o.id)}>
+              <Trash2 size={16} className="mr-1" /> Удалить
+            </Button>
           </div>
 
           <div className="bg-muted/50 rounded-xl p-4 space-y-2">
