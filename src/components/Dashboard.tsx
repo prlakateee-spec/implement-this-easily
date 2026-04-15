@@ -54,7 +54,6 @@ export function Dashboard({
   progressPercentage,
   onToggleModule 
 }: DashboardProps) {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'knowledge' | 'delivery' | 'order' | 'pick' | 'ambassador' | 'settings' | 'admin' | 'requests' | 'kira' | 'clients'>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unviewedCount, setUnviewedCount] = useState(0);
   const [hasKira, setHasKira] = useState(false);
@@ -63,6 +62,8 @@ export function Dashboard({
   const [hasPick, setHasPick] = useState(false);
   const [userLevel, setUserLevel] = useState(1);
   const [isClient, setIsClient] = useState(false);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'knowledge' | 'delivery' | 'order' | 'pick' | 'ambassador' | 'settings' | 'admin' | 'requests' | 'kira' | 'clients'>('dashboard');
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -99,22 +100,29 @@ export function Dashboard({
 
   // Check if user has Kira access and fetch level
   useEffect(() => {
-    if (isAdmin) { setHasKira(true); setHasDelivery(true); setHasOrder(true); setHasPick(true); setUserLevel(99); return; }
+    if (isAdmin) {
+      setHasKira(true); setHasDelivery(true); setHasOrder(true); setHasPick(true); setUserLevel(99);
+      setProfileLoaded(true);
+      return;
+    }
     const checkProfile = async () => {
       const { data } = await supabase
         .from('user_profiles')
         .select('has_kira, has_delivery, has_order, has_pick, level, is_client')
         .eq('user_id', user.id)
         .single();
-      if (data?.has_kira) setHasKira(true);
-      if (data?.has_delivery) setHasDelivery(true);
-      if (data?.has_order) setHasOrder(true);
-      if (data?.has_pick) setHasPick(true);
-      if (data?.level) setUserLevel(data.level);
-      if (data?.is_client) {
-        setIsClient(true);
-        setActiveTab('settings');
+      if (data) {
+        setHasKira(data.has_kira);
+        setHasDelivery(data.has_delivery);
+        setHasOrder(data.has_order);
+        setHasPick(data.has_pick);
+        setUserLevel(data.level || 1);
+        setIsClient(data.is_client);
+        if (data.is_client) {
+          setActiveTab('settings');
+        }
       }
+      setProfileLoaded(true);
     };
     checkProfile();
   }, [user.id, isAdmin]);
@@ -136,6 +144,14 @@ export function Dashboard({
     ] : []),
     { id: 'ambassador' as const, icon: Sparkles, label: 'Стать амбассадором', badge: 0, highlight: true },
   ];
+
+  if (!profileLoaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   const ThemeToggle = () => (
     <button
