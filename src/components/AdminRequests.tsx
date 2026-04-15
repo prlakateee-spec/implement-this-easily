@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import {
   RefreshCw, Truck, ShoppingBag, Package, User, Phone, MapPin,
   Calendar, ExternalLink, ChevronLeft, MessageCircle, Eye, Sparkles,
-  DollarSign, Users, Link2, Check, Search, Palette, Ruler, Hash, Image as ImageIcon
+  DollarSign, Users, Link2, Check, Search, Palette, Ruler, Hash, Image as ImageIcon, Trash2
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 function AmbassadorDetail({ ambassador: a, profiles, onBack, onActivate, onUpdateBalance, onUpdateStats, formatDate }: {
   ambassador: { id: string; user_id: string; referral_link: string | null; balance_usd: number; is_active: boolean; referrals_channel: number; referrals_club: number; referrals_orders: number; created_at: string };
@@ -349,6 +350,27 @@ export function AdminRequests() {
     if (selectedAmbassador?.id === id) setSelectedAmbassador({ ...selectedAmbassador, balance_usd: balance } as AmbassadorProfile);
   };
 
+  const deleteDelivery = async (id: string) => {
+    await supabase.from('deliveries').delete().eq('id', id);
+    setDeliveries(prev => prev.filter(d => d.id !== id));
+    setSelectedDelivery(null);
+    toast.success('Заявка удалена');
+  };
+
+  const deleteOrder = async (id: string) => {
+    await supabase.from('order_requests').delete().eq('id', id);
+    setOrders(prev => prev.filter(o => o.id !== id));
+    setSelectedOrder(null);
+    toast.success('Заявка удалена');
+  };
+
+  const deletePick = async (id: string) => {
+    await supabase.from('pick_requests').delete().eq('id', id);
+    setPicks(prev => prev.filter(p => p.id !== id));
+    setSelectedPick(null);
+    toast.success('Заявка удалена');
+  };
+
   const newAmbassadorsCount = ambassadors.filter(a => a.is_active && !a.admin_viewed_at).length;
   const newPicksCount = picks.filter(p => isNew(p.admin_viewed_at)).length;
 
@@ -407,7 +429,12 @@ export function AdminRequests() {
           <ChevronLeft size={18} /> Назад к заявкам
         </button>
         <div className="bg-card rounded-2xl p-6 border border-border shadow-soft space-y-5">
-          <h2 className="text-xl font-bold text-foreground">Заявка на подбор</h2>
+          <div className="flex items-start justify-between">
+            <h2 className="text-xl font-bold text-foreground">Заявка на подбор</h2>
+            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => deletePick(p.id)}>
+              <Trash2 size={16} className="mr-1" /> Удалить
+            </Button>
+          </div>
 
           <div className="bg-muted/50 rounded-xl p-4 space-y-2">
             <p className="text-xs text-muted-foreground font-semibold uppercase">Статус</p>
@@ -482,6 +509,9 @@ export function AdminRequests() {
         <div className="bg-card rounded-2xl p-6 border border-border shadow-soft space-y-5">
           <div className="flex items-start justify-between gap-3">
             <h2 className="text-xl font-bold text-foreground">{d.product_name}</h2>
+            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => deleteDelivery(d.id)}>
+              <Trash2 size={16} className="mr-1" /> Удалить
+            </Button>
           </div>
 
           <div className="bg-muted/50 rounded-xl p-4 space-y-2">
@@ -533,6 +563,9 @@ export function AdminRequests() {
         <div className="bg-card rounded-2xl p-6 border border-border shadow-soft space-y-5">
           <div className="flex items-start justify-between gap-3">
             <h2 className="text-xl font-bold text-foreground">{o.product_name}</h2>
+            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => deleteOrder(o.id)}>
+              <Trash2 size={16} className="mr-1" /> Удалить
+            </Button>
           </div>
 
           <div className="bg-muted/50 rounded-xl p-4 space-y-2">
