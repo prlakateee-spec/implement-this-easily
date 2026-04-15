@@ -314,13 +314,6 @@ export function PickForMeModule({ userId }: Props) {
           </div>
         </>
       )}
-      <div className="space-y-1">
-        <Label className="text-xs">Упаковка</Label>
-        <Select value={profile.packaging_type} onValueChange={handlePackagingChange}>
-          <SelectTrigger><SelectValue placeholder="Выберите упаковку" /></SelectTrigger>
-          <SelectContent>{PACKAGING_OPTIONS.map(o => <SelectItem key={o.label} value={o.label}>{o.label} — ${o.price}</SelectItem>)}</SelectContent>
-        </Select>
-      </div>
       <div className="flex gap-2">
         <Button size="sm" onClick={() => saveProfile(profile)}><Save size={14} className="mr-1" /> Сохранить</Button>
         <Button size="sm" variant="ghost" onClick={() => { setEditingProfile(null); setIsAddingNew(false); }}><X size={14} className="mr-1" /> Отмена</Button>
