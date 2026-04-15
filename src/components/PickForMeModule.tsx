@@ -272,7 +272,7 @@ export function PickForMeModule({ userId }: Props) {
   };
 
   const deleteBatch = async (batchId: string) => {
-    const batchItems = requests.filter(r => r.batch_id === batchId && r.status === 'pending');
+    const batchItems = requests.filter(r => r.batch_id === batchId);
     if (batchItems.length === 0) return;
     for (const item of batchItems) {
       await supabase.from('pick_requests').delete().eq('id', item.id);
