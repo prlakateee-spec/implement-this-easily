@@ -100,22 +100,29 @@ export function Dashboard({
 
   // Check if user has Kira access and fetch level
   useEffect(() => {
-    if (isAdmin) { setHasKira(true); setHasDelivery(true); setHasOrder(true); setHasPick(true); setUserLevel(99); return; }
+    if (isAdmin) {
+      setHasKira(true); setHasDelivery(true); setHasOrder(true); setHasPick(true); setUserLevel(99);
+      setProfileLoaded(true);
+      return;
+    }
     const checkProfile = async () => {
       const { data } = await supabase
         .from('user_profiles')
         .select('has_kira, has_delivery, has_order, has_pick, level, is_client')
         .eq('user_id', user.id)
         .single();
-      if (data?.has_kira) setHasKira(true);
-      if (data?.has_delivery) setHasDelivery(true);
-      if (data?.has_order) setHasOrder(true);
-      if (data?.has_pick) setHasPick(true);
-      if (data?.level) setUserLevel(data.level);
-      if (data?.is_client) {
-        setIsClient(true);
-        setActiveTab('settings');
+      if (data) {
+        setHasKira(data.has_kira);
+        setHasDelivery(data.has_delivery);
+        setHasOrder(data.has_order);
+        setHasPick(data.has_pick);
+        setUserLevel(data.level || 1);
+        setIsClient(data.is_client);
+        if (data.is_client) {
+          setActiveTab('settings');
+        }
       }
+      setProfileLoaded(true);
     };
     checkProfile();
   }, [user.id, isAdmin]);
