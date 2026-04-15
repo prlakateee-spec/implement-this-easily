@@ -424,21 +424,18 @@ export function PickForMeModule({ userId }: Props) {
               </div>
 
               <div className="space-y-1">
-                <span className="text-xs font-medium text-foreground flex items-center gap-1"><ImageIcon size={12} /> Скриншот</span>
-                <div
+                <Label htmlFor={`pick-image-${idx}`} className="text-xs font-medium text-foreground flex items-center gap-1"><ImageIcon size={12} /> Скриншот</Label>
+                <label
+                  htmlFor={`pick-image-${idx}`}
                   className="flex items-center justify-center border-2 border-dashed border-border rounded-xl p-3 cursor-pointer hover:border-primary/50 transition-colors"
-                  onClick={() => {
-                    const input = document.getElementById(`pick-image-${idx}`) as HTMLInputElement;
-                    if (input) { input.value = ''; input.click(); }
-                  }}
                 >
                   {item.imagePreview ? (
                     <img src={item.imagePreview} alt="Preview" className="max-h-24 rounded-lg object-contain" />
                   ) : (
                     <p className="text-xs text-muted-foreground">Нажмите для загрузки</p>
                   )}
-                </div>
-                <input id={`pick-image-${idx}`} type="file" accept="image/*" className="hidden" onChange={e => handleImageChange(idx, e)} />
+                </label>
+                <input id={`pick-image-${idx}`} type="file" accept="image/*" className="sr-only" onChange={e => handleImageChange(idx, e)} />
               </div>
             </div>
           ))}
