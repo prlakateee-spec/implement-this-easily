@@ -204,7 +204,7 @@ export function PickForMeModule({ userId }: Props) {
 
   const uploadImage = async (file: File): Promise<string | null> => {
     const ext = file.name.split('.').pop();
-    const path = `pick/${userId}/${Date.now()}_${Math.random().toString(36).slice(2, 6)}.${ext}`;
+    const path = `${userId}/pick/${Date.now()}_${Math.random().toString(36).slice(2, 6)}.${ext}`;
     const { error } = await supabase.storage.from('order-images').upload(path, file);
     if (error) return null;
     const { data } = supabase.storage.from('order-images').getPublicUrl(path);
