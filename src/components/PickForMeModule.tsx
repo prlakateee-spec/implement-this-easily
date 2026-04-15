@@ -491,11 +491,9 @@ export function PickForMeModule({ userId }: Props) {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground">{formatDate(items[0].created_at)}</span>
-                    {allPending && (
-                      <button onClick={() => deleteBatch(batchKey)} className="p-1 text-muted-foreground hover:text-destructive transition-colors">
-                        <Trash2 size={15} />
-                      </button>
-                    )}
+                    <button onClick={() => deleteBatch(batchKey)} className="p-1 text-muted-foreground hover:text-destructive transition-colors">
+                      <Trash2 size={15} />
+                    </button>
                   </div>
                 </div>
                 {first.recipient_name && (

@@ -642,11 +642,9 @@ function OrderCard({ order, onDelete, completed, statusLabels }: { order: OrderR
           <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColorMap[order.status] || 'bg-muted text-muted-foreground'}`}>
             {statusLabels[order.status] || order.status}
           </span>
-          {!completed && order.status === 'pending' && (
-            <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => onDelete(order.id)}>
-              <Trash2 size={14} />
-            </Button>
-          )}
+          <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => onDelete(order.id)}>
+            <Trash2 size={14} />
+          </Button>
         </div>
       </div>
       {(order.qr_image_url || order.info_image_url) && (
