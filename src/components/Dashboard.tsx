@@ -131,7 +131,7 @@ export function Dashboard({
     ...(!isClient ? [{ id: 'dashboard' as const, icon: Layout, label: 'Главная', badge: 0, highlight: false }] : []),
     ...(!isClient ? [{ id: 'knowledge' as const, icon: BookOpen, label: 'База знаний', badge: 0, highlight: false }] : []),
     { id: 'settings' as const, icon: UserIcon, label: 'Личный кабинет', badge: 0, highlight: false },
-    ...(!isClient && hasDelivery ? [{ id: 'delivery' as const, icon: Truck, label: 'Доставка', badge: 0, highlight: false }] : []),
+    ...(!isClient && hasDelivery ? [{ id: 'delivery' as const, icon: Truck, label: 'Мои трек-номера', badge: 0, highlight: false }] : []),
     ...(hasOrder ? [{ id: 'order' as const, icon: ShoppingBag, label: 'Закажите мне', badge: 0, highlight: false }] : []),
     ...(hasPick ? [{ id: 'pick' as const, icon: Search, label: 'Подберите мне', badge: 0, highlight: false }] : []),
     ...(!isClient && hasKira ? [
