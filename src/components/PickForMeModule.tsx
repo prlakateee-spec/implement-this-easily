@@ -3,10 +3,32 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  Plus, Trash2, ExternalLink, ShoppingCart, ChevronLeft, Image as ImageIcon, Palette, Ruler, Hash, X
+  Plus, Trash2, ExternalLink, ShoppingCart, ChevronLeft, Image as ImageIcon,
+  Palette, Ruler, Hash, X, ChevronDown, ChevronUp, Edit2, Save, Check, User
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+const TRANSPORT_COMPANIES = [
+  'Желдорэкспедиция', 'Мейджик транс', 'Байкал сервис', 'Деловые Линии',
+  'Мега транс', 'ПЭК', 'КСЭ', 'СДЭК', 'Кит', 'Энергия', 'Возовоз',
+  'Виктория', 'Азбука логистики', 'Байт транзит',
+];
+
+const PACKAGING_OPTIONS = [
+  { label: 'Мешок', price: 2 },
+  { label: 'Коробка', price: 5 },
+  { label: 'Уголки', price: 7 },
+  { label: 'Коробка + уголки', price: 12 },
+  { label: 'Обрешетка', price: 12 },
+  { label: 'Паллет + обрешетка (за куб)', price: 30 },
+  { label: 'Деревянный ящик', price: 70 },
+  { label: 'Коробка + сетка', price: 15 },
+  { label: 'Обрешетка + сетка', price: 22 },
+];
 
 interface PickRequest {
   id: string;
@@ -19,6 +41,9 @@ interface PickRequest {
   status: string;
   created_at: string;
   batch_id?: string | null;
+  recipient_name?: string;
+  recipient_phone?: string;
+  delivery_type?: string;
 }
 
 interface CartItem {
@@ -30,6 +55,27 @@ interface CartItem {
   imageFile: File | null;
   imagePreview: string | null;
 }
+
+interface ShippingProfile {
+  id?: string;
+  recipient_name: string;
+  recipient_phone: string;
+  delivery_type: 'pickup' | 'redirect';
+  transport_company: string;
+  delivery_address: string;
+  packaging_type: string;
+  packaging_price: number;
+}
+
+const emptyProfile: ShippingProfile = {
+  recipient_name: '',
+  recipient_phone: '',
+  delivery_type: 'pickup',
+  transport_company: '',
+  delivery_address: '',
+  packaging_type: '',
+  packaging_price: 0,
+};
 
 const emptyItem = (): CartItem => ({ link: '', priceRub: '', color: '', size: '', quantity: '1', imageFile: null, imagePreview: null });
 
@@ -53,6 +99,13 @@ export function PickForMeModule({ userId }: Props) {
   const [cart, setCart] = useState<CartItem[]>([emptyItem()]);
   const [submitting, setSubmitting] = useState(false);
 
+  // Shipping profiles
+  const [profiles, setProfiles] = useState<ShippingProfile[]>([]);
+  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
+  const [editingProfile, setEditingProfile] = useState<ShippingProfile | null>(null);
+  const [isAddingNew, setIsAddingNew] = useState(false);
+  const [profilesExpanded, setProfilesExpanded] = useState(true);
+
   const load = async () => {
     setLoading(true);
     const { data } = await supabase
@@ -64,7 +117,70 @@ export function PickForMeModule({ userId }: Props) {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, [userId]);
+  const loadProfiles = async () => {
+    const { data } = await supabase
+      .from('shipping_profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: true });
+    if (data && data.length > 0) {
+      const mapped = data.map(d => ({
+        id: d.id,
+        recipient_name: d.recipient_name || '',
+        recipient_phone: d.recipient_phone || '',
+        delivery_type: (d.delivery_type as 'pickup' | 'redirect') || 'pickup',
+        transport_company: d.transport_company || '',
+        delivery_address: d.delivery_address || '',
+        packaging_type: d.packaging_type || '',
+        packaging_price: Number(d.packaging_price) || 0,
+      }));
+      setProfiles(mapped);
+      if (!selectedProfileId) setSelectedProfileId(mapped[0].id!);
+    }
+  };
+
+  useEffect(() => { load(); loadProfiles(); }, [userId]);
+
+  const selectedProfile = profiles.find(p => p.id === selectedProfileId);
+
+  const saveProfile = async (profile: ShippingProfile) => {
+    if (!profile.recipient_name.trim() || !profile.recipient_phone.trim()) {
+      toast.error('Заполните ФИО и телефон');
+      return;
+    }
+    const payload = {
+      user_id: userId,
+      recipient_name: profile.recipient_name.trim(),
+      recipient_phone: profile.recipient_phone.trim(),
+      delivery_type: profile.delivery_type,
+      transport_company: profile.transport_company || null,
+      delivery_address: profile.delivery_address.trim() || null,
+      packaging_type: profile.packaging_type || null,
+      packaging_price: profile.packaging_price || null,
+    };
+    if (profile.id) {
+      await supabase.from('shipping_profiles').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', profile.id);
+    } else {
+      await supabase.from('shipping_profiles').insert(payload);
+    }
+    toast.success('Данные сохранены ✅');
+    setEditingProfile(null);
+    setIsAddingNew(false);
+    await loadProfiles();
+  };
+
+  const deleteProfile = async (id: string) => {
+    await supabase.from('shipping_profiles').delete().eq('id', id);
+    if (selectedProfileId === id) setSelectedProfileId(null);
+    toast.success('Профиль удалён');
+    await loadProfiles();
+  };
+
+  const handlePackagingChange = (value: string) => {
+    if (!editingProfile) return;
+    const opt = PACKAGING_OPTIONS.find(o => o.label === value);
+    setEditingProfile({ ...editingProfile, packaging_type: value, packaging_price: opt?.price || 0 });
+  };
 
   const updateCartItem = (index: number, field: keyof CartItem, value: any) => {
     setCart(prev => prev.map((item, i) => i === index ? { ...item, [field]: value } : item));
@@ -97,6 +213,7 @@ export function PickForMeModule({ userId }: Props) {
   const handleSubmit = async () => {
     const validItems = cart.filter(item => item.link.trim());
     if (validItems.length === 0) { toast.error('Добавьте хотя бы один товар со ссылкой'); return; }
+    if (!selectedProfile) { toast.error('Выберите профиль получателя'); return; }
     setSubmitting(true);
 
     const batchId = crypto.randomUUID();
@@ -114,6 +231,13 @@ export function PickForMeModule({ userId }: Props) {
         size: item.size.trim(),
         quantity: parseInt(item.quantity) || 1,
         batch_id: batchId,
+        recipient_name: selectedProfile.recipient_name,
+        recipient_phone: selectedProfile.recipient_phone,
+        delivery_type: selectedProfile.delivery_type,
+        transport_company: selectedProfile.transport_company || null,
+        delivery_address: selectedProfile.delivery_address || null,
+        packaging_type: selectedProfile.packaging_type || null,
+        packaging_price: selectedProfile.packaging_price || null,
       });
     }
 
@@ -145,13 +269,63 @@ export function PickForMeModule({ userId }: Props) {
 
   const formatDate = (d: string) => new Date(d).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-  // Group requests by batch_id
   const grouped = requests.reduce<Record<string, PickRequest[]>>((acc, r) => {
     const key = r.batch_id || r.id;
     if (!acc[key]) acc[key] = [];
     acc[key].push(r);
     return acc;
   }, {});
+
+  // --- Profile editing form ---
+  const renderProfileForm = (profile: ShippingProfile) => (
+    <div className="space-y-3 bg-muted/30 rounded-xl p-4 border border-border">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <Label className="text-xs">ФИО получателя *</Label>
+          <Input value={profile.recipient_name} onChange={e => setEditingProfile({ ...profile, recipient_name: e.target.value })} placeholder="Иванов Иван Иванович" />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">Телефон *</Label>
+          <Input value={profile.recipient_phone} onChange={e => setEditingProfile({ ...profile, recipient_phone: e.target.value })} placeholder="+7 999 123-45-67" />
+        </div>
+      </div>
+      <div className="space-y-1">
+        <Label className="text-xs">Тип доставки</Label>
+        <RadioGroup value={profile.delivery_type} onValueChange={v => setEditingProfile({ ...profile, delivery_type: v as 'pickup' | 'redirect' })}>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5"><RadioGroupItem value="pickup" id="pick-pickup" /><Label htmlFor="pick-pickup" className="text-xs">Самовывоз</Label></div>
+            <div className="flex items-center gap-1.5"><RadioGroupItem value="redirect" id="pick-redirect" /><Label htmlFor="pick-redirect" className="text-xs">Переадресация</Label></div>
+          </div>
+        </RadioGroup>
+      </div>
+      {profile.delivery_type === 'redirect' && (
+        <>
+          <div className="space-y-1">
+            <Label className="text-xs">Транспортная компания</Label>
+            <Select value={profile.transport_company} onValueChange={v => setEditingProfile({ ...profile, transport_company: v })}>
+              <SelectTrigger><SelectValue placeholder="Выберите ТК" /></SelectTrigger>
+              <SelectContent>{TRANSPORT_COMPANIES.map(tc => <SelectItem key={tc} value={tc}>{tc}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Адрес доставки</Label>
+            <Input value={profile.delivery_address} onChange={e => setEditingProfile({ ...profile, delivery_address: e.target.value })} placeholder="Город, улица, дом..." />
+          </div>
+        </>
+      )}
+      <div className="space-y-1">
+        <Label className="text-xs">Упаковка</Label>
+        <Select value={profile.packaging_type} onValueChange={handlePackagingChange}>
+          <SelectTrigger><SelectValue placeholder="Выберите упаковку" /></SelectTrigger>
+          <SelectContent>{PACKAGING_OPTIONS.map(o => <SelectItem key={o.label} value={o.label}>{o.label} — ${o.price}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      <div className="flex gap-2">
+        <Button size="sm" onClick={() => saveProfile(profile)}><Save size={14} className="mr-1" /> Сохранить</Button>
+        <Button size="sm" variant="ghost" onClick={() => { setEditingProfile(null); setIsAddingNew(false); }}><X size={14} className="mr-1" /> Отмена</Button>
+      </div>
+    </div>
+  );
 
   if (showForm) {
     return (
@@ -165,6 +339,53 @@ export function PickForMeModule({ userId }: Props) {
             <Badge variant="secondary" className="text-sm">{cart.length} товар(ов)</Badge>
           </div>
 
+          {/* Shipping profile section */}
+          <div className="bg-card rounded-2xl border border-border shadow-soft overflow-hidden">
+            <button
+              onClick={() => setProfilesExpanded(!profilesExpanded)}
+              className="w-full flex items-center justify-between px-4 py-3 bg-muted/30 border-b border-border hover:bg-muted/50 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <User size={15} className="text-muted-foreground" />
+                <span className="text-sm font-semibold text-foreground">Данные получателя</span>
+              </div>
+              {profilesExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
+            {profilesExpanded && (
+              <div className="p-4 space-y-3">
+                {profiles.length > 0 && (
+                  <div className="space-y-2">
+                    {profiles.map(p => (
+                      <div
+                        key={p.id}
+                        className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-colors ${selectedProfileId === p.id ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/30'}`}
+                        onClick={() => setSelectedProfileId(p.id!)}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{p.recipient_name}</p>
+                          <p className="text-xs text-muted-foreground">{p.recipient_phone} · {p.delivery_type === 'pickup' ? 'Самовывоз' : p.transport_company || 'Переадресация'}</p>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          {selectedProfileId === p.id && <Check size={14} className="text-primary" />}
+                          <button onClick={e => { e.stopPropagation(); setEditingProfile({ ...p }); setIsAddingNew(false); }} className="p-1 text-muted-foreground hover:text-foreground"><Edit2 size={13} /></button>
+                          <button onClick={e => { e.stopPropagation(); deleteProfile(p.id!); }} className="p-1 text-muted-foreground hover:text-destructive"><Trash2 size={13} /></button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {editingProfile && !isAddingNew && renderProfileForm(editingProfile)}
+                {isAddingNew && editingProfile && renderProfileForm(editingProfile)}
+                {!editingProfile && (
+                  <Button variant="outline" size="sm" onClick={() => { setEditingProfile({ ...emptyProfile }); setIsAddingNew(true); }} className="w-full">
+                    <Plus size={14} className="mr-1" /> Добавить получателя
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Cart items */}
           {cart.map((item, idx) => (
             <div key={idx} className="bg-card rounded-2xl p-5 border border-border shadow-soft space-y-4 relative">
               <div className="flex items-center justify-between">
@@ -250,6 +471,7 @@ export function PickForMeModule({ userId }: Props) {
         <div className="space-y-4">
           {Object.entries(grouped).map(([batchKey, items]) => {
             const allPending = items.every(i => i.status === 'pending');
+            const first = items[0];
             return (
               <div key={batchKey} className="bg-card rounded-2xl border border-border shadow-soft overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-3 bg-muted/30 border-b border-border">
@@ -266,6 +488,13 @@ export function PickForMeModule({ userId }: Props) {
                     )}
                   </div>
                 </div>
+                {first.recipient_name && (
+                  <div className="px-4 py-2 bg-muted/10 border-b border-border text-xs text-muted-foreground flex items-center gap-2">
+                    <User size={12} />
+                    <span>{first.recipient_name} · {first.recipient_phone}</span>
+                    {first.delivery_type === 'redirect' && <span>· Переадресация</span>}
+                  </div>
+                )}
                 <div className="divide-y divide-border">
                   {items.map(r => {
                     const st = STATUS_MAP[r.status] || STATUS_MAP.pending;
