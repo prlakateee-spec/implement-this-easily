@@ -203,12 +203,25 @@ export function PickForMeModule({ userId }: Props) {
   };
 
   const uploadImage = async (file: File): Promise<string | null> => {
-    const ext = file.name.split('.').pop();
-    const path = `${userId}/pick/${Date.now()}_${Math.random().toString(36).slice(2, 6)}.${ext}`;
-    const { error } = await supabase.storage.from('order-images').upload(path, file);
-    if (error) return null;
-    const { data } = supabase.storage.from('order-images').getPublicUrl(path);
-    return data.publicUrl;
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `${userId}/pick/${Date.now()}_${Math.random().toString(36).slice(2, 6)}.${ext}`;
+      const { error } = await supabase.storage.from('order-images').upload(path, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+      if (error) {
+        console.error('Storage upload error:', error);
+        toast.error('Не удалось загрузить фото: ' + error.message);
+        return null;
+      }
+      const { data } = supabase.storage.from('order-images').getPublicUrl(path);
+      return data.publicUrl;
+    } catch (err) {
+      console.error('Upload exception:', err);
+      toast.error('Ошибка при загрузке фото');
+      return null;
+    }
   };
 
   const handleSubmit = async () => {
