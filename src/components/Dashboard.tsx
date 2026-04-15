@@ -145,6 +145,14 @@ export function Dashboard({
     { id: 'ambassador' as const, icon: Sparkles, label: 'Стать амбассадором', badge: 0, highlight: true },
   ];
 
+  if (!profileLoaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
   const ThemeToggle = () => (
     <button
       onClick={toggleTheme}
